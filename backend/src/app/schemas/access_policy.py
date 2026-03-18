@@ -1,0 +1,22 @@
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class AccessPolicyCreate(BaseModel):
+    subject: str = Field(..., max_length=64)
+    resource: str = Field(..., max_length=128)
+    action: str = Field(..., max_length=32)
+
+
+class AccessPolicyUpdate(BaseModel):
+    subject: str | None = Field(None, max_length=64)
+    resource: str | None = Field(None, max_length=128)
+    action: str | None = Field(None, max_length=32)
+
+
+class AccessPolicyOut(BaseModel):
+    id: int
+    subject: str
+    resource: str
+    action: str
+
+    model_config = ConfigDict(from_attributes=True)

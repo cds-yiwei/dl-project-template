@@ -1,0 +1,90 @@
+import type { PropsWithChildren, ReactElement } from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { AccessPage } from "@/features/access/pages/AccessPage";
+import { useSession, useUserTier } from "@/hooks";
+
+vi.mock("react-i18next", () => ({
+	useTranslation: (): { t: (key: string, options?: Record<string, string>) => string } => ({
+		t: (key: string, options?: Record<string, string>): string => {
+			const translations: Record<string, string> = {
+				"access.title": "My access",
+				"access.summary": "Tier information for the signed-in account.",
+				"access.tierCreatedAt": `Tier created: ${options?.["value"] ?? ""}`,
+				"access.tierName": `Tier name: ${options?.["value"] ?? ""}`,
+				"access.username": `Username: ${options?.["value"] ?? ""}`,
+			};
+
+			return translations[key] ?? key;
+		},
+	}),
+}));
+
+vi.mock("@gcds-core/components-react", () => ({
+	GcdsHeading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
+	GcdsNotice: ({ children, noticeTitle }: PropsWithChildren<{ noticeTitle?: string }>): ReactElement => (
+		<section>
+			{noticeTitle ? <h2>{noticeTitle}</h2> : null}
+			{children}
+		</section>
+	),
+	GcdsText: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
+}));
+
+vi.mock("@tanstack/react-router", () => ({
+	useNavigate: vi.fn(() => vi.fn()),
+	useRouterState: ({ select }: { select: (state: { location: { pathname: string } }) => string }): string =>
+		select({ location: { pathname: "/access" } }),
+}));
+
+vi.mock("@/hooks", () => ({
+	useSession: vi.fn(),
+	useUserTier: vi.fn(),
+}));
+
+describe("AccessPage", () => {
+	it("renders the current user's tier details", () => {
+		vi.mocked(useSession).mockReturnValue({
+			currentUser: {
+				id: 7,
+				name: "Jane Doe",
+				username: "jdoe",
+				email: "jane@example.com",
+				profile_image_url: "https://example.com/jane.png",
+				auth_provider: "gc-sso",
+				auth_subject: "subject-123",
+				role_id: 4,
+				tier_id: 2,
+			},
+			isAuthenticated: true,
+			isLoading: false,
+			login: vi.fn(),
+			logout: vi.fn((): Promise<void> => Promise.resolve()),
+			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
+			query: {} as never,
+		});
+		vi.mocked(useUserTier).mockReturnValue({
+			error: null,
+			isLoading: false,
+			tier: {
+				id: 7,
+				name: "Jane Doe",
+				username: "jdoe",
+				email: "jane@example.com",
+				profile_image_url: "https://example.com/jane.png",
+				auth_provider: "gc-sso",
+				auth_subject: "subject-123",
+				role_id: 4,
+				tier_id: 2,
+				tier_name: "free",
+				tier_created_at: "2026-03-17T00:00:00Z",
+			},
+		});
+
+		render(<AccessPage />);
+
+		expect(screen.getByRole("heading", { name: /my access/i })).toBeTruthy();
+		expect(screen.getByText(/tier name: free/i)).toBeTruthy();
+		expect(screen.getByText(/username: jdoe/i)).toBeTruthy();
+	});
+});

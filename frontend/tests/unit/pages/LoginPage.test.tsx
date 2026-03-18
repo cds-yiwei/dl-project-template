@@ -1,0 +1,85 @@
+import type { PropsWithChildren, ReactElement } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { LoginPage } from "@/features/auth/pages/LoginPage";
+import { useSession } from "@/hooks";
+
+vi.mock("react-i18next", () => ({
+	useTranslation: (): { t: (key: string) => string } => ({
+		t: (key: string): string => {
+			const translations: Record<string, string> = {
+				"login.expiredBody": "You are not logged in or your session expired. Sign in again to continue.",
+				"login.expiredTitle": "Session expired",
+				"login.title": "Sign in",
+				"login.summary": "Start the OIDC sign-in flow through the backend.",
+				"login.action": "Continue to sign in",
+			};
+
+			return translations[key] ?? key;
+		},
+	}),
+}));
+
+vi.mock("@gcds-core/components-react", () => ({
+	GcdsButton: ({ children, buttonId, buttonRole, ...properties }: PropsWithChildren<Record<string, unknown> & { buttonId?: string; buttonRole?: string }>): ReactElement => {
+		void buttonId;
+		void buttonRole;
+
+		return <button {...properties}>{children}</button>;
+	},
+	GcdsHeading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
+	GcdsNotice: ({ children, noticeTitle }: PropsWithChildren<{ noticeTitle?: string }>): ReactElement => (
+		<section>
+			{noticeTitle ? <h2>{noticeTitle}</h2> : null}
+			{children}
+		</section>
+	),
+	GcdsText: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
+}));
+
+vi.mock("@/hooks", () => ({
+	useSession: vi.fn(),
+}));
+
+describe("LoginPage", () => {
+	afterEach(() => {
+		window.history.replaceState({}, "", "/login");
+	});
+
+	it("starts the login flow when the sign-in button is clicked", () => {
+		const login = vi.fn();
+		vi.mocked(useSession).mockReturnValue({
+			currentUser: null,
+			isLoading: false,
+			isAuthenticated: false,
+			login,
+			logout: vi.fn((): Promise<void> => Promise.resolve()),
+			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
+			query: {} as never,
+		});
+
+		render(<LoginPage />);
+
+		fireEvent.click(screen.getByRole("button", { name: /continue to sign in/i }));
+
+		expect(login).toHaveBeenCalledTimes(1);
+	});
+
+	it("shows an expired-session notice when redirected back to sign in", () => {
+		window.history.replaceState({}, "", "/login?reason=expired");
+		vi.mocked(useSession).mockReturnValue({
+			currentUser: null,
+			isLoading: false,
+			isAuthenticated: false,
+			login: vi.fn(),
+			logout: vi.fn((): Promise<void> => Promise.resolve()),
+			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
+			query: {} as never,
+		});
+
+		render(<LoginPage />);
+
+		expect(screen.getByRole("heading", { name: /session expired/i })).toBeTruthy();
+		expect(screen.getByText(/not logged in or your session expired/i)).toBeTruthy();
+	});
+});
