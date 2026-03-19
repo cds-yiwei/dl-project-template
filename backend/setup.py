@@ -7,6 +7,7 @@ Automates copying the correct configuration files for different deployment scena
 
 import shutil
 import sys
+import subprocess
 from pathlib import Path
 
 DEPLOYMENTS = {
@@ -14,6 +15,12 @@ DEPLOYMENTS = {
         "name": "Local development with Uvicorn",
         "description": "Auto-reload enabled, development-friendly",
         "path": "scripts/local_with_uvicorn",
+    },
+    "local_without_docker": {
+        "name": "Local development without Docker",
+        "description": "Use a local Python virtualenv and local Postgres/Redis services",
+        "path": "scripts/local_without_docker",
+        "no_docker": True,
     },
     "staging": {
         "name": "Staging with Gunicorn managing Uvicorn workers",
@@ -48,6 +55,9 @@ def show_help():
     print("Local non-Docker workflow:")
     print("  cd backend && uv sync --group dev --extra dev")
     print("  uv run uvicorn src.app.main:app --reload")
+    print()
+    print("New option:")
+    print("  local_without_docker - sets up a .venv and copies only env files; expects local Postgres and Redis")
 
 
 def copy_files(deployment_type: str):
@@ -69,11 +79,17 @@ def copy_files(deployment_type: str):
     print(f"   {config['description']}")
     print()
 
-    files_to_copy = [
-        ("Dockerfile", "Dockerfile"),
-        ("docker-compose.yml", "docker-compose.yml"),
-        (".env.example", "src/.env"),
-    ]
+    # Choose which files to copy. For no-docker deployments, only copy the env example.
+    if config.get("no_docker"):
+        files_to_copy = [
+            (".env.example", "src/.env"),
+        ]
+    else:
+        files_to_copy = [
+            ("Dockerfile", "Dockerfile"),
+            ("docker-compose.yml", "docker-compose.yml"),
+            (".env.example", "src/.env"),
+        ]
 
     success = True
     for source_file, dest_file in files_to_copy:
@@ -106,15 +122,25 @@ def copy_files(deployment_type: str):
             print()
 
         print("Next steps:")
-        print("   docker compose up")
+        if not config.get("no_docker"):
+            print("   docker compose up")
 
-        if deployment_type == "local":
+        if deployment_type in ["local", "local_without_docker"]:
             print("   open http://127.0.0.1:8000/docs")
             print()
             print("Non-Docker local development:")
             print("   uv sync --group dev --extra dev")
             print("   uv run uvicorn src.app.main:app --reload")
             print("   Use .vscode/launch.json to debug the backend from VS Code")
+
+        # If this is the local_without_docker option, try to create a virtualenv
+        if config.get("no_docker"):
+            print()
+            print("🔧 local_without_docker: ensuring a Python virtual environment exists (.venv)")
+            try:
+                create_virtualenv()
+            except Exception as e:
+                print(f"⚠️  Virtualenv creation failed: {e}")
         elif deployment_type == "production":
             print("   open http://localhost")
 
@@ -158,6 +184,42 @@ def interactive_setup():
         except EOFError:
             print("\n\n👋 Setup cancelled.")
             return None
+
+
+def create_virtualenv():
+    """Create a local .venv using the current Python interpreter.
+
+    Requires Python >= 3.11 (3.12 recommended). If the running interpreter is older,
+    this function will warn but still attempt to create the venv.
+    """
+    min_version = (3, 11)
+    current = sys.version_info
+    if current < min_version:
+        print(
+            f"⚠️  Current Python is {current.major}.{current.minor}; >={min_version[0]}.{min_version[1]} is recommended (3.12 ideal)."
+        )
+
+    venv_dir = Path(".venv")
+    if venv_dir.exists():
+        print(f"✅ .venv already exists at {venv_dir.resolve()}")
+        return True
+
+    print(f"Creating virtual environment at {venv_dir} using {sys.executable}...")
+    try:
+        res = subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=False)
+        if res.returncode != 0:
+            raise RuntimeError(f"venv command returned {res.returncode}")
+
+        print("✅ .venv created")
+        activate_cmd = "source .venv/bin/activate"
+        print("Next: activate the venv and install dependencies:")
+        print(f"   {activate_cmd}")
+        print("   pip install -r requirements.txt  # or use your preferred tool")
+        print("Ensure PostgreSQL and Redis are running on the local machine.")
+        return True
+    except Exception as exc:
+        print(f"❌ Failed to create virtualenv: {exc}")
+        return False
 
 
 def main():

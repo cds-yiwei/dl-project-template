@@ -21,7 +21,6 @@ htmlcov/
 coverage/
 instance/
 .env
-.env.*
 celerybeat-schedule
 *.sqlite3
 
