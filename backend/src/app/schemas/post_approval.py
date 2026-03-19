@@ -3,8 +3,12 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+
 
 class PostApprovalCreateInternal(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     post_id: int
     submitted_by_user_id: int
     reviewed_by_user_id: int | None = None
@@ -14,7 +18,9 @@ class PostApprovalCreateInternal(BaseModel):
     comment: Annotated[str | None, Field(max_length=500, default=None)]
 
 
-class PostApprovalRead(BaseModel):
+class PostApprovalRead(TimestampSchema, UUIDSchema, PersistentDeletion):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     post_id: int
     submitted_by_user_id: int
@@ -23,7 +29,6 @@ class PostApprovalRead(BaseModel):
     to_status: str
     decision: str
     comment: str | None = None
-    created_at: datetime
 
 
 class PostApprovalUpdate(BaseModel):
@@ -33,3 +38,14 @@ class PostApprovalUpdate(BaseModel):
     to_status: Annotated[str | None, Field(max_length=32, default=None)]
     decision: Annotated[str | None, Field(max_length=32, default=None)]
     comment: Annotated[str | None, Field(max_length=500, default=None)]
+
+
+class PostApprovalUpdateInternal(PostApprovalUpdate):
+    updated_at: datetime
+
+
+class PostApprovalDelete(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    is_deleted: bool
+    deleted_at: datetime

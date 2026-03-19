@@ -183,6 +183,18 @@ async def _delete_keys_by_pattern(pattern: str) -> None:
             break
 
 
+async def invalidate_post_cache(username: str, post_id: int | None = None) -> None:
+    """Invalidate cached post detail and paginated post list entries for a user."""
+    if client is None:
+        return
+
+    if post_id is not None:
+        await client.delete(f"{username}_post_cache:{post_id}")
+
+    await client.delete(f"{username}_posts:{username}")
+    await _delete_keys_by_pattern(f"{username}_posts:*")
+
+
 def cache(
     key_prefix: str,
     resource_id_name: Any = None,

@@ -5,6 +5,7 @@ from fastcrud import compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
+from ..core.utils.cache import invalidate_post_cache
 from ..crud.crud_post_approvals import crud_post_approvals
 from ..crud.crud_posts import crud_posts
 from ..crud.crud_users import crud_users
@@ -32,6 +33,7 @@ class PostService:
         created_post = await crud_posts.create(db=db, object=post_internal, schema_to_select=PostRead)
         if created_post is None:
             raise NotFoundException("Failed to create post")
+        await invalidate_post_cache(username=username)
         return created_post
 
     async def list_posts_by_username(
@@ -77,6 +79,7 @@ class PostService:
             raise BadRequestException(f"Posts in status '{status.value}' cannot be edited")
 
         await crud_posts.update(db=db, object=values, id=post_id)
+        await invalidate_post_cache(username=username, post_id=post_id)
         return {"message": "Post updated"}
 
     async def delete_post(
@@ -91,6 +94,7 @@ class PostService:
             raise BadRequestException(f"Posts in status '{status.value}' cannot be deleted")
 
         await crud_posts.delete(db=db, id=post_id)
+        await invalidate_post_cache(username=username, post_id=post_id)
         return {"message": "Post deleted"}
 
     async def delete_post_from_db(self, db: AsyncSession, username: str, post_id: int) -> dict[str, str]:
@@ -100,6 +104,7 @@ class PostService:
             raise NotFoundException("Post not found")
 
         await crud_posts.db_delete(db=db, id=post_id)
+        await invalidate_post_cache(username=username, post_id=post_id)
         return {"message": "Post deleted from the database"}
 
     async def submit_for_review(
@@ -124,6 +129,7 @@ class PostService:
                 comment=None,
             ),
         )
+        await invalidate_post_cache(username=username, post_id=post_id)
         return {"message": "Post submitted for review"}
 
     async def list_posts_pending_review(self, db: AsyncSession, page: int, items_per_page: int) -> dict[str, Any]:
@@ -171,6 +177,8 @@ class PostService:
                 comment=comment,
             ),
         )
+        post_owner = await self._get_user_by_id(db=db, user_id=int(post["created_by_user_id"]))
+        await invalidate_post_cache(username=str(post_owner["username"]), post_id=post_id)
         message = "Post approved" if action == "approve" else "Post rejected"
         return {"message": message}
 
@@ -182,6 +190,12 @@ class PostService:
 
     async def _get_user_by_username(self, db: AsyncSession, username: str) -> Mapping[str, Any]:
         user = await crud_users.get(db=db, username=username, is_deleted=False, schema_to_select=UserRead)
+        if user is None:
+            raise NotFoundException("User not found")
+        return user
+
+    async def _get_user_by_id(self, db: AsyncSession, user_id: int) -> Mapping[str, Any]:
+        user = await crud_users.get(db=db, id=user_id, is_deleted=False, schema_to_select=UserRead)
         if user is None:
             raise NotFoundException("User not found")
         return user
