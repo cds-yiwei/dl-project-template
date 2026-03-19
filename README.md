@@ -114,11 +114,3 @@ See the backend contribution and code-of-conduct files in `backend/CONTRIBUTING.
 - Backend full docs and guides: `backend/docs/` and `backend/README.md`.
 - Frontend detailed README and package list: `frontend/README.md`.
 
-## Next steps I can help with
-
-- Add a root-level `dev` script to start backend + frontend with one command
-- Add badges and CI examples
-- Generate a minimal `Makefile` or `dev` script
-
-Which would you like next?
-
