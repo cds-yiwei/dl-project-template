@@ -9,7 +9,7 @@ export const HealthPage = (): FunctionComponent => {
 	const { health, ready, isLoading } = useSystemStatus();
 
 	return (
-		<CenteredPageLayout className="max-w-3xl">
+		<CenteredPageLayout className="max-w-5xl">
 			<Heading tag="h1">{t("health.title")}</Heading>
 			<Text>{t("health.summary")}</Text>
 

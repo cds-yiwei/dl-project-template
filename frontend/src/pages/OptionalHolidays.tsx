@@ -6,7 +6,7 @@ import { DateModified, Heading, Text } from '../components';
 
 const OptionalHolidays = (): FunctionComponent => {
   return (
-  <CenteredPageLayout>
+  <CenteredPageLayout className="max-w-6xl gap-600">
       <Heading tag="h1">Optional holidays in Canada</Heading>
       <Text>Optional holidays are commonly observed but not legally mandated. Businesses may choose to opt-in to optional holidays but they don't have to. If your workplace doesn't observe an optional holiday, it is treated just like any other work day.</Text>
 
@@ -47,7 +47,6 @@ const OptionalHolidays = (): FunctionComponent => {
       </ul>
       <Text>Whatever the case may be, optional holidays are never guaranteed. Always check with your employer to make sure if optional holidays apply to you.</Text>
 
-      <DateModified>2025-07-16</DateModified>
     </CenteredPageLayout>
     );
 };

@@ -1,4 +1,4 @@
-import { CenteredPageLayout } from "../components/layout";
+import { CenteredPageLayout, ContentPageLayout } from "../components/layout";
 import type { FunctionComponent } from "../common/types";
 
 // Components (internal)
@@ -6,7 +6,7 @@ import { DateModified, ExternalLink, Heading, Text } from '../components';
 
 const FederalAndProvincialHolidays = (): FunctionComponent => {
   return (
-  <CenteredPageLayout>
+  <ContentPageLayout>
       <Heading tag="h1">Federal and provincial holidays</Heading>
       <Text>Most Canadian workers get provincial holidays off, not federal ones.</Text>
 
@@ -34,8 +34,7 @@ const FederalAndProvincialHolidays = (): FunctionComponent => {
       <Text>For example, the province of Ontario does not observe Remembrance Day, which means on November 11, post offices are closed but schools are open.</Text>
       <Text>Ontario observes Family Day but the federal government does not. So that means on the third Monday in February, schools are closed but post offices will be open.</Text>
 
-      <DateModified>2025-07-16</DateModified>
-    </CenteredPageLayout>
+    </ContentPageLayout>
   );
 };
 

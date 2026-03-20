@@ -13,7 +13,7 @@ export const LoginPage = (): FunctionComponent => {
 	const { loginNotice } = loginRouteApi.useLoaderData();
 
 	return (
-		<CenteredPageLayout className="max-w-2xl">
+		<CenteredPageLayout className="max-w-5xl mx-0">
 			<Heading tag="h1">{t("login.title")}</Heading>
 			<Text>{t("login.summary")}</Text>
 			{loginNotice ? (

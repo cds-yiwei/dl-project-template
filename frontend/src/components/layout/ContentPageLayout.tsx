@@ -6,5 +6,5 @@ type ContentPageLayoutProps = PropsWithChildren<{
 }>;
 
 export const ContentPageLayout = ({ children, className = "" }: ContentPageLayoutProps): FunctionComponent => (
-	<section className={`mx-auto flex w-full max-w-4xl flex-col items-center gap-300 py-500 text-center ${className}`.trim()}>{children}</section>
+	<section className={`mx-0 flex w-full max-w-4xl flex-col items-start gap-300 py-500 text-left ${className}`.trim()}>{children}</section>
 );

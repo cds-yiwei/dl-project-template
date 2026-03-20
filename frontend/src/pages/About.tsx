@@ -6,7 +6,7 @@ import { DateModified, Heading, Text, Card, Grid } from "../components";
 
 const About = (): FunctionComponent => {
   return (
-  <CenteredPageLayout>
+  <CenteredPageLayout className="max-w-6xl gap-600">
       <Heading tag="h1">About this app</Heading>
 
       <Text>
@@ -48,11 +48,6 @@ const About = (): FunctionComponent => {
         />
       </Grid>
 
-      <Heading tag="h2">Special thanks to Paul Craig</Heading>
-
-      <Text>Paul Craig is the original creator of this site...</Text>
-
-      <DateModified>2025-07-16</DateModified>
     </CenteredPageLayout>
   );
 };

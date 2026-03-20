@@ -15,7 +15,7 @@ export const AccessPage = (): FunctionComponent => {
 	});
 
 	return (
-		<CenteredPageLayout className="max-w-3xl">
+		<CenteredPageLayout className="max-w-5xl">
 			<Heading tag="h1">{t("access.title")}</Heading>
 			<Text>{t("access.summary")}</Text>
 

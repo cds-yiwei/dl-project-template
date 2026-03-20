@@ -9,7 +9,7 @@ export const ProfilePage = (): FunctionComponent => {
 	const { currentUser, isAuthenticated, isLoading, login } = useSession();
 
 	return (
-		<CenteredPageLayout className="max-w-3xl">
+		<CenteredPageLayout className="max-w-5xl gap-600">
 			<Heading tag="h1">{t("profile.title")}</Heading>
 			<Text>{t("profile.summary")}</Text>
 
