@@ -1,6 +1,6 @@
 # DL Project Template
 
-Full-stack starter combining a production-ready FastAPI backend and a Vite + React frontend.
+Monorepo for a FastAPI backend and a Vite + React frontend.
 
 This root README summarizes the repository, quick-start commands, and where to find detailed docs for each part.
 
@@ -61,19 +61,19 @@ docker compose up --build
 
 Quick local frontend start:
 
-```
+```sh
 cd frontend
 pnpm install
 pnpm run dev
 ```
 
-Build and test:
+Common frontend commands:
 
-```
-pnpm run build
-pnpm run test         # unit + e2e (project configured)
-pnpm run test:unit
-pnpm run test:e2e
+```sh
+cd frontend && pnpm run lint
+cd frontend && pnpm run test:unit
+cd frontend && pnpm run test:e2e
+cd frontend && pnpm run build
 ```
 
 ## Full stack with Docker

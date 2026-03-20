@@ -13,7 +13,9 @@ You are the project-specific full-stack developer agent for this repository. You
 - Backend feature layout: `backend/src/app/api/v1/` for routes, `backend/src/app/services/` for business logic, `backend/src/app/models/` for SQLAlchemy models, `backend/src/app/schemas/` for Pydantic schemas, `backend/src/app/core/` for config/security/access control, `backend/src/migrations/` for Alembic migrations, `backend/tests/` for tests.
 - Frontend stack: Vite, React 19, TypeScript, TanStack Router, TanStack Query, React Hook Form, Zod, Zustand, Tailwind, GCDS components, Vitest, Playwright.
 - Frontend entry point: `frontend/src/main.tsx`.
-- Frontend feature layout: `frontend/src/routes/` for route files, `frontend/src/features/` for feature-specific API/hooks/pages, `frontend/src/components/` for shared UI, `frontend/src/hooks/`, `frontend/src/store/`, `frontend/tests/unit/`, `frontend/e2e/`.
+- Frontend route layout: `frontend/src/routes/` for TanStack Router route files, `frontend/src/pages/` for root-level static pages, and `frontend/src/routeTree.gen.ts` as generated router output.
+- Frontend feature layout: `frontend/src/features/` for feature-specific pages and hooks such as `auth`, `access`, `dashboard`, `posts`, `roles`, `tiers`, and `users`.
+- Frontend shared code layout: `frontend/src/components/` for shared layout, UI, forms, charts, and utilities, `frontend/src/hooks/` for shared hooks, `frontend/src/fetch/` for request helpers, `frontend/src/store/` for Zustand state, and `frontend/tests/unit/` plus `frontend/e2e/` for test coverage.
 
 ## Primary Responsibilities
 - Analyze backend and frontend impact before changing code.
@@ -26,7 +28,8 @@ You are the project-specific full-stack developer agent for this repository. You
 - Start by locating the affected backend and frontend files before proposing changes.
 - Prefer existing project patterns over introducing new abstractions.
 - For backend changes, follow the usual path: model or schema changes, service changes, route wiring, then tests and migrations when needed.
-- For frontend changes, follow the existing feature structure: API client functions, query or mutation hooks, route or page wiring, then unit or e2e coverage when appropriate.
+- For frontend changes, follow the existing structure: route file in `frontend/src/routes/`, page component in `frontend/src/features/*/pages/` when feature-owned, and shared building blocks in `frontend/src/components/`.
+- Reuse existing layout components before creating new page shells. `AppShell` is the root wrapper, `PageContent` handles the shell body, `CenteredPageLayout` is for constrained centered content, and `ContentPageLayout` is for constrained left-aligned content.
 - Do not assume generated or sample files are authoritative; inspect the actual files involved in the current task.
 - Do not treat unrelated legacy sample-page build failures as proof that a new change is wrong; verify imports in legacy UI sample folders before blaming new work.
 
@@ -55,16 +58,18 @@ You are the project-specific full-stack developer agent for this repository. You
 
 ## Debugging Workflow
 - Auth or session bugs: inspect backend auth config and route handlers first, then verify frontend API base URL and cookie origin behavior.
-- OIDC or login issues: check the Authlib and session flow in backend auth or OIDC routes, then verify frontend session hydration and login/logout calls.
+- OIDC or login issues: check the Authlib and session flow in backend auth or OIDC routes, then verify frontend session hydration and login/logout calls through `frontend/src/features/auth/hooks/use-session.ts` and related auth route files.
 - Authorization bugs: inspect Casbin decorators, policy or role service logic, and the relevant backend integration tests.
 - API bugs: trace route -> service -> schema -> model or CRUD layer, then verify the frontend caller sends and reads the same fields.
-- Frontend rendering bugs: inspect the route file, feature hooks, API response shape, and any shared component imports.
+- Frontend rendering bugs: inspect the route file, the feature page component, layout wrapper choice, feature hooks, API response shape, and any shared component imports.
 - End-to-end regressions: compare the feature with an existing working route on both backend and frontend before adding new abstractions.
 
 ## Known Pitfalls
 - Alembic is configured from `backend/src`; running migration commands from the wrong directory will fail or misread config.
 - In this workspace, backend test collection is reliable via `cd backend && uv run pytest tests -q`.
 - Frontend auth should derive the backend origin from the browser hostname when `VITE_API_BASE_URL` is unset; `localhost` vs `127.0.0.1` can break session cookies.
+- The frontend uses both route files and page components; do not collapse everything into `src/pages/` or treat route files as the main UI implementation.
+- `frontend/src/routeTree.gen.ts` is generated; edit route source files instead.
 - Generated TanStack route stubs may already exist and should usually be replaced in place rather than added as new duplicate files.
 - Legacy sample components under `frontend/src/components/ui` and `frontend/src/pages` may contain stale imports and can fail builds independently of current feature work.
 
