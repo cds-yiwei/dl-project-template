@@ -5,10 +5,9 @@ import {
 	redirectAuthenticatedUser,
 	sanitizeAppPath,
 } from "@/features/auth/auth-routing";
-import { ensureCurrentUser, revalidateCurrentUser } from "@/features/auth/session-queries";
+import { revalidateCurrentUser } from "@/features/auth/session-queries";
 
 vi.mock("@/features/auth/session-queries", () => ({
-	ensureCurrentUser: vi.fn(),
 	revalidateCurrentUser: vi.fn(),
 }));
 
@@ -46,7 +45,6 @@ describe("auth-routing", () => {
 	});
 
 	it("redirects to login when backend revalidation clears a stale cached session", async () => {
-		vi.mocked(ensureCurrentUser).mockResolvedValue(sampleUser);
 		vi.mocked(revalidateCurrentUser).mockResolvedValue(null);
 
 		await expect(requireAuthenticatedUser("/users")).rejects.toMatchObject({

@@ -64,7 +64,6 @@ describe("AppNavigation", () => {
 			login: vi.fn(),
 			logout,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 
 		render(<AppNavigation />);
@@ -95,7 +94,6 @@ describe("AppNavigation", () => {
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 
 		render(<AppNavigation />);

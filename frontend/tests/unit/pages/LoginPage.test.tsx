@@ -4,6 +4,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { useSession } from "@/hooks";
 
+type LoginLoaderData = {
+	loginNotice: {
+		bodyKey: string;
+		titleKey: string;
+	} | null;
+};
+
+const { useLoaderData } = vi.hoisted(() => ({
+	useLoaderData: vi.fn<() => LoginLoaderData>(() => ({ loginNotice: null })),
+}));
+
 vi.mock("react-i18next", () => ({
 	useTranslation: (): { t: (key: string) => string } => ({
 		t: (key: string): string => {
@@ -40,9 +51,17 @@ vi.mock("@/hooks", () => ({
 	useSession: vi.fn(),
 }));
 
+vi.mock("@tanstack/react-router", () => ({
+	getRouteApi: () => ({
+		useLoaderData,
+	}),
+}));
+
 describe("LoginPage", () => {
 	afterEach(() => {
 		window.history.replaceState({}, "", "/login");
+		useLoaderData.mockReset();
+		useLoaderData.mockReturnValue({ loginNotice: null });
 	});
 
 	it("starts the login flow when the sign-in button is clicked", () => {
@@ -54,7 +73,6 @@ describe("LoginPage", () => {
 			login,
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 
 		render(<LoginPage />);
@@ -66,6 +84,12 @@ describe("LoginPage", () => {
 
 	it("shows an expired-session notice when redirected back to sign in", () => {
 		window.history.replaceState({}, "", "/login?reason=expired");
+		useLoaderData.mockReturnValue({
+			loginNotice: {
+				bodyKey: "login.expiredBody",
+				titleKey: "login.expiredTitle",
+			},
+		});
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: null,
 			isLoading: false,
@@ -73,7 +97,6 @@ describe("LoginPage", () => {
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 
 		render(<LoginPage />);
@@ -84,6 +107,12 @@ describe("LoginPage", () => {
 
 	it("shows an unauthorized notice when redirected after a 401 response", () => {
 		window.history.replaceState({}, "", "/login?reason=unauthorized&message=session-expired");
+		useLoaderData.mockReturnValue({
+			loginNotice: {
+				bodyKey: "login.unauthorizedBody",
+				titleKey: "login.unauthorizedTitle",
+			},
+		});
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: null,
 			isLoading: false,
@@ -91,12 +120,34 @@ describe("LoginPage", () => {
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 
 		render(<LoginPage />);
 
 		expect(screen.getByRole("heading", { name: /sign in required/i })).toBeTruthy();
 		expect(screen.getByText(/session is no longer valid/i)).toBeTruthy();
+	});
+
+	it("renders the finalized login notice from the route layer", () => {
+		window.history.replaceState({}, "", "/login?reason=expired");
+		useLoaderData.mockReturnValue({
+			loginNotice: {
+				bodyKey: "login.unauthorizedBody",
+				titleKey: "login.unauthorizedTitle",
+			},
+		});
+		vi.mocked(useSession).mockReturnValue({
+			currentUser: null,
+			isLoading: false,
+			isAuthenticated: false,
+			login: vi.fn(),
+			logout: vi.fn((): Promise<void> => Promise.resolve()),
+			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
+		});
+
+		render(<LoginPage />);
+
+		expect(screen.getByRole("heading", { name: /sign in required/i })).toBeTruthy();
+		expect(screen.queryByRole("heading", { name: /session expired/i })).toBeNull();
 	});
 });

@@ -73,7 +73,6 @@ describe("DashboardPage", () => {
 			isLoading: false,
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
-			query: {} as never,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 		});
 		vi.mocked(useUserRole).mockReturnValue({
@@ -136,7 +135,6 @@ describe("DashboardPage", () => {
 			isLoading: false,
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
-			query: {} as never,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 		});
 		vi.mocked(useUserRole).mockReturnValue({

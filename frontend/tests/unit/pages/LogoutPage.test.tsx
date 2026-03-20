@@ -47,7 +47,6 @@ describe("LogoutPage", (): void => {
 			login: vi.fn(),
 			logout,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 
 		render(<LogoutPage />);
@@ -70,7 +69,6 @@ describe("LogoutPage", (): void => {
 			login: vi.fn(),
 			logout,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 
 		render(
@@ -97,7 +95,6 @@ describe("LogoutPage", (): void => {
 			login: vi.fn(),
 			logout: () => logout(),
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		}));
 
 		const { rerender } = render(<LogoutPage />);

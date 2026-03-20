@@ -87,4 +87,21 @@ describe("useSession", () => {
 			expect(result.current.isAuthenticated).toBe(false);
 		});
 	});
+
+	it("does not expose a React Query result for auth session state", async () => {
+		vi.mocked(getCurrentUser).mockResolvedValue(null);
+
+		const queryClient = new QueryClient();
+		const wrapper = ({ children }: PropsWithChildren): ReactElement => (
+			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+		);
+
+		const { result } = renderHook(() => useSession(), { wrapper });
+
+		await waitFor(() => {
+			expect(result.current.isLoading).toBe(false);
+		});
+
+		expect("query" in result.current).toBe(false);
+	});
 });

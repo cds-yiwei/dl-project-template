@@ -102,7 +102,6 @@ describe("PostManagementPage", () => {
 			isLoading: false,
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
-			query: {} as never,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 		});
 		vi.mocked(usePostManagement).mockReturnValue({
@@ -179,7 +178,6 @@ describe("PostManagementPage", () => {
 			isLoading: false,
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
-			query: {} as never,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 		});
 		vi.mocked(usePostManagement).mockReturnValue({
@@ -237,7 +235,6 @@ describe("PostManagementPage", () => {
 			isLoading: false,
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
-			query: {} as never,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 		});
 		vi.mocked(usePostManagement).mockReturnValue({
@@ -300,7 +297,6 @@ describe("PostManagementPage", () => {
 			isLoading: false,
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
-			query: {} as never,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 		});
 		vi.mocked(usePostManagement).mockReturnValue({

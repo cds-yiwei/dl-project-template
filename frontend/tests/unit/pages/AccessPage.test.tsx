@@ -61,7 +61,6 @@ describe("AccessPage", () => {
 			login: vi.fn(),
 			logout: vi.fn((): Promise<void> => Promise.resolve()),
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
-			query: {} as never,
 		});
 		vi.mocked(useUserTier).mockReturnValue({
 			error: null,

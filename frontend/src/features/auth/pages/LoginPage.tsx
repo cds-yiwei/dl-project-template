@@ -1,39 +1,16 @@
+import { getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button, Heading, Notice, Text } from "@/components/ui";
 import { CenteredPageLayout } from "@/components/layout";
 import { useSession } from "@/hooks";
-import { parseLoginMessage, parseLoginReason } from "../login-search";
 
-const getLoginNoticeContent = (
-	reason: ReturnType<typeof parseLoginReason>,
-	message: ReturnType<typeof parseLoginMessage>,
-): { bodyKey: string; titleKey: string } | null => {
-	if (reason === "unauthorized" || message === "session-expired") {
-		return {
-			bodyKey: "login.unauthorizedBody",
-			titleKey: "login.unauthorizedTitle",
-		};
-	}
-
-	if (reason === "expired") {
-		return {
-			bodyKey: "login.expiredBody",
-			titleKey: "login.expiredTitle",
-		};
-	}
-
-	return null;
-};
+const loginRouteApi = getRouteApi("/login");
 
 export const LoginPage = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const { login } = useSession();
-	const searchParameters = new URLSearchParams(window.location.search);
-	const loginNotice = getLoginNoticeContent(
-		parseLoginReason(searchParameters.get("reason")),
-		parseLoginMessage(searchParameters.get("message")),
-	);
+	const { loginNotice } = loginRouteApi.useLoaderData();
 
 	return (
 		<CenteredPageLayout className="max-w-2xl">

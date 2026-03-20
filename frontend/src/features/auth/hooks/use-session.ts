@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import type { UseQueryResult } from "@tanstack/react-query";
 import type { UserRead } from "@/fetch/auth";
 import { useAuthStore } from "@/store";
 
@@ -10,7 +9,6 @@ export type SessionState = {
 	login: () => void;
 	logout: () => Promise<void>;
 	refreshSession: () => Promise<UserRead | null>;
-	query: UseQueryResult<UserRead | null, Error>;
 };
 
 export const useSession = (): SessionState => {
@@ -31,19 +29,6 @@ export const useSession = (): SessionState => {
 		void hydrateSession();
 	}, [hasHydrated, hydrateSession, isLoading]);
 
-	const query = {
-		data: currentUser,
-		fetchStatus: isLoading ? "fetching" : "idle",
-		isFetched: hasHydrated,
-		isFetching: isLoading,
-		isLoading,
-		isPending: isLoading,
-		isRefetching: false,
-		isSuccess: hasHydrated,
-		refetch: async (): Promise<never> => ({ data: await refreshSession() } as never),
-		status: isLoading ? "pending" : "success",
-	} as unknown as UseQueryResult<UserRead | null, Error>;
-
 	return {
 		currentUser,
 		isAuthenticated,
@@ -51,6 +36,5 @@ export const useSession = (): SessionState => {
 		login,
 		logout,
 		refreshSession,
-		query,
 	};
 };
