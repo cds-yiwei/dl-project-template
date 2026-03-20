@@ -4,16 +4,6 @@
 </p>
 
 <p align="center">
-  <a href="https://benavlabs.github.io/FastAPI-boilerplate">
-    <img src="docs/assets/FastAPI-boilerplate.png" alt="Purple Rocket with FastAPI Logo as its window." width="25%" height="auto">
-  </a>
-</p>
-
-<p align="center">
-📚 <a href="https://benavlabs.github.io/FastAPI-boilerplate/">Docs</a> · 🧠 <a href="https://deepwiki.com/benavlabs/FastAPI-boilerplate">DeepWiki</a> · 💬 <a href="https://discord.com/invite/TEmPs22gqB">Discord</a>
-</p>
-
-<p align="center">
   <a href="https://fastapi.tiangolo.com">
       <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI">
   </a>
@@ -71,13 +61,6 @@ This is what we've been using in production apps. Several applications running i
 > **Building an AI SaaS?** Skip even more setup with [**FastroAI**](https://fastro.ai) - our production-ready template with AI integration, payments, and frontend included.
 
 ## TL;DR - Quickstart
-
-Use the template on GitHub, create your repo, then:
-
-```bash
-git clone https://github.com/<you>/FastAPI-boilerplate
-cd FastAPI-boilerplate
-```
 
 **Quick setup:** Run the interactive setup script to choose your deployment configuration:
 
@@ -183,8 +166,6 @@ Use `.vscode/launch.json` and start `Backend: FastAPI (uvicorn)` from the Run an
 
 Create `src/.env` and set **app**, **database**, **session**, **OIDC**, **JWT fallback**, and **environment** settings. See the [docs](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/) for a copy-pasteable example and production guidance.
 
-[https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/](https://benavlabs.github.io/FastAPI-boilerplate/getting-started/configuration/)
-
 * `ENVIRONMENT=local|staging|production` controls API docs exposure
 * Set `ADMIN_*` to enable the first admin user
 * `OIDC_ENABLED`, `OIDC_SERVER_METADATA_URL`, `OIDC_CLIENT_ID`, and `OIDC_CLIENT_SECRET` enable OIDC login
@@ -239,12 +220,3 @@ This project was inspired by a few projects, it's based on them with things chan
 ## License
 
 [`MIT`](LICENSE.md)
-
-## Contact
-
-Benav Labs – [benav.io](https://benav.io), [discord server](https://discord.com/invite/TEmPs22gqB)
-
-<hr>
-<a href="https://benav.io">
-  <img src="https://github.com/benavlabs/fastcrud/raw/main/docs/assets/benav_labs_banner.png" alt="Powered by Benav Labs - benav.io"/>
-</a>
