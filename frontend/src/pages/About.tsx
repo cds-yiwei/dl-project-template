@@ -2,7 +2,7 @@ import { CenteredPageLayout } from "../components/layout";
 import type { FunctionComponent } from "../common/types";
 
 // Components (internal)
-import { DateModified, Heading, Text, Card, Grid } from "../components";
+import { Heading, Text, Card, Grid } from "../components";
 
 const About = (): FunctionComponent => {
   return (

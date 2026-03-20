@@ -5,9 +5,15 @@
 		"aboutCardTitle": "À propos de cette application",
 		"backendOrigin": "Origine du backend : {{origin}}",
 		"dashboardPageLink": "Tableau de bord",
+		"featureAccess": "Protégez les routes du frontend avec des contrôles de session backend et une navigation adaptée au rôle.",
+		"featureContent": "Consultez les pages d'exemple et les parcours CRUD protégés qui valident l'intégration API.",
+		"featureObservability": "Vérifiez l'état du backend, la disponibilité et le comportement de session depuis la même interface.",
+		"featureSectionTitle": "Ce que contient ce modèle",
 		"federalCardDescription": "Page de référence montrant le fonctionnement de la typographie et des conteneurs de contenu d'exemple.",
 		"federalCardTitle": "Jours fériés fédéraux et provinciaux",
 		"healthPageLink": "État du système",
+		"heroEyebrow": "Frontend axé sur la session",
+		"heroTitle": "Construisez des parcours de service sécurisés sur une interface frontend pratique.",
 		"loadingBody": "Vérification de l'existence d'une session authentifiée côté backend.",
 		"loadingTitle": "Vérification de votre session",
 		"loginPageLink": "Page d'ouverture de session",
@@ -33,9 +39,11 @@
 		"signedOutBody": "Utilisez l'authentification basée sur la session via le backend pour démarrer le flux OIDC et revenir avec une session d'application valide.",
 		"signedOutTitle": "Ouvrez une session pour continuer",
 		"summary": "Ce frontend cible maintenant une intégration de type BFF axée sur la session avec le backend pour l'authentification OIDC et l'accès aux API protégées.",
+		"supportingLinksTitle": "Étapes suivantes courantes",
 		"title": "Modèle de prestation de services numériques",
 		"tiersPageLink": "Page des paliers",
-		"usersPageLink": "Page des utilisateurs"
+		"usersPageLink": "Page des utilisateurs",
+		"statusPanelTitle": "État actuel de la session"
 	},
 	"authComplete": {
 		"noticeTitle": "Finalisation de votre ouverture de session",

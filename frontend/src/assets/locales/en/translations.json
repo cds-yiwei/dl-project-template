@@ -5,9 +5,15 @@
         "aboutCardTitle": "About this app",
         "backendOrigin": "Backend origin: {{origin}}",
         "dashboardPageLink": "Dashboard",
+        "featureAccess": "Protect frontend routes with backend session checks and role-aware navigation.",
+        "featureContent": "Review sample pages and protected CRUD flows that exercise the API integration.",
+        "featureObservability": "Verify backend readiness, health, and session behavior from the same shell.",
+        "featureSectionTitle": "What this starter includes",
         "federalCardDescription": "Reference content page showing how the sample typography and content wrappers work.",
         "federalCardTitle": "Federal and provincial holidays",
         "healthPageLink": "System health",
+        "heroEyebrow": "Session-first frontend",
+        "heroTitle": "Build secure service flows on top of a practical frontend shell.",
         "loadingBody": "Checking whether an authenticated backend session is already available.",
         "loadingTitle": "Checking your session",
         "loginPageLink": "Sign-in page",
@@ -33,9 +39,11 @@
         "signedOutBody": "Use session-based authentication through the backend to start the OIDC flow and return with a valid app session.",
         "signedOutTitle": "Sign in to continue",
         "summary": "This frontend now targets a session-first BFF-style integration with the backend for OIDC authentication and protected API access.",
+        "supportingLinksTitle": "Common next steps",
         "title": "Digital service delivery starter",
         "tiersPageLink": "Tiers page",
-        "usersPageLink": "Users page"
+        "usersPageLink": "Users page",
+        "statusPanelTitle": "Current session status"
     },
     "authComplete": {
         "noticeTitle": "Finalizing your sign-in",

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Stateful orchestrated agent hooks for session context, prompt routing hints, tool gating, and session logging",
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/scripts/orchestrated_session_start.py",
+        "windows": "py -3 .github\\hooks\\scripts\\orchestrated_session_start.py",
+        "timeout": 10,
+        "env": {
+          "PYTHONPATH": "."
+        }
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/scripts/orchestrated_user_prompt.py",
+        "windows": "py -3 .github\\hooks\\scripts\\orchestrated_user_prompt.py",
+        "timeout": 10,
+        "env": {
+          "PYTHONPATH": "."
+        }
+      }
+    ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/scripts/orchestrated_pre_tool.py",
+        "windows": "py -3 .github\\hooks\\scripts\\orchestrated_pre_tool.py",
+        "timeout": 10,
+        "env": {
+          "PYTHONPATH": "."
+        }
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/scripts/orchestrated_post_tool.py",
+        "windows": "py -3 .github\\hooks\\scripts\\orchestrated_post_tool.py",
+        "timeout": 15,
+        "env": {
+          "PYTHONPATH": "."
+        }
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/scripts/orchestrated_stop.py",
+        "windows": "py -3 .github\\hooks\\scripts\\orchestrated_stop.py",
+        "timeout": 10,
+        "env": {
+          "PYTHONPATH": "."
+        }
+      }
+    ]
+  }
+}

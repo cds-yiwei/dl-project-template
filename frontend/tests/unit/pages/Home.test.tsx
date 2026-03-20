@@ -9,15 +9,23 @@ vi.mock("react-i18next", () => ({
 	useTranslation: (): { t: (key: string, options?: Record<string, string>) => string } => ({
 		t: (key: string, options?: Record<string, string>): string => {
 			const translations: Record<string, string> = {
+					"home.featureAccess": "Protect frontend routes with backend session checks and role-aware navigation.",
+					"home.featureContent": "Review sample pages and protected CRUD flows that exercise the API integration.",
+					"home.featureObservability": "Verify backend readiness, health, and session behavior from the same shell.",
+					"home.featureSectionTitle": "What this starter includes",
 				"home.backendOrigin": `Backend origin: ${options?.["origin"] ?? ""}`,
+					"home.heroEyebrow": "Session-first frontend",
+					"home.heroTitle": "Build secure service flows on top of a practical frontend shell.",
 				"home.signInAction": "Sign in with GC identity provider",
 				"home.signOutAction": "Sign out",
+					"home.statusPanelTitle": "Current session status",
 				"home.signedInBody": `Signed in as ${options?.["name"] ?? ""}.`,
 				"home.signedInEmail": `Email: ${options?.["email"] ?? ""}`,
 				"home.signedInTitle": "You are signed in",
 				"home.signedInUsername": `Username: ${options?.["username"] ?? ""}`,
 				"home.signedOutBody": "Use session-based authentication through the backend to start the OIDC flow and return with a valid app session.",
 				"home.signedOutTitle": "Sign in to continue",
+					"home.supportingLinksTitle": "Common next steps",
 				"home.summary": "This frontend now targets a session-first BFF-style integration with the backend for OIDC authentication and protected API access.",
 				"home.title": "Digital service delivery starter",
 			};
@@ -74,11 +82,23 @@ describe("Home", () => {
 			screen.getByRole("heading", { name: /digital service delivery starter/i }),
 		).toBeTruthy();
 		expect(
+			screen.getByRole("heading", { name: /build secure service flows on top of a practical frontend shell/i }),
+		).toBeTruthy();
+		expect(
+			screen.getByRole("heading", { name: /current session status/i }),
+		).toBeTruthy();
+		expect(
+			screen.getByRole("heading", { name: /what this starter includes/i }),
+		).toBeTruthy();
+		expect(
 			screen.getByRole("button", { name: /sign in with gc identity provider/i }),
 		).toBeTruthy();
 		expect(
 			screen.getByText(/session-based authentication through the backend/i),
 		).toBeTruthy();
+		expect(
+			screen.getAllByText(/protect frontend routes with backend session checks/i),
+		).toHaveLength(2);
 	});
 
 	it("shows the signed-in user and a sign-out action when authenticated", () => {
@@ -106,6 +126,7 @@ describe("Home", () => {
 			</QueryClientProvider>,
 		);
 
+		expect(screen.getByRole("heading", { name: /current session status/i })).toBeTruthy();
 		expect(screen.getByText(/signed in as jane doe/i)).toBeTruthy();
 		expect(screen.getByRole("button", { name: /sign out/i })).toBeTruthy();
 	});

@@ -1,8 +1,8 @@
-import { CenteredPageLayout, ContentPageLayout } from "../components/layout";
+import { ContentPageLayout } from "../components/layout";
 import type { FunctionComponent } from "../common/types";
 
 // Components (internal)
-import { DateModified, ExternalLink, Heading, Text } from '../components';
+import { ExternalLink, Heading, Text } from '../components';
 
 const FederalAndProvincialHolidays = (): FunctionComponent => {
   return (

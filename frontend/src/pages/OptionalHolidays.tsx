@@ -2,7 +2,7 @@ import { CenteredPageLayout } from "../components/layout";
 import type { FunctionComponent } from "../common/types";
 
 // Components (internal)
-import { DateModified, Heading, Text } from '../components';
+import { Heading, Text } from '../components';
 
 const OptionalHolidays = (): FunctionComponent => {
   return (
