@@ -1,4 +1,4 @@
-import { useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { useSession } from "@/hooks";
@@ -18,10 +18,18 @@ const isCurrentPath = (pathname: string, href: string): boolean => {
 
 const AppNavigation = (): FunctionComponent => {
 	const { t } = useTranslation();
-	const { isAuthenticated, isLoading } = useSession();
+	const { isAuthenticated, isLoading, logout } = useSession();
+	const navigate = useNavigate();
 	const pathname = useRouterState({
 		select: (state) => state.location.pathname,
 	});
+
+	const handleLogout = (): void => {
+		void (async (): Promise<void> => {
+			await logout();
+			await navigate({ replace: true, to: "/" });
+		})();
+	};
 
 	const commonItems: Array<NavigationItem> = [
 		{ href: "/", label: t("nav.home") },
@@ -54,6 +62,20 @@ const AppNavigation = (): FunctionComponent => {
 			<div className="mx-auto w-full max-w-[72rem] px-400 md:px-600">
 				<ul className="flex flex-wrap gap-x-400 gap-y-150 py-250 text-sm">
 					{items.map((item) => {
+						if (item.href === "/logout") {
+							return (
+								<li key={item.href}>
+									<button
+										className="text-[var(--gcds-text-primary)] underline-offset-[0.16em] hover:text-[var(--gcds-text-secondary)]"
+										type="button"
+										onClick={handleLogout}
+									>
+										{item.label}
+									</button>
+								</li>
+							);
+						}
+
 						const current = isCurrentPath(pathname, item.href);
 
 						return (

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTiers, type TiersListResponse } from "../tiers-api";
+import { getTiers, type TiersListResponse } from "@/fetch/tiers";
 
 export const tiersQueryKey = (page: number, itemsPerPage: number) =>
 	["tiers", page, itemsPerPage] as const;

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPendingReviewPosts, type PostsListResponse } from "../posts-api";
+import { getPendingReviewPosts, type PostsListResponse } from "@/fetch/posts";
 
 export const pendingReviewPostsQueryKey = (page: number, itemsPerPage: number) =>
 	["pending-review-posts", page, itemsPerPage] as const;

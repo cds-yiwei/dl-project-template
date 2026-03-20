@@ -46,8 +46,18 @@
         "action": "Continue to sign in",
         "expiredBody": "You are not logged in or your session expired. Sign in again to continue.",
         "expiredTitle": "Session expired",
+        "unauthorizedBody": "Your session is no longer valid. Sign in again to continue.",
+        "unauthorizedTitle": "Sign in required",
         "summary": "Start the OIDC sign-in flow through the backend.",
         "title": "Sign in"
+    },
+    "errors": {
+        "badRequestBody": "The request could not be completed as submitted. Review the current input and try again.",
+        "badRequestTitle": "Check the request details",
+        "forbiddenBody": "Your current account does not have permission to complete this action.",
+        "forbiddenTitle": "Access is restricted",
+        "serverBody": "The service is temporarily unavailable. Try again in a moment.",
+        "serverTitle": "Service temporarily unavailable"
     },
     "nav": {
         "access": "My access",

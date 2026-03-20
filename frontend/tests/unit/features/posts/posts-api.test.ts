@@ -6,7 +6,7 @@ import {
 	getUserPosts,
 	rejectPost,
 	submitPostForReview,
-} from "@/features/posts/posts-api";
+} from "@/fetch/posts";
 
 describe("posts-api", () => {
 	afterEach(() => {

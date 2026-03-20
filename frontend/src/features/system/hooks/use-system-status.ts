@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getHealthCheck, getReadyCheck, type HealthCheck, type ReadyCheck } from "../system-api";
+import { getHealthCheck, getReadyCheck, type HealthCheck, type ReadyCheck } from "@/fetch/system";
 
 export type SystemStatusState = {
 	health: HealthCheck | null;

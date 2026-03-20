@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserPosts, type PostsListResponse } from "../posts-api";
+import { getUserPosts, type PostsListResponse } from "@/fetch/posts";
 
 export const postsQueryKey = (username: string | null | undefined, page: number, itemsPerPage: number) =>
 	["posts", username ?? "anonymous", page, itemsPerPage] as const;

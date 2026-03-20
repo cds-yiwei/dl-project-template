@@ -4,7 +4,7 @@ import {
 	deleteTier,
 	getTiers,
 	updateTier,
-} from "@/features/tiers/tiers-api";
+} from "@/fetch/tiers";
 
 describe("tiers-api", () => {
 	const originalFetch = globalThis.fetch;

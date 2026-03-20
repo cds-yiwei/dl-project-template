@@ -1,7 +1,7 @@
 import type { PropsWithChildren, ReactElement } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { UnauthorizedRequestError } from "@/features/auth/auth-api";
+import { UnauthorizedRequestError } from "@/fetch";
 import { UsersPage } from "@/features/users/pages/UsersPage";
 import { useRoles, useUserManagement, useUserRole } from "@/hooks";
 
@@ -71,6 +71,8 @@ vi.mock("@/components/ui", () => ({
 			<input id={inputId} name={name} type={type} value={value} onInput={(event): void => onInput?.({ target: { value: (event.target as HTMLInputElement).value } })} />
 		</label>
 	),
+	Heading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
+	Notice: ({ children, noticeTitle }: PropsWithChildren<{ noticeTitle?: string }>): ReactElement => <section>{noticeTitle ? <h2>{noticeTitle}</h2> : null}{children}</section>,
 	Select: ({ children, label, name, onInput, selectId, value }: PropsWithChildren<{ label: string; name: string; onInput?: (event: { target: { value: string } }) => void; selectId: string; value?: string }>): ReactElement => (
 		<label htmlFor={selectId}>
 			<span>{label}</span>
@@ -79,6 +81,7 @@ vi.mock("@/components/ui", () => ({
 			</select>
 		</label>
 	),
+	Text: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
 	Modal: ({ children, isOpen, title }: PropsWithChildren<{ isOpen: boolean; title: string }>): ReactElement | null => (isOpen ? <section><h2>{title}</h2>{children}</section> : null),
 }));
 
@@ -184,7 +187,7 @@ describe("UsersPage", () => {
 		expect(screen.getByRole("button", { name: /save role/i })).toBeTruthy();
 	});
 
-	it("redirects to login when the backend returns an unauthorized error", async () => {
+	it("does not render a generic error notice for unauthorized hook errors", () => {
 		vi.mocked(useUserManagement).mockReturnValue({
 			error: new UnauthorizedRequestError(),
 			createUser: vi.fn((): Promise<void> => Promise.resolve()),
@@ -218,12 +221,7 @@ describe("UsersPage", () => {
 
 		render(<UsersPage />);
 
-		await waitFor((): void => {
-			expect(navigate).toHaveBeenCalledWith({
-				replace: true,
-				search: { reason: "expired", redirect: "/users" },
-				to: "/login",
-			});
-		});
+		expect(navigate).not.toHaveBeenCalled();
+		expect(screen.queryByText(/users.errorTitle/i)).toBeNull();
 	});
 });

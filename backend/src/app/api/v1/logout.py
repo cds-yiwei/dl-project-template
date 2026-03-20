@@ -23,6 +23,17 @@ async def logout(
 ) -> dict[str, str]:
     result = await service.logout(request=request, access_token=access_token, refresh_token=refresh_token, db=db)
     if result.get("clear_cookies"):
-        response.delete_cookie(key="refresh_token")
-        response.delete_cookie(key=settings.SESSION_COOKIE_NAME)
+        response.delete_cookie(
+            key="refresh_token",
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            path="/",
+        )
+        response.delete_cookie(
+            key=settings.SESSION_COOKIE_NAME,
+            secure=settings.SESSION_COOKIE_SECURE,
+            samesite="lax",
+            path="/",
+        )
     return {"message": result["message"]}

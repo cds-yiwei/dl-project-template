@@ -1,12 +1,10 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { GcdsHeading, GcdsNotice, GcdsText } from "@gcds-core/components-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { CenteredPageLayout } from "@/components/layout";
-import { Button, ConfirmDialog, DataTable, Input, Modal, Pagination } from "@/components/ui";
+import { Button, ConfirmDialog, DataTable, Heading, Input, Modal, Notice, Pagination, Text } from "@/components/ui";
 import type { DataTableColumn } from "@/components/ui/DataTable";
-import { isUnauthorizedRequestError } from "@/features/auth/auth-api";
+import { getRequestErrorNotice } from "@/fetch";
 import { useAdminListState, usePolicyManagement } from "@/hooks";
 import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
 
@@ -49,9 +47,9 @@ export const PoliciesPage = (): FunctionComponent => {
 	const [form, setForm] = useState<PolicyFormState>(emptyPolicyForm);
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
 	const [selectedPolicyId, setSelectedPolicyId] = useState<number | null>(null);
-	const navigate = useNavigate();
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
+	const errorNotice = getRequestErrorNotice(error, {
+		bodyKey: "policies.errorBody",
+		titleKey: "policies.errorTitle",
 	});
 
 	const selectedPolicy = policies.find((policy) => policy.id === selectedPolicyId) ?? null;
@@ -67,18 +65,6 @@ export const PoliciesPage = (): FunctionComponent => {
 		{ field: "action", headerName: t("policies.actionLabel") },
 	];
 	const totalPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
-
-	useEffect(() => {
-		if (!isUnauthorizedRequestError(error)) {
-			return;
-		}
-
-		void navigate({
-			replace: true,
-			search: { reason: "expired", redirect: pathname },
-			to: "/login",
-		});
-	}, [error, navigate, pathname]);
 
 	useEffect(() => {
 		if (modalMode !== "edit" && !deleteDialogOpen) {
@@ -157,25 +143,25 @@ export const PoliciesPage = (): FunctionComponent => {
 
 	return (
 		<CenteredPageLayout className="max-w-5xl">
-			<GcdsHeading tag="h1">{t("policies.title")}</GcdsHeading>
-			<GcdsText>{t("policies.summary")}</GcdsText>
+			<Heading tag="h1">{t("policies.title")}</Heading>
+			<Text>{t("policies.summary")}</Text>
 
 			{isLoading ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("policies.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("policies.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("policies.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("policies.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
-			{error && !isUnauthorizedRequestError(error) ? (
-				<GcdsNotice noticeRole="danger" noticeTitle={t("policies.errorTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("policies.errorBody")}</GcdsText>
-				</GcdsNotice>
+			{errorNotice ? (
+				<Notice noticeRole={errorNotice.noticeRole} noticeTitle={t(errorNotice.titleKey as never)} noticeTitleTag="h2">
+					<Text>{t(errorNotice.bodyKey as never)}</Text>
+				</Notice>
 			) : null}
 
 			{!isLoading && !error && policies.length === 0 ? (
-				<GcdsNotice noticeRole="warning" noticeTitle={t("policies.emptyTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("policies.emptyBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="warning" noticeTitle={t("policies.emptyTitle")} noticeTitleTag="h2">
+					<Text>{t("policies.emptyBody")}</Text>
+				</Notice>
 			) : null}
 
 			{policies.length > 0 ? (

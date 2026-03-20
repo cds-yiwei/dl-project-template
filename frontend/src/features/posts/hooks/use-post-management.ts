@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import {
 	approvePost as postApproval,
 	createPost as postCreate,
@@ -10,7 +9,8 @@ import {
 	type PostCreate,
 	type PostReviewPayload,
 	type PostUpdate,
-} from "../posts-api";
+} from "@/fetch/posts";
+import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import { pendingReviewPostsQueryKey } from "./use-pending-review-posts";
 import { postsQueryKey, usePosts, type PostsState } from "./use-posts";
 

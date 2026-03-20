@@ -1,7 +1,7 @@
 import type { PropsWithChildren, ReactElement } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ForbiddenRequestError } from "@/features/auth/auth-api";
+import { ForbiddenRequestError } from "@/fetch";
 import { PostManagementPage } from "@/features/posts/pages/PostManagementPage";
 import { useSession } from "@/hooks";
 import { usePendingReviewPosts, usePostManagement } from "@/features/posts/hooks";
@@ -54,8 +54,11 @@ vi.mock("@/components/ui", () => ({
 	Input: ({ inputId, label, onInput, value }: { inputId: string; label: string; onInput?: (event: { target: { value: string } }) => void; value?: string }): ReactElement => (
 		<label htmlFor={inputId}><span>{label}</span><input id={inputId} value={value} onInput={(event): void => onInput?.({ target: { value: (event.target as HTMLInputElement).value } })} /></label>
 	),
+	Heading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
 	Modal: ({ children, footer, isOpen, title }: PropsWithChildren<{ footer?: ReactElement; isOpen: boolean; title: string }>): ReactElement | null => isOpen ? <section><h2>{title}</h2>{children}{footer}</section> : null,
+	Notice: ({ children, noticeTitle }: PropsWithChildren<{ noticeTitle?: string }>): ReactElement => <section>{noticeTitle ? <h2>{noticeTitle}</h2> : null}{children}</section>,
 	Pagination: (): ReactElement | null => null,
+	Text: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
 	Textarea: ({ label, onInput, textareaId, value }: { label: string; onInput?: (event: { target: { value: string } }) => void; textareaId: string; value?: string }): ReactElement => (
 		<label htmlFor={textareaId}><span>{label}</span><textarea id={textareaId} value={value} onInput={(event): void => onInput?.({ target: { value: (event.target as HTMLTextAreaElement).value } })} /></label>
 	),

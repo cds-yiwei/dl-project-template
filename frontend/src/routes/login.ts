@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-	redirectAuthenticatedUser,
+	parseLoginMessage,
+	parseLoginReason,
 	type LoginRedirectSearch,
-} from "../features/auth/auth-routing";
+} from "../features/auth/login-search";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 
 const validateSearch = (search: Record<string, unknown>): LoginRedirectSearch => ({
-	reason: search["reason"] === "expired" ? "expired" : undefined,
+	message: parseLoginMessage(search["message"]),
+	reason: parseLoginReason(search["reason"]),
 	redirect: typeof search["redirect"] === "string" ? search["redirect"] : undefined,
 });
 
 export const Route = createFileRoute("/login")({
-	beforeLoad: async ({ search }) => redirectAuthenticatedUser(search.redirect),
 	component: LoginPage,
 	validateSearch,
 });

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUsers, type UsersListResponse } from "../users-api";
+import { getUsers, type UsersListResponse } from "@/fetch/users";
 
 export const usersQueryKey = (page: number, itemsPerPage: number) =>
 	["users", page, itemsPerPage] as const;

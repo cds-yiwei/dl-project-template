@@ -1,9 +1,7 @@
 // @ts-nocheck
 import React, { useEffect } from "react";
-import { Text, Button, Input } from "@/components";
+import { ErrorSummary, Text, Button, Input } from "@/components";
 import Stepper from "../Stepper";
-
-import { GcdsErrorSummary } from "@gcds-core/components-react";
 
 interface StepTwoProps {
   formdata: {
@@ -40,7 +38,7 @@ const StepTwo: React.FC<StepTwoProps> = (props) => {
         you know that we"ve successfully added your holiday to our app!
       </Text>
 
-      <GcdsErrorSummary listen />
+      <ErrorSummary listen />
 
       <Input
         inputId="fullname"

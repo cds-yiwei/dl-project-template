@@ -1,6 +1,8 @@
 // @ts-nocheck
 import React, { useEffect } from "react";
 import {
+	ErrorSummary,
+	Link,
   Text,
   Select,
   Details,
@@ -15,8 +17,6 @@ import {
 } from "@/components";
 import Stepper from "../Stepper";
 import { provinces } from "@/utils/constants";
-
-import { GcdsLink, GcdsErrorSummary } from "@gcds-core/components-react";
 
 interface StepOneProps {
   formdata: {
@@ -63,7 +63,7 @@ const StepOne: React.FC<StepOneProps> = (props) => {
         About this holiday
       </Stepper>
 
-      <GcdsErrorSummary listen />
+      <ErrorSummary listen />
 
       <Fieldset legend="General holiday information" legendSize="h3">
         <Input
@@ -143,9 +143,9 @@ const StepOne: React.FC<StepOneProps> = (props) => {
           <Text marginBottom="0">
             If your job is regulated by the federal government, you get federal
             holidays instead of the provincial holidays. Find out more about{" "}
-            <GcdsLink href="/federal-and-provincial-holidays">
+              <Link href="/federal-and-provincial-holidays">
               who gets federal holidays
-            </GcdsLink>
+              </Link>
             .
           </Text>
         </Details>

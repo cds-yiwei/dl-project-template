@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { authStore } from "@/store";
-import { getCurrentUser, type UserRead } from "./auth-api";
+import { getCurrentUser, type UserRead } from "@/fetch/auth";
 
 export const currentUserQueryKey = ["auth", "current-user"] as const;
 

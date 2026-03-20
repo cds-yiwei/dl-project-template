@@ -1,6 +1,6 @@
-import { GcdsButton, GcdsHeading, GcdsNotice, GcdsText } from "@gcds-core/components-react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Button, Heading, Notice, Text } from "@/components/ui";
 import { CenteredPageLayout } from "@/components/layout";
 import { useSession } from "@/hooks";
 
@@ -10,36 +10,36 @@ export const ProfilePage = (): FunctionComponent => {
 
 	return (
 		<CenteredPageLayout className="max-w-3xl">
-			<GcdsHeading tag="h1">{t("profile.title")}</GcdsHeading>
-			<GcdsText>{t("profile.summary")}</GcdsText>
+			<Heading tag="h1">{t("profile.title")}</Heading>
+			<Text>{t("profile.summary")}</Text>
 
 			{isLoading ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("profile.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("profile.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("profile.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("profile.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
 			{!isLoading && !isAuthenticated ? (
-				<GcdsNotice noticeRole="warning" noticeTitle={t("profile.signedOutTitle")} noticeTitleTag="h2">
+				<Notice noticeRole="warning" noticeTitle={t("profile.signedOutTitle")} noticeTitleTag="h2">
 					<div className="flex flex-col gap-300">
-						<GcdsText>{t("profile.signedOutBody")}</GcdsText>
+						<Text>{t("profile.signedOutBody")}</Text>
 						<div>
-							<GcdsButton buttonId="profile-login" buttonRole="primary" type="button" onClick={login}>
+							<Button buttonId="profile-login" buttonRole="primary" type="button" onGcdsClick={login}>
 								{t("profile.action")}
-							</GcdsButton>
+							</Button>
 						</div>
 					</div>
-				</GcdsNotice>
+				</Notice>
 			) : null}
 
 			{!isLoading && currentUser ? (
-				<GcdsNotice noticeRole="success" noticeTitle={t("profile.cardTitle")} noticeTitleTag="h2">
+				<Notice noticeRole="success" noticeTitle={t("profile.cardTitle")} noticeTitleTag="h2">
 					<div className="flex flex-col gap-200">
-						<GcdsText>{t("profile.name", { value: currentUser.name })}</GcdsText>
-						<GcdsText>{t("profile.username", { value: currentUser.username })}</GcdsText>
-						<GcdsText>{t("profile.email", { value: currentUser.email })}</GcdsText>
+						<Text>{t("profile.name", { value: currentUser.name })}</Text>
+						<Text>{t("profile.username", { value: currentUser.username })}</Text>
+						<Text>{t("profile.email", { value: currentUser.email })}</Text>
 					</div>
-				</GcdsNotice>
+				</Notice>
 			) : null}
 		</CenteredPageLayout>
 	);

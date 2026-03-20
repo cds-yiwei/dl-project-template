@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getApiBaseUrl, getCurrentUser, getOidcLoginUrl, logoutCurrentUser } from "@/features/auth/auth-api";
+import { ServerRequestError, getApiBaseUrl } from "@/fetch";
+import { getCurrentUser, getOidcLoginUrl, logoutCurrentUser } from "@/fetch/auth";
 
 const createUserFixture = (): Record<string, string | number> => ({
 	id: 1,
@@ -13,7 +14,7 @@ const createUserFixture = (): Record<string, string | number> => ({
 	"tier_id": 2,
 });
 
-describe("auth-api", () => {
+describe("fetch auth", () => {
 	const originalFetch = globalThis.fetch;
 
 	beforeEach(() => {
@@ -33,6 +34,7 @@ describe("auth-api", () => {
 		globalThis.fetch = vi.fn().mockResolvedValue({
 			ok: true,
 			json: () => Promise.resolve(user),
+			headers: new Headers({ "content-type": "application/json" }),
 		}) as typeof fetch;
 
 		await expect(getCurrentUser()).resolves.toEqual(user);
@@ -50,13 +52,26 @@ describe("auth-api", () => {
 		globalThis.fetch = vi.fn().mockResolvedValue({
 			ok: false,
 			status: 401,
+			json: () => Promise.resolve({ detail: "Unauthorized" }),
+			headers: new Headers({ "content-type": "application/json" }),
 		}) as typeof fetch;
 
 		await expect(getCurrentUser()).resolves.toBeNull();
 	});
 
+	it("throws shared request errors for non-401 failures", async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 503,
+			json: () => Promise.resolve({ detail: "Backend offline" }),
+			headers: new Headers({ "content-type": "application/json" }),
+		}) as typeof fetch;
+
+		await expect(getCurrentUser()).rejects.toBeInstanceOf(ServerRequestError);
+	});
+
 	it("posts to logout with credentials included", async () => {
-		globalThis.fetch = vi.fn().mockResolvedValue({ ok: true }) as typeof fetch;
+		globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, status: 204 }) as typeof fetch;
 
 		await logoutCurrentUser();
 
@@ -77,7 +92,18 @@ describe("auth-api", () => {
 			protocol: "http:",
 		} satisfies Pick<Location, "hostname" | "origin" | "protocol">);
 
-		expect(getApiBaseUrl()).toBe("http://localhost:8000");
+		expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
+	});
+
+	it("normalizes a configured local backend origin to the current local hostname", () => {
+		vi.stubEnv("VITE_API_BASE_URL", "http://localhost:8000");
+		vi.stubGlobal("location", {
+			hostname: "127.0.0.1",
+			origin: "http://127.0.0.1:4173",
+			protocol: "http:",
+		} satisfies Pick<Location, "hostname" | "origin" | "protocol">);
+
+		expect(getApiBaseUrl()).toBe("http://127.0.0.1:8000");
 	});
 
 	it("builds the backend OIDC login URL from the configured origin", () => {

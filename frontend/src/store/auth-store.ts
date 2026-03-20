@@ -5,7 +5,7 @@ import {
 	getOidcLoginUrl,
 	logoutCurrentUser,
 	type UserRead,
-} from "@/features/auth/auth-api";
+} from "@/fetch/auth";
 
 type AuthStoreState = {
 	currentUser: UserRead | null;

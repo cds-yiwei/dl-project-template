@@ -37,6 +37,8 @@ vi.mock("@/components", () => ({
 	Card: ({ cardTitle, description }: { cardTitle: string; description?: string }): ReactElement => <article><h2>{cardTitle}</h2><p>{description}</p></article>,
 	Grid: ({ children }: PropsWithChildren): ReactElement => <section>{children}</section>,
 	Heading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
+	Link: ({ children, href }: PropsWithChildren<{ href: string }>): ReactElement => <a href={href}>{children}</a>,
+	Notice: ({ children }: PropsWithChildren): ReactElement => <section>{children}</section>,
 	Text: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
 }));
 

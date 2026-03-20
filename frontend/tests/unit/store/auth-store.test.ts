@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authStore, resetAuthStore } from "@/store";
 
-vi.mock("@/features/auth/auth-api", () => ({
+vi.mock("@/fetch/auth", () => ({
 	getCurrentUser: vi.fn(),
 	getOidcLoginUrl: vi.fn((): string => "http://localhost:8000/api/v1/auth/oidc/login"),
 	logoutCurrentUser: vi.fn((): Promise<void> => Promise.resolve()),
@@ -38,12 +38,12 @@ const sampleUser = {
 };
 
 describe("authStore", () => {
-	let getCurrentUser: typeof import("@/features/auth/auth-api").getCurrentUser;
-	let logoutCurrentUser: typeof import("@/features/auth/auth-api").logoutCurrentUser;
+	let getCurrentUser: typeof import("@/fetch/auth").getCurrentUser;
+	let logoutCurrentUser: typeof import("@/fetch/auth").logoutCurrentUser;
 
 	beforeEach(async () => {
 		resetAuthStore();
-		({ getCurrentUser, logoutCurrentUser } = await import("@/features/auth/auth-api"));
+		({ getCurrentUser, logoutCurrentUser } = await import("@/fetch/auth"));
 	});
 
 	afterEach(() => {

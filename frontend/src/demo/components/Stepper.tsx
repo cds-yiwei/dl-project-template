@@ -1,5 +1,5 @@
 import React from "react";
-import { GcdsStepper } from "@gcds-core/components-react";
+import { Stepper as SharedStepper } from "@/components";
 
 interface StepperProps {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ interface StepperProps {
 
 const Stepper: React.FC<StepperProps> = React.memo(
   ({ children, tag, currentStep, totalSteps, className, tabIndex }) => (
-    <GcdsStepper
+    <SharedStepper
       tag={tag}
       currentStep={currentStep}
       totalSteps={totalSteps}
@@ -20,7 +20,7 @@ const Stepper: React.FC<StepperProps> = React.memo(
       tabIndex={tabIndex}
     >
       {children}
-    </GcdsStepper>
+    </SharedStepper>
   ),
 );
 

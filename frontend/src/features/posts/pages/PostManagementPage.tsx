@@ -1,13 +1,12 @@
-import { GcdsHeading, GcdsNotice, GcdsText } from "@gcds-core/components-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { CenteredPageLayout } from "@/components/layout";
 import type { DataTableColumn } from "@/components/ui/DataTable";
-import { Button, DataTable, Input, Modal, Pagination, Textarea } from "@/components/ui";
-import { ForbiddenRequestError, isUnauthorizedRequestError } from "@/features/auth/auth-api";
+import { Button, DataTable, Heading, Input, Modal, Notice, Pagination, Text, Textarea } from "@/components/ui";
+import { ForbiddenRequestError, getRequestErrorNotice, isUnauthorizedRequestError } from "@/fetch";
 import { usePendingReviewPosts, usePostManagement } from "@/features/posts/hooks";
-import type { PostRead } from "@/features/posts/posts-api";
+import type { PostRead } from "@/fetch/posts";
 import { useSession } from "@/hooks";
 import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
 
@@ -110,6 +109,10 @@ export const PostManagementPage = (): FunctionComponent => {
 		posts: pendingReviewPosts,
 		response: pendingReviewResponse,
 	} = usePendingReviewPosts(reviewPage, 10);
+	const errorNotice = getRequestErrorNotice(error, {
+		bodyKey: "posts.errorBody",
+		titleKey: "posts.errorTitle",
+	});
 	const canReviewPosts = !(pendingReviewError instanceof ForbiddenRequestError);
 	const isModalOpen = modalMode !== null;
 	const totalAuthorPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
@@ -268,36 +271,36 @@ export const PostManagementPage = (): FunctionComponent => {
 	return (
 		<CenteredPageLayout className="max-w-6xl gap-600">
 			<div className="max-w-3xl">
-				<GcdsHeading tag="h1">{t("posts.title")}</GcdsHeading>
-				<GcdsText>{t("posts.summary")}</GcdsText>
+				<Heading tag="h1">{t("posts.title")}</Heading>
+				<Text>{t("posts.summary")}</Text>
 			</div>
 
 			{isSessionLoading || isLoading ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("posts.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("posts.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("posts.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("posts.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
-			{error && !isUnauthorizedRequestError(error) ? (
-				<GcdsNotice noticeRole="danger" noticeTitle={t("posts.errorTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("posts.errorBody")}</GcdsText>
-				</GcdsNotice>
+			{errorNotice && !isUnauthorizedRequestError(error) ? (
+				<Notice noticeRole={errorNotice.noticeRole} noticeTitle={t(errorNotice.titleKey as never)} noticeTitleTag="h2">
+					<Text>{t(errorNotice.bodyKey as never)}</Text>
+				</Notice>
 			) : null}
 
 			{hasFormErrors(formErrors) ? (
-				<GcdsNotice noticeRole="warning" noticeTitle={t("posts.validationTitle")} noticeTitleTag="h2">
+				<Notice noticeRole="warning" noticeTitle={t("posts.validationTitle")} noticeTitleTag="h2">
 					<div className="flex flex-col gap-100">
-						{formErrors.title ? <GcdsText>{formErrors.title}</GcdsText> : null}
-						{formErrors.text ? <GcdsText>{formErrors.text}</GcdsText> : null}
-						{formErrors.mediaUrl ? <GcdsText>{formErrors.mediaUrl}</GcdsText> : null}
+						{formErrors.title ? <Text>{formErrors.title}</Text> : null}
+						{formErrors.text ? <Text>{formErrors.text}</Text> : null}
+						{formErrors.mediaUrl ? <Text>{formErrors.mediaUrl}</Text> : null}
 					</div>
-				</GcdsNotice>
+				</Notice>
 			) : null}
 
 			{canReviewPosts ? (
 				<section className="grid gap-300 rounded-sm border border-[var(--gcds-border-default)] bg-[var(--gcds-bg-white)] px-400 py-400 shadow-[0_14px_28px_rgba(38,55,74,0.06)]">
 					{isPendingReviewLoading ? (
-						<GcdsText>{t("posts.pendingLoadingBody")}</GcdsText>
+						<Text>{t("posts.pendingLoadingBody")}</Text>
 					) : null}
 
 					<DataTable
@@ -430,9 +433,9 @@ export const PostManagementPage = (): FunctionComponent => {
 			>
 				{modalMode === "review" && selectedReviewPost ? (
 					<div className="grid gap-200">
-						<GcdsText>{t("posts.status", { value: selectedReviewPost.status })}</GcdsText>
-						<GcdsText>{selectedReviewPost.title}</GcdsText>
-						<GcdsText>{selectedReviewPost.text}</GcdsText>
+						<Text>{t("posts.status", { value: selectedReviewPost.status })}</Text>
+						<Text>{selectedReviewPost.title}</Text>
+						<Text>{selectedReviewPost.text}</Text>
 						<Textarea label={t("posts.commentLabel")} name="review-comment" textareaId="review-comment" value={selectedReviewComment} onInput={(event: ValueInputEvent): void => {
 							if (!selectedPostId) {
 								return;

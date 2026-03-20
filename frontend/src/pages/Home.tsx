@@ -1,12 +1,8 @@
-import {
-  GcdsLink,
-  GcdsNotice,
-} from "@gcds-core/components-react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Button, Card, Grid, Heading, Text } from "@/components";
+import { Button, Card, Grid, Heading, Link, Notice, Text } from "@/components";
 import { CenteredPageLayout } from "@/components/layout";
-import { getBackendOrigin } from "@/features/auth/auth-api";
+import { getBackendOrigin } from "@/fetch/auth";
 import { useSession } from "@/hooks";
 
 export const Home = (): FunctionComponent => {
@@ -25,13 +21,13 @@ export const Home = (): FunctionComponent => {
 			</div>
 
 			{isLoading ? (
-				<GcdsNotice
+				<Notice
 					noticeRole="info"
 					noticeTitle={t("home.loadingTitle")}
 					noticeTitleTag="h2"
 				>
 					<Text>{t("home.loadingBody")}</Text>
-				</GcdsNotice>
+				</Notice>
 			) : null}
 
 			<section className="border border-[var(--gcds-border-default)] bg-[var(--gcds-bg-white)] px-500 py-600 shadow-[0_18px_40px_rgba(38,55,74,0.08)]">
@@ -65,7 +61,7 @@ export const Home = (): FunctionComponent => {
 									{t("home.signOutAction")}
 								</Button>
 							)}
-							<GcdsLink href="/profile">{t("home.profilePageLink")}</GcdsLink>
+							<Link href="/profile">{t("home.profilePageLink")}</Link>
 						</div>
 					</div>
 
@@ -75,16 +71,16 @@ export const Home = (): FunctionComponent => {
 						<Heading tag="h2">{t("home.quickLinksTitle")}</Heading>
 						<Text>{t("home.quickLinksBody")}</Text>
 						<nav className="flex flex-col gap-150">
-							<GcdsLink href="/dashboard">{t("home.dashboardPageLink")}</GcdsLink>
-							<GcdsLink href="/login">{t("home.loginPageLink")}</GcdsLink>
-							<GcdsLink href="/posts">{t("home.postsPageLink")}</GcdsLink>
-							<GcdsLink href="/access">{t("home.accessPageLink")}</GcdsLink>
-							<GcdsLink href="/users">{t("home.usersPageLink")}</GcdsLink>
-							<GcdsLink href="/policies">{t("home.policiesPageLink")}</GcdsLink>
-							<GcdsLink href="/roles">{t("home.rolesPageLink")}</GcdsLink>
-							<GcdsLink href="/tiers">{t("home.tiersPageLink")}</GcdsLink>
-							<GcdsLink href="/health">{t("home.healthPageLink")}</GcdsLink>
-							<GcdsLink href="/logout">{t("home.logoutPageLink")}</GcdsLink>
+							<Link href="/dashboard">{t("home.dashboardPageLink")}</Link>
+							<Link href="/login">{t("home.loginPageLink")}</Link>
+							<Link href="/posts">{t("home.postsPageLink")}</Link>
+							<Link href="/access">{t("home.accessPageLink")}</Link>
+							<Link href="/users">{t("home.usersPageLink")}</Link>
+							<Link href="/policies">{t("home.policiesPageLink")}</Link>
+							<Link href="/roles">{t("home.rolesPageLink")}</Link>
+							<Link href="/tiers">{t("home.tiersPageLink")}</Link>
+							<Link href="/health">{t("home.healthPageLink")}</Link>
+							<Link href="/logout">{t("home.logoutPageLink")}</Link>
 						</nav>
 					</div>
 				</div>

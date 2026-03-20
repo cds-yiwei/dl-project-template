@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSession } from "@/features/auth/hooks/use-session";
 
-vi.mock("@/features/auth/auth-api", () => ({
+vi.mock("@/fetch/auth", () => ({
 	getCurrentUser: vi.fn(),
 	getOidcLoginUrl: vi.fn((): string => "http://localhost:8000/api/v1/auth/oidc/login"),
 	logoutCurrentUser: vi.fn((): Promise<void> => Promise.resolve()),
@@ -29,11 +29,11 @@ const createDeferred = <T,>(): DeferredPromise<T> => {
 };
 
 describe("useSession", () => {
-	let getCurrentUser: typeof import("@/features/auth/auth-api").getCurrentUser;
-	let logoutCurrentUser: typeof import("@/features/auth/auth-api").logoutCurrentUser;
+	let getCurrentUser: typeof import("@/fetch/auth").getCurrentUser;
+	let logoutCurrentUser: typeof import("@/fetch/auth").logoutCurrentUser;
 
 	beforeEach(async () => {
-		({ getCurrentUser, logoutCurrentUser } = await import("@/features/auth/auth-api"));
+		({ getCurrentUser, logoutCurrentUser } = await import("@/fetch/auth"));
 	});
 
 	afterEach(() => {

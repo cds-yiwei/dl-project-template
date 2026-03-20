@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
-import type { UserRead } from "../auth-api";
+import type { UserRead } from "@/fetch/auth";
 import { useAuthStore } from "@/store";
 
 export type SessionState = {

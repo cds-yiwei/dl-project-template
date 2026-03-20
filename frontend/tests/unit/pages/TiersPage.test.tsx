@@ -57,7 +57,10 @@ vi.mock("@/components/ui", () => ({
 	Input: ({ inputId, label, name, onInput, value }: { inputId: string; label: string; name: string; onInput?: (event: { target: { value: string } }) => void; value?: string }): ReactElement => (
 		<label htmlFor={inputId}><span>{label}</span><input id={inputId} name={name} value={value} onInput={(event): void => onInput?.({ target: { value: (event.target as HTMLInputElement).value } })} /></label>
 	),
+	Heading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
 	Modal: ({ children, isOpen, title }: PropsWithChildren<{ isOpen: boolean; title: string }>): ReactElement | null => (isOpen ? <section><h2>{title}</h2>{children}</section> : null),
+	Notice: ({ children, noticeTitle }: PropsWithChildren<{ noticeTitle?: string }>): ReactElement => <section>{noticeTitle ? <h2>{noticeTitle}</h2> : null}{children}</section>,
+	Text: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
 }));
 
 vi.mock("@/hooks", () => ({

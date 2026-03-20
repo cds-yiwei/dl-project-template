@@ -5,7 +5,7 @@ import {
 	updateTier as patchTier,
 	type TierCreate,
 	type TierUpdate,
-} from "../tiers-api";
+} from "@/fetch/tiers";
 import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import { tiersQueryKey, useTiers, type TiersState } from "./use-tiers";
 

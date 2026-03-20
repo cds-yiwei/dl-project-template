@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import {
 	createUser as postUser,
 	deleteUser as removeUser,
@@ -8,7 +7,8 @@ import {
 	type UserCreate,
 	type UserUpdate,
 	type UsersListResponse,
-} from "../users-api";
+} from "@/fetch/users";
+import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import { usersQueryKey } from "./use-users";
 
 export type UserManagementState = {

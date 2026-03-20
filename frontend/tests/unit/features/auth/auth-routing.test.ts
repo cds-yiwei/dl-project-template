@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	completeLoginRedirect,
 	requireAuthenticatedUser,
@@ -25,6 +25,14 @@ const sampleUser = {
 };
 
 describe("auth-routing", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
 	it("keeps internal app paths and rejects external ones", () => {
 		expect(sanitizeAppPath("/users")).toBe("/users");
 		expect(sanitizeAppPath("https://example.com/attack", "/profile")).toBe("/profile");
@@ -32,13 +40,27 @@ describe("auth-routing", () => {
 	});
 
 	it("returns the authenticated user for protected routes", async () => {
-		vi.mocked(ensureCurrentUser).mockResolvedValue(sampleUser);
+		vi.mocked(revalidateCurrentUser).mockResolvedValue(sampleUser);
 
 		await expect(requireAuthenticatedUser("/users")).resolves.toEqual(sampleUser);
 	});
 
+	it("redirects to login when backend revalidation clears a stale cached session", async () => {
+		vi.mocked(ensureCurrentUser).mockResolvedValue(sampleUser);
+		vi.mocked(revalidateCurrentUser).mockResolvedValue(null);
+
+		await expect(requireAuthenticatedUser("/users")).rejects.toMatchObject({
+			options: {
+				replace: true,
+				search: { redirect: "/users" },
+				to: "/login",
+			},
+		});
+		expect(revalidateCurrentUser).toHaveBeenCalledTimes(1);
+	});
+
 	it("redirects unauthenticated users to the login route", async () => {
-		vi.mocked(ensureCurrentUser).mockResolvedValue(null);
+		vi.mocked(revalidateCurrentUser).mockResolvedValue(null);
 
 		await expect(requireAuthenticatedUser("/users")).rejects.toMatchObject({
 			options: {
@@ -49,8 +71,20 @@ describe("auth-routing", () => {
 		});
 	});
 
+	it("redirects to login when session revalidation fails before route entry", async () => {
+		vi.mocked(revalidateCurrentUser).mockRejectedValue(new TypeError("Failed to fetch"));
+
+		await expect(requireAuthenticatedUser("/dashboard")).rejects.toMatchObject({
+			options: {
+				replace: true,
+				search: { redirect: "/dashboard" },
+				to: "/login",
+			},
+		});
+	});
+
 	it("redirects authenticated users away from the login page", async () => {
-		vi.mocked(ensureCurrentUser).mockResolvedValue(sampleUser);
+		vi.mocked(revalidateCurrentUser).mockResolvedValue(sampleUser);
 
 		await expect(redirectAuthenticatedUser("/profile")).rejects.toMatchObject({
 			options: {

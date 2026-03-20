@@ -1,13 +1,11 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { GcdsHeading, GcdsNotice, GcdsText } from "@gcds-core/components-react";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Heading, Notice, Text } from "@/components/ui";
 import { CenteredPageLayout } from "@/components/layout";
 import {
 	ForbiddenRequestError,
-	isUnauthorizedRequestError,
-} from "@/features/auth/auth-api";
+	getRequestErrorNotice,
+} from "@/fetch";
 import { usePendingReviewPosts, usePosts } from "@/features/posts/hooks";
 import { useSession, useUserRole } from "@/hooks";
 
@@ -32,50 +30,35 @@ export const DashboardPage = (): FunctionComponent => {
 		isLoading: isPendingReviewLoading,
 		response: pendingReviewResponse,
 	} = usePendingReviewPosts(1, 10);
-	const navigate = useNavigate();
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
-	});
 	const isLoading = isSessionLoading || isRoleLoading || arePostsLoading;
 	const combinedError = postsError ?? roleError;
+	const errorNotice = getRequestErrorNotice(combinedError, {
+		bodyKey: "dashboard.errorBody",
+		titleKey: "dashboard.errorTitle",
+	});
 	const canReviewPosts = !(pendingReviewError instanceof ForbiddenRequestError);
 	const draftCount = posts.filter((post) => post.status === "draft").length;
 	const inReviewCount = posts.filter((post) => post.status === "in_review").length;
 	const approvedCount = posts.filter((post) => post.status === "approved").length;
 	const pendingApprovalCount = pendingReviewResponse?.total_count ?? 0;
 
-	useEffect(() => {
-		if (
-			!isUnauthorizedRequestError(combinedError)
-			&& !isUnauthorizedRequestError(pendingReviewError)
-		) {
-			return;
-		}
-
-		void navigate({
-			replace: true,
-			search: { reason: "expired", redirect: pathname },
-			to: "/login",
-		});
-	}, [combinedError, navigate, pathname, pendingReviewError]);
-
 	return (
 		<CenteredPageLayout className="max-w-6xl gap-600">
 			<div className="max-w-3xl">
-				<GcdsHeading tag="h1">{t("dashboard.title")}</GcdsHeading>
-				<GcdsText>{t("dashboard.summary")}</GcdsText>
+				<Heading tag="h1">{t("dashboard.title")}</Heading>
+				<Text>{t("dashboard.summary")}</Text>
 			</div>
 
 			{isLoading ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("dashboard.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("dashboard.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("dashboard.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("dashboard.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
-			{combinedError && !isUnauthorizedRequestError(combinedError) ? (
-				<GcdsNotice noticeRole="danger" noticeTitle={t("dashboard.errorTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("dashboard.errorBody")}</GcdsText>
-				</GcdsNotice>
+			{errorNotice ? (
+				<Notice noticeRole={errorNotice.noticeRole} noticeTitle={t(errorNotice.titleKey as never)} noticeTitleTag="h2">
+					<Text>{t(errorNotice.bodyKey as never)}</Text>
+				</Notice>
 			) : null}
 
 			{currentUser ? (
@@ -85,9 +68,9 @@ export const DashboardPage = (): FunctionComponent => {
 							{t("dashboard.profileEyebrow")}
 						</p>
 						<div className="mt-150 flex flex-col gap-150">
-							<GcdsText>{t("dashboard.username", { value: currentUser.username })}</GcdsText>
-							<GcdsText>{t("dashboard.email", { value: currentUser.email })}</GcdsText>
-							<GcdsText>{t("dashboard.role", { value: role?.name ?? t("dashboard.noRole") })}</GcdsText>
+							<Text>{t("dashboard.username", { value: currentUser.username })}</Text>
+							<Text>{t("dashboard.email", { value: currentUser.email })}</Text>
+							<Text>{t("dashboard.role", { value: role?.name ?? t("dashboard.noRole") })}</Text>
 						</div>
 					</div>
 
@@ -96,19 +79,19 @@ export const DashboardPage = (): FunctionComponent => {
 							<p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--gcds-text-secondary)]">
 								{t("dashboard.draftLabel")}
 							</p>
-							<GcdsText>{t("dashboard.draftPosts", { count: draftCount })}</GcdsText>
+							<Text>{t("dashboard.draftPosts", { count: draftCount })}</Text>
 						</div>
 						<div className={summaryCardClasses}>
 							<p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--gcds-text-secondary)]">
 								{t("dashboard.inReviewLabel")}
 							</p>
-							<GcdsText>{t("dashboard.inReviewPosts", { count: inReviewCount })}</GcdsText>
+							<Text>{t("dashboard.inReviewPosts", { count: inReviewCount })}</Text>
 						</div>
 						<div className={summaryCardClasses}>
 							<p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--gcds-text-secondary)]">
 								{t("dashboard.approvedLabel")}
 							</p>
-							<GcdsText>{t("dashboard.approvedPosts", { count: approvedCount })}</GcdsText>
+							<Text>{t("dashboard.approvedPosts", { count: approvedCount })}</Text>
 						</div>
 					</div>
 				</section>
@@ -118,8 +101,8 @@ export const DashboardPage = (): FunctionComponent => {
 				<section className={summaryCardClasses}>
 					<div className="flex flex-col gap-150 sm:flex-row sm:items-start sm:justify-between">
 						<div>
-							<GcdsHeading tag="h2">{t("dashboard.awaitingApproval")}</GcdsHeading>
-							<GcdsText>{t("dashboard.pendingReviewSummary", { count: pendingApprovalCount })}</GcdsText>
+							<Heading tag="h2">{t("dashboard.awaitingApproval")}</Heading>
+							<Text>{t("dashboard.pendingReviewSummary", { count: pendingApprovalCount })}</Text>
 						</div>
 						{isPendingReviewLoading ? (
 							<p className="text-sm text-[var(--gcds-text-secondary)]">{t("dashboard.pendingLoadingBody")}</p>

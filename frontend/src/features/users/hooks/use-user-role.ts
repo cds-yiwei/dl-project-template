@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import {
 	getUserRole,
 	updateUserRole as patchUserRole,
 	type UserRoleUpdate,
-} from "../../user-roles/user-roles-api";
+} from "@/fetch/user-roles";
+import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import { usersQueryKey } from "./use-users";
 
 export const userRoleQueryKey = (username: string | null | undefined) =>

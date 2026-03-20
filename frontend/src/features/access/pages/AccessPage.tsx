@@ -1,64 +1,50 @@
-import { useEffect } from "react";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { GcdsHeading, GcdsNotice, GcdsText } from "@gcds-core/components-react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Heading, Notice, Text } from "@/components/ui";
 import { CenteredPageLayout } from "@/components/layout";
-import { isUnauthorizedRequestError } from "@/features/auth/auth-api";
+import { getRequestErrorNotice } from "@/fetch";
 import { useSession, useUserTier } from "@/hooks";
 
 export const AccessPage = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const { currentUser } = useSession();
 	const { error, isLoading, tier } = useUserTier(currentUser?.username);
-	const navigate = useNavigate();
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
+	const errorNotice = getRequestErrorNotice(error, {
+		bodyKey: "access.errorBody",
+		titleKey: "access.errorTitle",
 	});
-
-	useEffect(() => {
-		if (!isUnauthorizedRequestError(error)) {
-			return;
-		}
-
-		void navigate({
-			replace: true,
-			search: { reason: "expired", redirect: pathname },
-			to: "/login",
-		});
-	}, [error, navigate, pathname]);
 
 	return (
 		<CenteredPageLayout className="max-w-3xl">
-			<GcdsHeading tag="h1">{t("access.title")}</GcdsHeading>
-			<GcdsText>{t("access.summary")}</GcdsText>
+			<Heading tag="h1">{t("access.title")}</Heading>
+			<Text>{t("access.summary")}</Text>
 
 			{isLoading ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("access.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("access.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("access.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("access.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
-			{error && !isUnauthorizedRequestError(error) ? (
-				<GcdsNotice noticeRole="danger" noticeTitle={t("access.errorTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("access.errorBody")}</GcdsText>
-				</GcdsNotice>
+			{errorNotice ? (
+				<Notice noticeRole={errorNotice.noticeRole} noticeTitle={t(errorNotice.titleKey as never)} noticeTitleTag="h2">
+					<Text>{t(errorNotice.bodyKey as never)}</Text>
+				</Notice>
 			) : null}
 
 			{!isLoading && !error && !tier ? (
-				<GcdsNotice noticeRole="warning" noticeTitle={t("access.emptyTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("access.emptyBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="warning" noticeTitle={t("access.emptyTitle")} noticeTitleTag="h2">
+					<Text>{t("access.emptyBody")}</Text>
+				</Notice>
 			) : null}
 
 			{tier ? (
-				<GcdsNotice noticeRole="success" noticeTitle={t("access.cardTitle")} noticeTitleTag="h2">
+				<Notice noticeRole="success" noticeTitle={t("access.cardTitle")} noticeTitleTag="h2">
 					<div className="flex flex-col gap-200">
-						<GcdsText>{t("access.username", { value: tier.username })}</GcdsText>
-						<GcdsText>{t("access.tierName", { value: tier.tier_name })}</GcdsText>
-						<GcdsText>{t("access.tierCreatedAt", { value: tier.tier_created_at })}</GcdsText>
+						<Text>{t("access.username", { value: tier.username })}</Text>
+						<Text>{t("access.tierName", { value: tier.tier_name })}</Text>
+						<Text>{t("access.tierCreatedAt", { value: tier.tier_created_at })}</Text>
 					</div>
-				</GcdsNotice>
+				</Notice>
 			) : null}
 		</CenteredPageLayout>
 	);

@@ -1,16 +1,10 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-	GcdsHeading,
-	GcdsNotice,
-	GcdsText,
-} from "@gcds-core/components-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { CenteredPageLayout } from "@/components/layout";
 import type { DataTableColumn } from "@/components/ui/DataTable";
-import { Button, ConfirmDialog, DataTable, Input, Modal, Pagination, Select } from "@/components/ui";
-import { isUnauthorizedRequestError } from "@/features/auth/auth-api";
+import { Button, ConfirmDialog, DataTable, Heading, Input, Modal, Notice, Pagination, Select, Text } from "@/components/ui";
+import { getRequestErrorNotice } from "@/fetch";
 import { useAdminListState, useRoles, useUserManagement, useUserRole } from "@/hooks";
 import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
 
@@ -79,13 +73,13 @@ export const UsersPage = (): FunctionComponent => {
 		role,
 		updateUserRole,
 	} = useUserRole(modalMode === "edit" ? selectedUsername : null);
-	const navigate = useNavigate();
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
-	});
 	const selectedUser = users.find((user) => user.username === selectedUsername) ?? null;
 	const currentRoleName = role?.name ?? t("users.noRole");
 	const combinedError = error ?? rolesError ?? userRoleError;
+	const errorNotice = getRequestErrorNotice(combinedError, {
+		bodyKey: "users.errorBody",
+		titleKey: "users.errorTitle",
+	});
 	const isBusy = isLoading || isRolesLoading;
 	const userRows: Array<UserTableRow> = users.map((user) => ({
 		email: user.email,
@@ -107,22 +101,6 @@ export const UsersPage = (): FunctionComponent => {
 	useEffect(() => {
 		setSelectedRoleId(role?.id ? String(role.id) : "");
 	}, [role]);
-
-	useEffect(() => {
-		if (
-			!isUnauthorizedRequestError(error)
-			&& !isUnauthorizedRequestError(rolesError)
-			&& !isUnauthorizedRequestError(userRoleError)
-		) {
-			return;
-		}
-
-		void navigate({
-			replace: true,
-			search: { reason: "expired", redirect: pathname },
-			to: "/login",
-		});
-	}, [error, navigate, pathname, rolesError, userRoleError]);
 
 	useEffect(() => {
 		if (modalMode !== "edit" && !deleteDialogOpen) {
@@ -219,25 +197,25 @@ export const UsersPage = (): FunctionComponent => {
 
 	return (
 		<CenteredPageLayout className="max-w-5xl">
-			<GcdsHeading tag="h1">{t("users.title")}</GcdsHeading>
-			<GcdsText>{t("users.summary")}</GcdsText>
+			<Heading tag="h1">{t("users.title")}</Heading>
+			<Text>{t("users.summary")}</Text>
 
 			{isBusy ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("users.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("users.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("users.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("users.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
-			{combinedError && !isUnauthorizedRequestError(combinedError) ? (
-				<GcdsNotice noticeRole="danger" noticeTitle={t("users.errorTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("users.errorBody")}</GcdsText>
-				</GcdsNotice>
+			{errorNotice ? (
+				<Notice noticeRole={errorNotice.noticeRole} noticeTitle={t(errorNotice.titleKey as never)} noticeTitleTag="h2">
+					<Text>{t(errorNotice.bodyKey as never)}</Text>
+				</Notice>
 			) : null}
 
 			{!isBusy && !combinedError && users.length === 0 ? (
-				<GcdsNotice noticeRole="warning" noticeTitle={t("users.emptyTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("users.emptyBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="warning" noticeTitle={t("users.emptyTitle")} noticeTitleTag="h2">
+					<Text>{t("users.emptyBody")}</Text>
+				</Notice>
 			) : null}
 
 			{users.length > 0 ? (
@@ -333,9 +311,9 @@ export const UsersPage = (): FunctionComponent => {
 							}} type="email" value={editForm.email} />
 						</div>
 						<div className="grid gap-200 border-t border-[var(--gcds-border-default)] pt-250">
-							<GcdsHeading tag="h2">{t("users.manageRoleTitle")}</GcdsHeading>
-							{isUserRoleLoading ? <GcdsText>{t("users.loadingRoleBody")}</GcdsText> : null}
-							<GcdsText>{t("users.role", { value: currentRoleName })}</GcdsText>
+							<Heading tag="h2">{t("users.manageRoleTitle")}</Heading>
+							{isUserRoleLoading ? <Text>{t("users.loadingRoleBody")}</Text> : null}
+							<Text>{t("users.role", { value: currentRoleName })}</Text>
 							<Select label={t("users.roleLabel")} name="role" onInput={(event): void => {
 								setSelectedRoleId(event.target.value);
 							}} selectId="user-role-select" value={selectedRoleId}>

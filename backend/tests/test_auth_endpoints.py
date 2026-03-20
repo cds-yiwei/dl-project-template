@@ -63,6 +63,34 @@ class TestLogoutEndpoint:
             db=mock_db,
         )
 
+    @pytest.mark.asyncio
+    async def test_logout_clears_cookies_with_matching_security_attributes(self, mock_db):
+        request = make_request(session={"user_id": 5})
+        response = Response()
+        mock_service = Mock()
+        mock_service.logout = AsyncMock(return_value={"message": "Logged out successfully", "clear_cookies": True})
+
+        await logout(request, response, None, None, mock_db, mock_service)
+
+        set_cookie_headers = [header.decode() for key, header in response.raw_headers if key == b"set-cookie"]
+
+        refresh_cookie_header = next(header for header in set_cookie_headers if header.startswith("refresh_token="))
+        session_cookie_header = next(
+            header for header in set_cookie_headers if header.startswith(f"{settings.SESSION_COOKIE_NAME}=")
+        )
+
+        assert "Max-Age=0" in refresh_cookie_header
+        assert "Path=/" in refresh_cookie_header
+        assert "SameSite=lax" in refresh_cookie_header
+        assert "HttpOnly" in refresh_cookie_header
+        assert "Secure" in refresh_cookie_header
+
+        assert "Max-Age=0" in session_cookie_header
+        assert "Path=/" in session_cookie_header
+        assert "SameSite=lax" in session_cookie_header
+        if settings.SESSION_COOKIE_SECURE:
+            assert "Secure" in session_cookie_header
+
 
 class TrackingInMemoryStore(InMemoryStore):
     def __init__(self) -> None:

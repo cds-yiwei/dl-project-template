@@ -1,9 +1,5 @@
-import {
-	requestJson,
-	type ApiMessageResponse,
-	buildApiUrl,
-	UnauthorizedRequestError,
-} from "../auth/auth-api";
+import { requestJson } from "@/fetch";
+import type { ApiMessageResponse } from "./api-types";
 
 export type PolicyRead = {
 	action: string;
@@ -41,27 +37,10 @@ export const getPolicies = async (
 		page: String(page),
 	});
 
-	const response = await fetch(
-		buildApiUrl(`/api/v1/policies?${searchParameters.toString()}`),
-		{
-			cache: "no-store",
-			credentials: "include",
-			headers: {
-				Accept: "application/json",
-			},
-			method: "GET",
-		},
-	);
-
-	if (response.status === 401) {
-		throw new UnauthorizedRequestError();
-	}
-
-	if (!response.ok) {
-		throw new Error(`Unable to load policies: ${response.status}`);
-	}
-
-	return (await response.json()) as PoliciesListResponse;
+	return (await requestJson<PoliciesListResponse>(`/api/v1/policies?${searchParameters.toString()}`, {
+		cache: "no-store",
+		method: "GET",
+	})) as PoliciesListResponse;
 };
 
 export const createPolicy = async (

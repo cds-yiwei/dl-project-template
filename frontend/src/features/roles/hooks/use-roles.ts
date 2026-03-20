@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRoles, type RolesListResponse } from "../roles-api";
+import { getRoles, type RolesListResponse } from "@/fetch/roles";
 
 export const rolesQueryKey = (page: number, itemsPerPage: number) =>
 	["roles", page, itemsPerPage] as const;

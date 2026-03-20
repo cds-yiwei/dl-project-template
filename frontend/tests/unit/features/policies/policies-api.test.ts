@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { UnauthorizedRequestError } from "@/features/auth/auth-api";
-import { createPolicy, deletePolicy, getPolicies, updatePolicy } from "@/features/policies/policies-api";
+import { UnauthorizedRequestError } from "@/fetch";
+import { createPolicy, deletePolicy, getPolicies, updatePolicy } from "@/fetch/policies";
 
 describe("policies-api", () => {
 	afterEach(() => {

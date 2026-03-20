@@ -1,8 +1,7 @@
 // @ts-nocheck
 import { useEffect } from "react";
 
-import { Button, Text } from "../..";
-import { GcdsNotice } from "@gcds-core/components-react";
+import { Button, Notice, Text } from "../..";
 
 const Success: React.FC = () => {
   useEffect(() => {
@@ -13,7 +12,7 @@ const Success: React.FC = () => {
 
   return (
     <>
-      <GcdsNotice
+      <Notice
         noticeTitle="Your holiday request was submitted."
         noticeRole="success"
         noticeTitleTag="h2"
@@ -23,7 +22,7 @@ const Success: React.FC = () => {
         <Text marginBottom="0">
           We hope to add this holiday to our app soon.
         </Text>
-      </GcdsNotice>
+      </Notice>
 
       <Button buttonRole="secondary" className="me-600" type="link" href="/">
         Back to homepage

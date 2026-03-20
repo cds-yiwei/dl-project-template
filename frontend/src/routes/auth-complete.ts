@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
 	completeLoginRedirect,
-	type LoginRedirectSearch,
 } from "../features/auth/auth-routing";
+import type { LoginRedirectSearch } from "../features/auth/login-search";
 import { AuthCompletePage } from "../features/auth/pages/AuthCompletePage";
 
 const validateSearch = (search: Record<string, unknown>): LoginRedirectSearch => ({

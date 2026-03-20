@@ -1,7 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import AppNavigation from "@/components/ui/AppNavigation";
 import { useSession } from "@/hooks";
+
+const navigate = vi.fn((options: { replace?: boolean; to: string }): Promise<void> => {
+	void options;
+
+	return Promise.resolve();
+});
 
 vi.mock("react-i18next", () => ({
 	useTranslation: (): { t: (key: string) => string } => ({
@@ -28,6 +34,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
+	useNavigate: (): typeof navigate => navigate,
 	useRouterState: ({ select }: { select: (state: { location: { pathname: string } }) => string }): string =>
 		select({ location: { pathname: "/users" } }),
 }));
@@ -38,6 +45,8 @@ vi.mock("@/hooks", () => ({
 
 describe("AppNavigation", () => {
 	it("shows authenticated links when a session exists", () => {
+		const logout = vi.fn((): Promise<void> => Promise.resolve());
+
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
 				id: 7,
@@ -53,7 +62,7 @@ describe("AppNavigation", () => {
 			isAuthenticated: true,
 			isLoading: false,
 			login: vi.fn(),
-			logout: vi.fn((): Promise<void> => Promise.resolve()),
+			logout,
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 			query: {} as never,
 		});
@@ -68,7 +77,14 @@ describe("AppNavigation", () => {
 		expect(screen.getByRole("link", { name: /roles/i })).toBeTruthy();
 		expect(screen.getByRole("link", { name: /tiers/i })).toBeTruthy();
 		expect(screen.getByRole("link", { name: /my access/i })).toBeTruthy();
-		expect(screen.getByRole("link", { name: /sign out/i })).toBeTruthy();
+		expect(screen.getByRole("button", { name: /sign out/i })).toBeTruthy();
+
+		fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
+
+		return waitFor((): void => {
+			expect(logout).toHaveBeenCalledTimes(1);
+			expect(navigate).toHaveBeenCalledWith({ replace: true, to: "/" });
+		});
 	});
 
 	it("shows the public sign-in link when no session exists", () => {

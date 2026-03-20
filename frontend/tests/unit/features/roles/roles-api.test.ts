@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { UnauthorizedRequestError } from "@/features/auth/auth-api";
-import { createRole, deleteRole, getRoles, updateRole } from "@/features/roles/roles-api";
+import { UnauthorizedRequestError } from "@/fetch";
+import { createRole, deleteRole, getRoles, updateRole } from "@/fetch/roles";
 
 describe("roles-api", () => {
 	afterEach(() => {

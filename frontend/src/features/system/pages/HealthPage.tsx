@@ -1,6 +1,6 @@
-import { GcdsHeading, GcdsNotice, GcdsText } from "@gcds-core/components-react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Heading, Notice, Text } from "@/components/ui";
 import { CenteredPageLayout } from "@/components/layout";
 import { useSystemStatus } from "@/hooks";
 
@@ -10,33 +10,33 @@ export const HealthPage = (): FunctionComponent => {
 
 	return (
 		<CenteredPageLayout className="max-w-3xl">
-			<GcdsHeading tag="h1">{t("health.title")}</GcdsHeading>
-			<GcdsText>{t("health.summary")}</GcdsText>
+			<Heading tag="h1">{t("health.title")}</Heading>
+			<Text>{t("health.summary")}</Text>
 
 			{isLoading ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("health.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("health.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("health.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("health.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
 			{health ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("health.cardTitle")} noticeTitleTag="h2">
+				<Notice noticeRole="info" noticeTitle={t("health.cardTitle")} noticeTitleTag="h2">
 					<div className="flex flex-col gap-200">
-						<GcdsText>{t("health.healthStatus", { status: health.status })}</GcdsText>
-						<GcdsText>{t("health.environment", { value: health.environment })}</GcdsText>
-						<GcdsText>{t("health.version", { value: health.version })}</GcdsText>
+						<Text>{t("health.healthStatus", { status: health.status })}</Text>
+						<Text>{t("health.environment", { value: health.environment })}</Text>
+						<Text>{t("health.version", { value: health.version })}</Text>
 					</div>
-				</GcdsNotice>
+				</Notice>
 			) : null}
 
 			{ready ? (
-				<GcdsNotice noticeRole="success" noticeTitle={t("health.readyTitle")} noticeTitleTag="h2">
+				<Notice noticeRole="success" noticeTitle={t("health.readyTitle")} noticeTitleTag="h2">
 					<div className="flex flex-col gap-200">
-						<GcdsText>{t("health.readyStatus", { status: ready.status })}</GcdsText>
-						<GcdsText>{t("health.databaseStatus", { status: ready.database })}</GcdsText>
-						<GcdsText>{t("health.redisStatus", { status: ready.redis })}</GcdsText>
+						<Text>{t("health.readyStatus", { status: ready.status })}</Text>
+						<Text>{t("health.databaseStatus", { status: ready.database })}</Text>
+						<Text>{t("health.redisStatus", { status: ready.redis })}</Text>
 					</div>
-				</GcdsNotice>
+				</Notice>
 			) : null}
 		</CenteredPageLayout>
 	);

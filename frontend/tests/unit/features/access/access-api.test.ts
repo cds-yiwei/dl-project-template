@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getUserTier } from "@/features/access/access-api";
+import { getUserTier } from "@/fetch/access";
 
 describe("access-api", () => {
 	const originalFetch = globalThis.fetch;

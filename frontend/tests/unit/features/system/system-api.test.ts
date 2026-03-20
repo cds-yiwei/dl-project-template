@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getHealthCheck, getReadyCheck } from "@/features/system/system-api";
+import { getHealthCheck, getReadyCheck } from "@/fetch/system";
 
 describe("system-api", () => {
 	const originalFetch = globalThis.fetch;

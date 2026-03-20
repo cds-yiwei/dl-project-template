@@ -46,8 +46,18 @@
 		"action": "Continuer pour ouvrir une session",
 		"expiredBody": "Vous n'êtes pas connecté ou votre session a expiré. Ouvrez une session de nouveau pour continuer.",
 		"expiredTitle": "Session expirée",
+		"unauthorizedBody": "Votre session n'est plus valide. Ouvrez une session de nouveau pour continuer.",
+		"unauthorizedTitle": "Ouverture de session requise",
 		"summary": "Démarrez le flux d'ouverture de session OIDC via le backend.",
 		"title": "Ouvrir une session"
+	},
+	"errors": {
+		"badRequestBody": "La requête n'a pas pu être complétée telle qu'elle a été soumise. Vérifiez les données et réessayez.",
+		"badRequestTitle": "Vérifiez les détails de la requête",
+		"forbiddenBody": "Votre compte actuel n'a pas la permission d'effectuer cette action.",
+		"forbiddenTitle": "L'accès est restreint",
+		"serverBody": "Le service est temporairement indisponible. Réessayez dans un instant.",
+		"serverTitle": "Service temporairement indisponible"
 	},
 	"nav": {
 		"access": "Mon acces",

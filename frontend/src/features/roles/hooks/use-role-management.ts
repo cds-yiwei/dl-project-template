@@ -5,7 +5,7 @@ import {
 	updateRole as patchRole,
 	type RoleCreate,
 	type RoleUpdate,
-} from "../roles-api";
+} from "@/fetch/roles";
 import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import { rolesQueryKey, useRoles, type RolesState } from "./use-roles";
 

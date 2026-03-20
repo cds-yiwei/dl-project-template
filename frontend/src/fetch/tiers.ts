@@ -1,10 +1,5 @@
-import {
-	requestJson,
-	type ApiMessageResponse,
-	ForbiddenRequestError,
-	UnauthorizedRequestError,
-	buildApiUrl,
-} from "../auth/auth-api";
+import { requestJson } from "@/fetch";
+import type { ApiMessageResponse } from "./api-types";
 
 export type TierCreate = {
 	name: string;
@@ -43,31 +38,10 @@ export const getTiers = async (
 		page: String(page),
 	});
 
-	const response = await fetch(
-		buildApiUrl(`/api/v1/tiers?${searchParameters.toString()}`),
-		{
-			cache: "no-store",
-			credentials: "include",
-			headers: {
-				Accept: "application/json",
-			},
-			method: "GET",
-		},
-	);
-
-	if (response.status === 401) {
-		throw new UnauthorizedRequestError();
-	}
-
-	if (response.status === 403) {
-		throw new ForbiddenRequestError();
-	}
-
-	if (!response.ok) {
-		throw new Error(`Unable to load tiers: ${response.status}`);
-	}
-
-	return (await response.json()) as TiersListResponse;
+	return (await requestJson<TiersListResponse>(`/api/v1/tiers?${searchParameters.toString()}`, {
+		cache: "no-store",
+		method: "GET",
+	})) as TiersListResponse;
 };
 
 export const updateTier = async (name: string, payload: TierUpdate): Promise<ApiMessageResponse | null> =>

@@ -5,7 +5,7 @@ import {
 	updatePolicy as patchPolicy,
 	type PolicyCreate,
 	type PolicyUpdate,
-} from "../policies-api";
+} from "@/fetch/policies";
 import { refreshActiveListQuery } from "@/lib/refresh-active-list-query";
 import { policiesQueryKey, usePolicies, type PoliciesState } from "./use-policies";
 

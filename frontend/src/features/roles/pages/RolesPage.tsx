@@ -1,12 +1,10 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { GcdsHeading, GcdsNotice, GcdsText } from "@gcds-core/components-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { CenteredPageLayout } from "@/components/layout";
-import { Button, ConfirmDialog, DataTable, Input, Modal, Pagination } from "@/components/ui";
+import { Button, ConfirmDialog, DataTable, Heading, Input, Modal, Notice, Pagination, Text } from "@/components/ui";
 import type { DataTableColumn } from "@/components/ui/DataTable";
-import { isUnauthorizedRequestError } from "@/features/auth/auth-api";
+import { getRequestErrorNotice } from "@/fetch";
 import { useAdminListState, useRoleManagement } from "@/hooks";
 import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
 
@@ -46,9 +44,9 @@ export const RolesPage = (): FunctionComponent => {
 	const [form, setForm] = useState<RoleFormState>(emptyRoleForm);
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
 	const [selectedRoleName, setSelectedRoleName] = useState<string | null>(null);
-	const navigate = useNavigate();
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
+	const errorNotice = getRequestErrorNotice(error, {
+		bodyKey: "roles.errorBody",
+		titleKey: "roles.errorTitle",
 	});
 
 	const selectedRole = roles.find((role) => role.name === selectedRoleName) ?? null;
@@ -62,18 +60,6 @@ export const RolesPage = (): FunctionComponent => {
 		{ field: "description", headerName: t("roles.descriptionLabel") },
 	];
 	const totalPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
-
-	useEffect(() => {
-		if (!isUnauthorizedRequestError(error)) {
-			return;
-		}
-
-		void navigate({
-			replace: true,
-			search: { reason: "expired", redirect: pathname },
-			to: "/login",
-		});
-	}, [error, navigate, pathname]);
 
 	useEffect(() => {
 		if (modalMode !== "edit" && !deleteDialogOpen) {
@@ -151,25 +137,25 @@ export const RolesPage = (): FunctionComponent => {
 
 	return (
 		<CenteredPageLayout className="max-w-5xl">
-			<GcdsHeading tag="h1">{t("roles.title")}</GcdsHeading>
-			<GcdsText>{t("roles.summary")}</GcdsText>
+			<Heading tag="h1">{t("roles.title")}</Heading>
+			<Text>{t("roles.summary")}</Text>
 
 			{isLoading ? (
-				<GcdsNotice noticeRole="info" noticeTitle={t("roles.loadingTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("roles.loadingBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="info" noticeTitle={t("roles.loadingTitle")} noticeTitleTag="h2">
+					<Text>{t("roles.loadingBody")}</Text>
+				</Notice>
 			) : null}
 
-			{error && !isUnauthorizedRequestError(error) ? (
-				<GcdsNotice noticeRole="danger" noticeTitle={t("roles.errorTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("roles.errorBody")}</GcdsText>
-				</GcdsNotice>
+			{errorNotice ? (
+				<Notice noticeRole={errorNotice.noticeRole} noticeTitle={t(errorNotice.titleKey as never)} noticeTitleTag="h2">
+					<Text>{t(errorNotice.bodyKey as never)}</Text>
+				</Notice>
 			) : null}
 
 			{!isLoading && !error && roles.length === 0 ? (
-				<GcdsNotice noticeRole="warning" noticeTitle={t("roles.emptyTitle")} noticeTitleTag="h2">
-					<GcdsText>{t("roles.emptyBody")}</GcdsText>
-				</GcdsNotice>
+				<Notice noticeRole="warning" noticeTitle={t("roles.emptyTitle")} noticeTitleTag="h2">
+					<Text>{t("roles.emptyBody")}</Text>
+				</Notice>
 			) : null}
 
 			{roles.length > 0 ? (

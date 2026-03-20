@@ -8,6 +8,8 @@ vi.mock("react-i18next", () => ({
 	useTranslation: (): { t: (key: string) => string } => ({
 		t: (key: string): string => {
 			const translations: Record<string, string> = {
+				"login.unauthorizedBody": "Your session is no longer valid. Sign in again to continue.",
+				"login.unauthorizedTitle": "Sign in required",
 				"login.expiredBody": "You are not logged in or your session expired. Sign in again to continue.",
 				"login.expiredTitle": "Session expired",
 				"login.title": "Sign in",
@@ -20,21 +22,18 @@ vi.mock("react-i18next", () => ({
 	}),
 }));
 
-vi.mock("@gcds-core/components-react", () => ({
-	GcdsButton: ({ children, buttonId, buttonRole, ...properties }: PropsWithChildren<Record<string, unknown> & { buttonId?: string; buttonRole?: string }>): ReactElement => {
-		void buttonId;
-		void buttonRole;
-
-		return <button {...properties}>{children}</button>;
-	},
-	GcdsHeading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
-	GcdsNotice: ({ children, noticeTitle }: PropsWithChildren<{ noticeTitle?: string }>): ReactElement => (
+vi.mock("@/components/ui", () => ({
+	Button: ({ children, onGcdsClick }: PropsWithChildren<{ onGcdsClick?: () => void }>): ReactElement => (
+		<button onClick={onGcdsClick} type="button">{children}</button>
+	),
+	Heading: ({ children }: PropsWithChildren): ReactElement => <h1>{children}</h1>,
+	Notice: ({ children, noticeTitle }: PropsWithChildren<{ noticeTitle?: string }>): ReactElement => (
 		<section>
 			{noticeTitle ? <h2>{noticeTitle}</h2> : null}
 			{children}
 		</section>
 	),
-	GcdsText: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
+	Text: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
 }));
 
 vi.mock("@/hooks", () => ({
@@ -81,5 +80,23 @@ describe("LoginPage", () => {
 
 		expect(screen.getByRole("heading", { name: /session expired/i })).toBeTruthy();
 		expect(screen.getByText(/not logged in or your session expired/i)).toBeTruthy();
+	});
+
+	it("shows an unauthorized notice when redirected after a 401 response", () => {
+		window.history.replaceState({}, "", "/login?reason=unauthorized&message=session-expired");
+		vi.mocked(useSession).mockReturnValue({
+			currentUser: null,
+			isLoading: false,
+			isAuthenticated: false,
+			login: vi.fn(),
+			logout: vi.fn((): Promise<void> => Promise.resolve()),
+			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
+			query: {} as never,
+		});
+
+		render(<LoginPage />);
+
+		expect(screen.getByRole("heading", { name: /sign in required/i })).toBeTruthy();
+		expect(screen.getByText(/session is no longer valid/i)).toBeTruthy();
 	});
 });

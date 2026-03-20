@@ -1,7 +1,7 @@
 import type { PropsWithChildren, ReactElement } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ForbiddenRequestError } from "@/features/auth/auth-api";
+import { ForbiddenRequestError } from "@/fetch";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
 import { useSession, useUserRole } from "@/hooks";
 import { usePendingReviewPosts, usePosts } from "@/features/posts/hooks";

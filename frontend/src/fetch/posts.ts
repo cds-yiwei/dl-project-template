@@ -1,10 +1,5 @@
-import {
-	ForbiddenRequestError,
-	requestJson,
-	type ApiMessageResponse,
-	buildApiUrl,
-	UnauthorizedRequestError,
-} from "../auth/auth-api";
+import { requestJson } from "@/fetch";
+import type { ApiMessageResponse } from "./api-types";
 
 export type PostStatus = "draft" | "in_review" | "approved" | "rejected";
 
@@ -57,30 +52,11 @@ const normalizePostPayload = <Payload extends PostCreate | PostUpdate>(payload: 
 	return normalizedPayload;
 };
 
-const getPaginatedPosts = async (path: string): Promise<PostsListResponse> => {
-	const response = await fetch(buildApiUrl(path), {
+const getPaginatedPosts = async (path: string): Promise<PostsListResponse> =>
+	(await requestJson<PostsListResponse>(path, {
 		cache: "no-store",
-		credentials: "include",
-		headers: {
-			Accept: "application/json",
-		},
 		method: "GET",
-	});
-
-	if (response.status === 401) {
-		throw new UnauthorizedRequestError();
-	}
-
-	if (response.status === 403) {
-		throw new ForbiddenRequestError();
-	}
-
-	if (!response.ok) {
-		throw new Error(`Unable to load posts: ${response.status}`);
-	}
-
-	return (await response.json()) as PostsListResponse;
-};
+	})) as PostsListResponse;
 
 export const getUserPosts = async (
 	username: string,

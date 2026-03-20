@@ -1,10 +1,6 @@
-import {
-	requestJson,
-	type ApiMessageResponse,
-	buildApiUrl,
-	UnauthorizedRequestError,
-	type UserRead,
-} from "../auth/auth-api";
+import { requestJson } from "@/fetch";
+import type { UserRead } from "./auth";
+import type { ApiMessageResponse } from "./api-types";
 
 export type UserCreate = {
 	email: string;
@@ -39,27 +35,10 @@ export const getUsers = async (
 		page: String(page),
 	});
 
-	const response = await fetch(
-		buildApiUrl(`/api/v1/users?${searchParameters.toString()}`),
-		{
-			cache: "no-store",
-			credentials: "include",
-			headers: {
-				Accept: "application/json",
-			},
-			method: "GET",
-		},
-	);
-
-	if (response.status === 401) {
-		throw new UnauthorizedRequestError();
-	}
-
-	if (!response.ok) {
-		throw new Error(`Unable to load users: ${response.status}`);
-	}
-
-	return (await response.json()) as UsersListResponse;
+	return (await requestJson<UsersListResponse>(`/api/v1/users?${searchParameters.toString()}`, {
+		cache: "no-store",
+		method: "GET",
+	})) as UsersListResponse;
 };
 
 export const createUser = async (payload: UserCreate): Promise<UserRead | null> =>

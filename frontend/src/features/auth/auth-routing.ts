@@ -1,40 +1,34 @@
 import { redirect } from "@tanstack/react-router";
-import { ensureCurrentUser, revalidateCurrentUser } from "./session-queries";
-import type { UserRead } from "./auth-api";
-
-export type LoginRedirectSearch = {
-	reason?: "expired";
-	redirect?: string;
-};
+import type { UserRead } from "@/fetch/auth";
+import { revalidateCurrentUser } from "./session-queries";
+import { buildLoginLocation, sanitizeAppPath } from "./login-search";
 
 const defaultPostLoginPath = "/dashboard";
-
-export const sanitizeAppPath = (
-	path: string | null | undefined,
-	fallback = defaultPostLoginPath,
-): string => {
-	if (!path) {
-		return fallback;
-	}
-
-	return path.startsWith("/") ? path : fallback;
-};
 
 export const getPostLoginPath = (): string =>
 	sanitizeAppPath(import.meta.env.VITE_AUTH_POST_LOGIN_PATH, defaultPostLoginPath);
 
+export { sanitizeAppPath } from "./login-search";
+
 export const requireAuthenticatedUser = async (
 	redirectTo: string,
 ): Promise<UserRead> => {
-	const currentUser = await ensureCurrentUser();
+	let currentUser: UserRead | null;
+
+	try {
+		currentUser = await revalidateCurrentUser();
+	} catch {
+		currentUser = null;
+	}
 
 	if (!currentUser) {
 		// TanStack Router uses thrown redirect objects to short-circuit route loading.
 		// eslint-disable-next-line @typescript-eslint/only-throw-error
 		throw redirect({
 			replace: true,
-			search: { redirect: sanitizeAppPath(redirectTo, getPostLoginPath()) },
-			to: "/login",
+			...buildLoginLocation({
+				redirect: sanitizeAppPath(redirectTo, getPostLoginPath()),
+			}),
 		});
 	}
 
@@ -44,7 +38,7 @@ export const requireAuthenticatedUser = async (
 export const redirectAuthenticatedUser = async (
 	redirectTo?: string,
 ): Promise<void> => {
-	const currentUser = await ensureCurrentUser();
+	const currentUser = await revalidateCurrentUser();
 
 	if (currentUser) {
 		// eslint-disable-next-line @typescript-eslint/only-throw-error
@@ -65,8 +59,7 @@ export const completeLoginRedirect = async (
 		// eslint-disable-next-line @typescript-eslint/only-throw-error
 		throw redirect({
 			replace: true,
-			search: { redirect: targetPath },
-			to: "/login",
+			...buildLoginLocation({ redirect: targetPath }),
 		});
 	}
 

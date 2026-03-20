@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPolicies, type PoliciesListResponse } from "../policies-api";
+import { getPolicies, type PoliciesListResponse } from "@/fetch/policies";
 
 export const policiesQueryKey = (page: number, itemsPerPage: number) =>
 	["policies", page, itemsPerPage] as const;

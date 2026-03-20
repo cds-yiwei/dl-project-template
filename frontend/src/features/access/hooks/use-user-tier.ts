@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserTier, type UserTierRead } from "../access-api";
+import { getUserTier, type UserTierRead } from "@/fetch/access";
 
 export type UserTierState = {
 	error: Error | null;
