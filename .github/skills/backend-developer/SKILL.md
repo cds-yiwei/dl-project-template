@@ -120,6 +120,7 @@ Do this when actions such as approve, reject, submit, activate, suspend, or simi
 Follow the schema split already used in the backend:
 
 - `XBase`: shared core fields when useful
+- top-level feature schema such as `X(...)`: domain schema composed from shared mixins and `XBase` when the feature uses that pattern
 - `XCreate`: public create payload
 - `XCreateInternal`: internal create payload enriched with server-side fields
 - `XUpdate`: public partial update payload
@@ -130,15 +131,30 @@ Use `ConfigDict(extra="forbid")` for request models that should reject unexpecte
 
 Use `Annotated[...]` with `Field(...)` constraints for validation instead of pushing validation into endpoint code.
 
+When a feature follows the shared-schema composition pattern already present in this repo, preserve it explicitly instead of flattening everything into one schema. Common examples in the current codebase include:
+
+- `Post(TimestampSchema, PostBase, UUIDSchema, PersistentDeletion)`
+- `User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion)`
+- `Role(TimestampSchema, RoleBase, PersistentDeletion)`
+
+That means:
+
+- keep feature fields in `XBase`
+- compose the main domain schema from `TimestampSchema`, `XBase`, and shared mixins such as `UUIDSchema` and `PersistentDeletion` when the neighboring feature already does so
+- keep `XRead` as the explicit outward response contract, even when the composed domain schema exists
+
 ### 6. Keep model definitions consistent
 
 SQLAlchemy models in this repo generally:
 
 - use `Mapped[...]` and `mapped_column`
 - define `__tablename__`
-- keep timestamp and soft-delete style fields explicit where the feature needs them
+- keep timestamp and soft-delete fields explicit with columns such as`created_at`, `updated_at`, `deleted_at` and `is_deleted`
 - use enums for constrained status values when the domain needs them
-- use UUIDs and indexed foreign keys where the current pattern does so
+- often carry a `uuid` field for public-safe identifiers on user-facing resources such as users, posts, and post approvals
+- use indexed foreign keys where the current pattern does so
+
+Do not turn this into a false universal rule. Some models in the repo currently have soft-delete fields without a UUID column, so copy the nearest existing feature rather than forcing UUID onto every table blindly.
 
 When adding new persistence fields, keep the style aligned with neighboring models instead of mixing in a new ORM style.
 
@@ -155,6 +171,21 @@ When adding a new service dependency:
 - create a small provider such as `get_<feature>_service()`
 - inject it into routes with `Annotated[..., Depends(...)]`
 - reuse shared auth and DB dependencies instead of recreating them locally
+
+### 8a. Preserve public identifier choices in services and routes
+
+Single-resource lookups in this repo are intentionally not uniform. Current public APIs use stable domain identifiers such as:
+
+- `username` for user resources
+- `name` for roles and tiers
+- integer ids for some existing resources such as posts, policies, tasks, and rate limits
+
+The design direction behind UUID-bearing models is to avoid leaking raw internal ids for user-facing resources when the feature already supports a public-safe identifier. When changing or adding endpoints:
+
+- prefer the existing public identifier used by that feature instead of introducing a second lookup style casually
+- if the neighboring model and schema already expose UUID as the public identifier, prefer querying by UUID in service methods and routes rather than by internal integer id
+- if the current feature is still id-based, do not silently rewrite it unless the task explicitly includes that API contract change
+- keep internal integer primary keys as persistence details, not as a new public API default
 
 ### 9. Seed Casbin policies when you add protected resources or actions
 
