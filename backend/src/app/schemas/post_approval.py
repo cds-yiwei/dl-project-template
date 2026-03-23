@@ -21,7 +21,6 @@ class PostApprovalCreateInternal(BaseModel):
 class PostApprovalRead(TimestampSchema, UUIDSchema, PersistentDeletion):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
     post_id: int
     submitted_by_user_id: int
     reviewed_by_user_id: int | None = None

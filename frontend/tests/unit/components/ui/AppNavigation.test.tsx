@@ -49,15 +49,15 @@ describe("AppNavigation", () => {
 
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 3,
-				tier_id: 2,
+				role_uuid: "role-uuid-3",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,

@@ -29,11 +29,11 @@ const sampleUser = {
 	auth_provider: "gc-sso",
 	auth_subject: "subject-123",
 	email: "jane@example.com",
-	id: 7,
 	name: "Jane Doe",
 	profile_image_url: "https://example.com/jane.png",
-	role_id: 2,
-	tier_id: 3,
+	role_uuid: "role-uuid-2",
+	tier_uuid: "tier-uuid-3",
+	uuid: "user-uuid-7",
 	username: "jdoe",
 };
 

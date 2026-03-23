@@ -15,27 +15,28 @@ describe("access-api", () => {
 	});
 
 	it("requests the current user's tier details", async () => {
+		const userUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102";
 		globalThis.fetch = vi.fn().mockResolvedValue({
 			json: () => Promise.resolve({
-				id: 7,
+				uuid: userUuid,
 				username: "jdoe",
 				name: "Jane Doe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 4,
-				tier_id: 2,
+				role_uuid: "role-uuid-4",
+				tier_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401",
 				tier_name: "free",
 				tier_created_at: "2026-03-17T00:00:00Z",
 			}),
 			ok: true,
 		} as Response) as typeof fetch;
 
-		const response = await getUserTier("jdoe");
+		const response = await getUserTier(userUuid);
 
 		expect(globalThis.fetch).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/user/jdoe/tier",
+			`http://localhost:8000/api/v1/user/${userUuid}/tier`,
 			expect.objectContaining({
 				credentials: "include",
 				method: "GET",

@@ -157,7 +157,7 @@ class TestAccessControlIntegration:
 
         try:
             with build_test_client() as client:
-                response = client.get("/api/v1/tier/free/rate_limits")
+                response = client.get("/api/v1/tier/018f6f4b-2c8a-7bd2-8dc5-29f8d51fda11/rate_limits")
         finally:
             app.dependency_overrides.clear()
 

@@ -1,9 +1,11 @@
+import uuid as uuid_pkg
 from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from ..schemas.rate_limit import RateLimitRead
 
 
 class UserBase(BaseModel):
@@ -23,7 +25,9 @@ class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
 
 
 class UserRead(BaseModel):
-    id: int
+    uuid: uuid_pkg.UUID
+    role_uuid: uuid_pkg.UUID | None = None
+    tier_uuid: uuid_pkg.UUID | None = None
 
     name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
@@ -31,8 +35,21 @@ class UserRead(BaseModel):
     profile_image_url: str
     auth_provider: str | None = None
     auth_subject: str | None = None
+
+
+class UserReadInternal(UserRead):
+    id: int
     role_id: int | None = None
-    tier_id: int | None
+    tier_id: int | None = None
+
+
+class UserTierRead(UserRead):
+    tier_name: str
+    tier_created_at: datetime
+
+
+class UserRateLimitsRead(UserRead):
+    tier_rate_limits: list[RateLimitRead]
 
 
 class UserCreate(UserBase):
@@ -70,11 +87,15 @@ class UserUpdateInternal(UserUpdate):
 
 
 class UserRoleUpdate(BaseModel):
-    role_id: int | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    role_uuid: uuid_pkg.UUID | None = None
 
 
 class UserTierUpdate(BaseModel):
-    tier_id: int
+    model_config = ConfigDict(extra="forbid")
+
+    tier_uuid: uuid_pkg.UUID
 
 
 class UserDelete(BaseModel):

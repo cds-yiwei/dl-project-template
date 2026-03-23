@@ -10,7 +10,7 @@ describe("policies-api", () => {
 	it("requests the backend policies list with pagination parameters", async () => {
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			json: () => Promise.resolve({
-				data: [{ action: "read", id: 4, resource: "roles", subject: "analyst" }],
+				data: [{ action: "read", resource: "roles", subject: "analyst", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b501" }],
 				"has_more": false,
 				"items_per_page": 10,
 				page: 1,
@@ -29,14 +29,14 @@ describe("policies-api", () => {
 			}),
 		);
 		expect(response).toMatchObject({
-			data: [{ action: "read", id: 4, resource: "roles", subject: "analyst" }],
+			data: [{ action: "read", resource: "roles", subject: "analyst", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b501" }],
 		});
 	});
 
 	it("creates a policy through the backend API", async () => {
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
-			json: () => Promise.resolve({ action: "read", id: 4, resource: "roles", subject: "analyst" }),
+			json: () => Promise.resolve({ action: "read", resource: "roles", subject: "analyst", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b501" }),
 			ok: true,
 			status: 201,
 		} as Response);
@@ -51,10 +51,11 @@ describe("policies-api", () => {
 				method: "POST",
 			}),
 		);
-		expect(response).toMatchObject({ action: "read", id: 4, resource: "roles", subject: "analyst" });
+		expect(response).toMatchObject({ action: "read", resource: "roles", subject: "analyst", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b501" });
 	});
 
 	it("updates a policy through the backend API", async () => {
+		const policyUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b501";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({ message: "Policy updated" }),
@@ -62,10 +63,10 @@ describe("policies-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await updatePolicy(4, { action: "write" });
+		const response = await updatePolicy(policyUuid, { action: "write" });
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/policy/4",
+			`http://localhost:8000/api/v1/policy/${policyUuid}`,
 			expect.objectContaining({
 				body: JSON.stringify({ action: "write" }),
 				credentials: "include",
@@ -76,6 +77,7 @@ describe("policies-api", () => {
 	});
 
 	it("deletes a policy through the backend API", async () => {
+		const policyUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b501";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({ message: "Policy deleted" }),
@@ -83,10 +85,10 @@ describe("policies-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await deletePolicy(4);
+		const response = await deletePolicy(policyUuid);
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/policy/4",
+			`http://localhost:8000/api/v1/policy/${policyUuid}`,
 			expect.objectContaining({
 				credentials: "include",
 				method: "DELETE",

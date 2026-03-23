@@ -14,17 +14,17 @@ const summaryCardClasses = "rounded-sm border border-[var(--gcds-border-default)
 export const DashboardPage = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const { currentUser, isLoading: isSessionLoading } = useSession();
-	const username = currentUser?.username ?? null;
+	const userUuid = currentUser?.uuid ?? null;
 	const {
 		error: roleError,
 		isLoading: isRoleLoading,
 		role,
-	} = useUserRole(username);
+	} = useUserRole(userUuid);
 	const {
 		error: postsError,
 		isLoading: arePostsLoading,
 		posts,
-	} = usePosts(username, 1, 500);
+	} = usePosts(userUuid, 1, 500);
 	const {
 		error: pendingReviewError,
 		isLoading: isPendingReviewLoading,

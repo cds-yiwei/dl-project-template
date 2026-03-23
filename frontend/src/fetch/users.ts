@@ -48,17 +48,17 @@ export const createUser = async (payload: UserCreate): Promise<UserRead | null> 
 	});
 
 export const updateUser = async (
-	username: string,
+	userUuid: string,
 	payload: UserUpdate,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/user/${username}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}`, {
 		body: JSON.stringify(payload),
 		method: "PATCH",
 	});
 
 export const deleteUser = async (
-	username: string,
+	userUuid: string,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/user/${username}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}`, {
 		method: "DELETE",
 	});

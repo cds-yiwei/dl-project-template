@@ -25,7 +25,7 @@ def make_request(session: dict | None = None, authorization: str | None = None) 
 class TestCurrentUserDependency:
     @pytest.mark.asyncio
     async def test_get_current_user_uses_session_first(self, mock_db, current_user_dict):
-        request = make_request(session={"user_id": current_user_dict["id"]})
+        request = make_request(session={"user_uuid": str(current_user_dict["uuid"])})
 
         with patch("src.app.api.dependencies.crud_users") as mock_crud:
             mock_crud.get = AsyncMock(return_value=current_user_dict)
@@ -33,14 +33,14 @@ class TestCurrentUserDependency:
             result = await get_current_user(request, mock_db, None)
 
             assert result == current_user_dict
-            mock_crud.get.assert_called_once_with(db=mock_db, id=current_user_dict["id"], is_deleted=False)
+            mock_crud.get.assert_called_once_with(db=mock_db, uuid=str(current_user_dict["uuid"]), is_deleted=False)
 
     @pytest.mark.asyncio
     async def test_get_current_user_falls_back_to_bearer_token(self, mock_db, current_user_dict):
         request = make_request(authorization="Bearer token-value")
 
         with patch("src.app.api.dependencies.verify_token", new_callable=AsyncMock) as mock_verify:
-            mock_verify.return_value = Mock(username_or_email=current_user_dict["username"])
+            mock_verify.return_value = Mock(subject=str(current_user_dict["uuid"]))
 
             with patch("src.app.api.dependencies.crud_users") as mock_crud:
                 mock_crud.get = AsyncMock(return_value=current_user_dict)
@@ -49,6 +49,11 @@ class TestCurrentUserDependency:
 
                 assert result == current_user_dict
                 mock_verify.assert_awaited_once()
+                mock_crud.get.assert_awaited_once_with(
+                    db=mock_db,
+                    uuid=str(current_user_dict["uuid"]),
+                    is_deleted=False,
+                )
 
     @pytest.mark.asyncio
     async def test_get_current_user_requires_session_or_token(self, mock_db):
@@ -61,7 +66,7 @@ class TestCurrentUserDependency:
 class TestOptionalUserDependency:
     @pytest.mark.asyncio
     async def test_get_optional_user_uses_session_first(self, mock_db, current_user_dict):
-        request = make_request(session={"user_id": current_user_dict["id"]})
+        request = make_request(session={"user_uuid": str(current_user_dict["uuid"])})
 
         with patch("src.app.api.dependencies.crud_users") as mock_crud:
             mock_crud.get = AsyncMock(return_value=current_user_dict)
@@ -69,7 +74,7 @@ class TestOptionalUserDependency:
             result = await get_optional_user(request, mock_db)
 
             assert result == current_user_dict
-            mock_crud.get.assert_called_once_with(db=mock_db, id=current_user_dict["id"], is_deleted=False)
+            mock_crud.get.assert_called_once_with(db=mock_db, uuid=str(current_user_dict["uuid"]), is_deleted=False)
 
     @pytest.mark.asyncio
     async def test_get_optional_user_returns_none_without_session_or_token(self, mock_db):

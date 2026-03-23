@@ -13,7 +13,7 @@ import { usersQueryKey } from "./use-users";
 
 export type UserManagementState = {
 	createUser: (payload: UserCreate) => Promise<void>;
-	deleteUser: (username: string) => Promise<void>;
+	deleteUser: (userUuid: string) => Promise<void>;
 	error: Error | null;
 	isCreating: boolean;
 	isDeleting: boolean;
@@ -22,7 +22,7 @@ export type UserManagementState = {
 	itemsPerPage: number;
 	page: number;
 	response: UsersListResponse | null;
-	updateUser: (username: string, payload: UserUpdate) => Promise<void>;
+	updateUser: (userUuid: string, payload: UserUpdate) => Promise<void>;
 	users: UsersListResponse["data"];
 };
 
@@ -49,8 +49,8 @@ export const useUserManagement = (
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: ({ payload, username: nextUsername }: { payload: UserUpdate; username: string }) =>
-			patchUser(nextUsername, payload),
+		mutationFn: ({ payload, userUuid }: { payload: UserUpdate; userUuid: string }) =>
+			patchUser(userUuid, payload),
 		onSuccess: refreshUsers,
 	});
 
@@ -63,8 +63,8 @@ export const useUserManagement = (
 		createUser: async (payload: UserCreate): Promise<void> => {
 			await createMutation.mutateAsync(payload);
 		},
-		deleteUser: async (username: string): Promise<void> => {
-			await deleteMutation.mutateAsync(username);
+		deleteUser: async (userUuid: string): Promise<void> => {
+			await deleteMutation.mutateAsync(userUuid);
 		},
 		error: query.error ?? null,
 		isCreating: createMutation.isPending,
@@ -74,8 +74,8 @@ export const useUserManagement = (
 		itemsPerPage,
 		page,
 		response: query.data ?? null,
-		updateUser: async (username: string, payload: UserUpdate): Promise<void> => {
-			await updateMutation.mutateAsync({ payload, username });
+		updateUser: async (userUuid: string, payload: UserUpdate): Promise<void> => {
+			await updateMutation.mutateAsync({ payload, userUuid });
 		},
 		users: query.data?.data ?? [],
 	};

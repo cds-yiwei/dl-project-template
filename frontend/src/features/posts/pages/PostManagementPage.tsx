@@ -29,18 +29,18 @@ type ValueInputEvent = {
 };
 
 type AuthorPostRow = {
-	id: number;
 	mediaUrl: string;
 	status: PostRead["status"];
 	text: string;
 	title: string;
+	uuid: string;
 };
 
 type ReviewPostRow = {
-	id: number;
 	status: PostRead["status"];
 	text: string;
 	title: string;
+	uuid: string;
 };
 
 const emptyPostForm: PostFormState = {
@@ -75,16 +75,16 @@ const isValidMediaUrl = (value: string): boolean => {
 export const PostManagementPage = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const { currentUser, isLoading: isSessionLoading } = useSession();
-	const username = currentUser?.username ?? null;
+	const userUuid = currentUser?.uuid ?? null;
 	const [authorPage, setAuthorPage] = useState(1);
 	const [reviewPage, setReviewPage] = useState(1);
 	const [authorSearch, setAuthorSearch] = useState("");
 	const [formState, setFormState] = useState<PostFormState>(emptyPostForm);
 	const [formErrors, setFormErrors] = useState<PostFormErrors>(emptyPostFormErrors);
 	const [modalMode, setModalMode] = useState<"create" | "edit" | "review" | null>(null);
-	const [reviewComments, setReviewComments] = useState<Record<number, string>>({});
+	const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
 	const [reviewSearch, setReviewSearch] = useState("");
-	const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+	const [selectedPostUuid, setSelectedPostUuid] = useState<string | null>(null);
 	const {
 		approve,
 		createPost,
@@ -102,7 +102,7 @@ export const PostManagementPage = (): FunctionComponent => {
 		response,
 		submitForReview,
 		updatePost,
-	} = usePostManagement(username, authorPage, 25);
+	} = usePostManagement(userUuid, authorPage, 25);
 	const {
 		error: pendingReviewError,
 		isLoading: isPendingReviewLoading,
@@ -120,25 +120,25 @@ export const PostManagementPage = (): FunctionComponent => {
 		? Math.max(1, Math.ceil(pendingReviewResponse.total_count / pendingReviewResponse.items_per_page))
 		: 1;
 	const authorRows: Array<AuthorPostRow> = posts.map((post) => ({
-		id: post.id,
 		mediaUrl: post.media_url ?? "",
 		status: post.status,
 		text: post.text,
 		title: post.title,
+		uuid: post.uuid,
 	}));
 	const reviewRows: Array<ReviewPostRow> = pendingReviewPosts.map((post) => ({
-		id: post.id,
 		status: post.status,
 		text: post.text,
 		title: post.title,
+		uuid: post.uuid,
 	}));
-	const selectedAuthorPost = selectedPostId ? (posts.find((post) => post.id === selectedPostId) ?? null) : null;
-	const selectedReviewPost = selectedPostId ? (pendingReviewPosts.find((post) => post.id === selectedPostId) ?? null) : null;
- 	const selectedReviewComment = selectedPostId ? (reviewComments[selectedPostId] ?? "") : "";
+	const selectedAuthorPost = selectedPostUuid ? (posts.find((post) => post.uuid === selectedPostUuid) ?? null) : null;
+	const selectedReviewPost = selectedPostUuid ? (pendingReviewPosts.find((post) => post.uuid === selectedPostUuid) ?? null) : null;
+	const selectedReviewComment = selectedPostUuid ? (reviewComments[selectedPostUuid] ?? "") : "";
 
 	const closeModal = (): void => {
 		setModalMode(null);
-		setSelectedPostId(null);
+		setSelectedPostUuid(null);
 		setFormState(emptyPostForm);
 		setFormErrors(emptyPostFormErrors);
 	};
@@ -147,13 +147,13 @@ export const PostManagementPage = (): FunctionComponent => {
 		releaseActiveElementFocus();
 		setFormState(emptyPostForm);
 		setFormErrors(emptyPostFormErrors);
-		setSelectedPostId(null);
+		setSelectedPostUuid(null);
 		setModalMode("create");
 	};
 
 	const openEditModal = (post: PostRead): void => {
 		releaseActiveElementFocus();
-		setSelectedPostId(post.id);
+		setSelectedPostUuid(post.uuid);
 		setFormState({
 			mediaUrl: post.media_url ?? "",
 			text: post.text,
@@ -165,7 +165,7 @@ export const PostManagementPage = (): FunctionComponent => {
 
 	const openReviewModal = (post: PostRead): void => {
 		releaseActiveElementFocus();
-		setSelectedPostId(post.id);
+		setSelectedPostUuid(post.uuid);
 		setModalMode("review");
 	};
 
@@ -184,7 +184,7 @@ export const PostManagementPage = (): FunctionComponent => {
 	const hasFormErrors = (errors: PostFormErrors): boolean => Object.values(errors).some((value) => value !== null);
 
 	const handleSavePost = async (): Promise<void> => {
-		if (!username) {
+		if (!userUuid) {
 			return;
 		}
 
@@ -208,20 +208,20 @@ export const PostManagementPage = (): FunctionComponent => {
 			return;
 		}
 
-		if (!selectedPostId) {
+		if (!selectedPostUuid) {
 			return;
 		}
 
-		await updatePost(selectedPostId, payload);
+		await updatePost(selectedPostUuid, payload);
 		closeModal();
 	};
 
 	const handleDeletePost = async (): Promise<void> => {
-		if (!selectedPostId) {
+		if (!selectedPostUuid) {
 			return;
 		}
 
-		await deletePost(selectedPostId);
+		await deletePost(selectedPostUuid);
 		closeModal();
 	};
 
@@ -230,27 +230,27 @@ export const PostManagementPage = (): FunctionComponent => {
 			return;
 		}
 
-		await submitForReview(selectedAuthorPost.id);
+		await submitForReview(selectedAuthorPost.uuid);
 		closeModal();
 	};
 
-	const handleApprove = async (postId: number): Promise<void> => {
-		const comment = reviewComments[postId]?.trim() ?? "";
-		await approve(postId, { comment: comment.length > 0 ? comment : null });
+	const handleApprove = async (postUuid: string): Promise<void> => {
+		const comment = reviewComments[postUuid]?.trim() ?? "";
+		await approve(postUuid, { comment: comment.length > 0 ? comment : null });
 		setReviewComments((current) => {
 			const next = { ...current };
-			delete next[postId];
+			delete next[postUuid];
 			return next;
 		});
 		closeModal();
 	};
 
-	const handleReject = async (postId: number): Promise<void> => {
-		const comment = reviewComments[postId]?.trim() ?? "";
-		await reject(postId, { comment: comment.length > 0 ? comment : null });
+	const handleReject = async (postUuid: string): Promise<void> => {
+		const comment = reviewComments[postUuid]?.trim() ?? "";
+		await reject(postUuid, { comment: comment.length > 0 ? comment : null });
 		setReviewComments((current) => {
 			const next = { ...current };
-			delete next[postId];
+			delete next[postUuid];
 			return next;
 		});
 		closeModal();
@@ -307,7 +307,7 @@ export const PostManagementPage = (): FunctionComponent => {
 						columns={reviewColumns}
 						emptyMessage={t("posts.noPendingBody")}
 						exportFileName="pending-review-posts.csv"
-						getRowId={(row) => String(row.id)}
+						getRowId={(row) => row.uuid}
 						itemLabel="posts"
 						pagination={false}
 						rows={reviewRows}
@@ -317,10 +317,10 @@ export const PostManagementPage = (): FunctionComponent => {
 						summary={t("posts.reviewQueueBody")}
 						title={t("posts.manageReviewQueue")}
 						action={{
-							buttonId: (row) => `manage-review-post-${row.id}`,
+							buttonId: (row) => `manage-review-post-${row.uuid}`,
 							buttonLabel: t("posts.manageAction"),
 							onAction: (row) => {
-								const post = pendingReviewPosts.find((entry) => entry.id === row.id);
+								const post = pendingReviewPosts.find((entry) => entry.uuid === row.uuid);
 
 								if (post) {
 									openReviewModal(post);
@@ -341,7 +341,7 @@ export const PostManagementPage = (): FunctionComponent => {
 					columns={authorColumns}
 					emptyMessage={t("posts.emptyBody")}
 					exportFileName="my-posts.csv"
-					getRowId={(row) => String(row.id)}
+					getRowId={(row) => row.uuid}
 					itemLabel="posts"
 					pagination={false}
 					rows={authorRows}
@@ -351,11 +351,11 @@ export const PostManagementPage = (): FunctionComponent => {
 					summary={t("posts.myPostsBody")}
 					title={t("posts.myPostsTitle")}
 					action={{
-						buttonId: (row) => `manage-author-post-${row.id}`,
+						buttonId: (row) => `manage-author-post-${row.uuid}`,
 						buttonLabel: t("posts.manageAction"),
 						isVisible: (row) => canEditPost(row.status) || canSubmitForReview(row.status),
 						onAction: (row) => {
-							const post = posts.find((entry) => entry.id === row.id);
+							const post = posts.find((entry) => entry.uuid === row.uuid);
 
 							if (post) {
 								openEditModal(post);
@@ -388,14 +388,14 @@ export const PostManagementPage = (): FunctionComponent => {
 							<>
 								<Button buttonRole="danger" disabled={isRejecting} type="button" onGcdsClick={() => {
 									if (selectedReviewPost) {
-										void handleReject(selectedReviewPost.id);
+										void handleReject(selectedReviewPost.uuid);
 									}
 								}}>
 									{t("posts.rejectAction")}
 								</Button>
 								<Button disabled={isApproving} type="button" onGcdsClick={() => {
 									if (selectedReviewPost) {
-										void handleApprove(selectedReviewPost.id);
+										void handleApprove(selectedReviewPost.uuid);
 									}
 								}}>
 									{t("posts.approveAction")}
@@ -437,13 +437,13 @@ export const PostManagementPage = (): FunctionComponent => {
 						<Text>{selectedReviewPost.title}</Text>
 						<Text>{selectedReviewPost.text}</Text>
 						<Textarea label={t("posts.commentLabel")} name="review-comment" textareaId="review-comment" value={selectedReviewComment} onInput={(event: ValueInputEvent): void => {
-							if (!selectedPostId) {
+							if (!selectedPostUuid) {
 								return;
 							}
 
 							setReviewComments((current) => ({
 								...current,
-								[selectedPostId]: getEventValue(event),
+								[selectedPostUuid]: getEventValue(event),
 							}));
 						}} />
 					</div>

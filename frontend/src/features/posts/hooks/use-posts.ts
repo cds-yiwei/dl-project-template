@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { getUserPosts, type PostsListResponse } from "@/fetch/posts";
 
-export const postsQueryKey = (username: string | null | undefined, page: number, itemsPerPage: number) =>
-	["posts", username ?? "anonymous", page, itemsPerPage] as const;
+export const postsQueryKey = (userUuid: string | null | undefined, page: number, itemsPerPage: number) =>
+	["posts", userUuid ?? "anonymous", page, itemsPerPage] as const;
 
 export type PostsState = {
 	error: Error | null;
@@ -15,14 +15,14 @@ export type PostsState = {
 };
 
 export const usePosts = (
-	username: string | null | undefined,
+	userUuid: string | null | undefined,
 	page = 1,
 	itemsPerPage = 25,
 ): PostsState => {
 	const query = useQuery<PostsListResponse, Error>({
-		enabled: Boolean(username),
-		queryFn: () => getUserPosts(username ?? "", page, itemsPerPage),
-		queryKey: postsQueryKey(username, page, itemsPerPage),
+		enabled: Boolean(userUuid),
+		queryFn: () => getUserPosts(userUuid ?? "", page, itemsPerPage),
+		queryKey: postsQueryKey(userUuid, page, itemsPerPage),
 	});
 
 	return {

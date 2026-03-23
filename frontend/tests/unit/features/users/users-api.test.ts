@@ -10,7 +10,7 @@ describe("users-api", () => {
 	it("requests the backend users list with pagination parameters", async () => {
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			json: () => Promise.resolve({
-				data: [{ id: 1, username: "jdoe" }],
+				data: [{ role_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301", tier_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101", username: "jdoe" }],
 				"has_more": false,
 				"items_per_page": 20,
 				page: 2,
@@ -29,7 +29,7 @@ describe("users-api", () => {
 			}),
 		);
 		expect(response).toMatchObject({
-			data: [{ id: 1, username: "jdoe" }],
+			data: [{ role_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301", tier_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101", username: "jdoe" }],
 			"has_more": false,
 			"items_per_page": 20,
 			page: 2,
@@ -51,11 +51,11 @@ describe("users-api", () => {
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({
 				email: "jane@example.com",
-				id: 9,
 				name: "Jane Doe",
 				profile_image_url: "",
-				role_id: null,
-				tier_id: null,
+				role_uuid: null,
+				tier_uuid: null,
+				uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102",
 				username: "jdoe",
 			}),
 			ok: true,
@@ -84,13 +84,14 @@ describe("users-api", () => {
 		);
 		expect(response).toMatchObject({
 			email: "jane@example.com",
-			id: 9,
 			name: "Jane Doe",
+			uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102",
 			username: "jdoe",
 		});
 	});
 
 	it("updates a user through the backend API", async () => {
+		const userUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({ message: "User updated successfully" }),
@@ -98,13 +99,13 @@ describe("users-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await updateUser("jdoe", {
+		const response = await updateUser(userUuid, {
 			email: "updated@example.com",
 			name: "Jane Updated",
 		});
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/user/jdoe",
+			`http://localhost:8000/api/v1/user/${userUuid}`,
 			expect.objectContaining({
 				body: JSON.stringify({
 					email: "updated@example.com",
@@ -118,6 +119,7 @@ describe("users-api", () => {
 	});
 
 	it("deletes a user through the backend API", async () => {
+		const userUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({ message: "User deleted successfully" }),
@@ -125,10 +127,10 @@ describe("users-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await deleteUser("jdoe");
+		const response = await deleteUser(userUuid);
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/user/jdoe",
+			`http://localhost:8000/api/v1/user/${userUuid}`,
 			expect.objectContaining({
 				credentials: "include",
 				method: "DELETE",

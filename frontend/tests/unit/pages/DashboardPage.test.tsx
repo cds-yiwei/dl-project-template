@@ -59,15 +59,15 @@ describe("DashboardPage", () => {
 	it("shows the signed-in profile, role, summaries, and approval queue when permitted", () => {
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 3,
-				tier_id: 2,
+				role_uuid: "role-uuid-3",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,
@@ -79,7 +79,7 @@ describe("DashboardPage", () => {
 			error: null,
 			isLoading: false,
 			isUpdating: false,
-			role: { created_at: "2026-03-18T00:00:00Z", description: "Reviewer", id: 3, name: "reviewer" },
+			role: { created_at: "2026-03-18T00:00:00Z", description: "Reviewer", name: "reviewer", uuid: "role-uuid-3" },
 			updateUserRole: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 		vi.mocked(usePosts).mockReturnValue({
@@ -90,9 +90,9 @@ describe("DashboardPage", () => {
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: null,
 			posts: [
-				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, id: 1, media_url: null, status: "draft", text: "A", title: "A" },
-				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, id: 2, media_url: null, status: "in_review", text: "B", title: "B" },
-				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, id: 3, media_url: null, status: "approved", text: "C", title: "C" },
+				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, media_url: null, status: "draft", text: "A", title: "A", uuid: "post-uuid-1" },
+				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, media_url: null, status: "in_review", text: "B", title: "B", uuid: "post-uuid-2" },
+				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, media_url: null, status: "approved", text: "C", title: "C", uuid: "post-uuid-3" },
 			],
 		});
 		vi.mocked(usePendingReviewPosts).mockReturnValue({
@@ -107,6 +107,8 @@ describe("DashboardPage", () => {
 
 		render(<DashboardPage />);
 
+		expect(useUserRole).toHaveBeenCalledWith("user-uuid-7");
+		expect(usePosts).toHaveBeenCalledWith("user-uuid-7", 1, 500);
 		expect(screen.getByRole("heading", { name: /dashboard/i })).toBeTruthy();
 		expect(screen.getByText(/username: jdoe/i)).toBeTruthy();
 		expect(screen.getByText(/email: jane@example.com/i)).toBeTruthy();
@@ -121,15 +123,15 @@ describe("DashboardPage", () => {
 	it("hides the awaiting approval section when the user cannot review posts", () => {
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 3,
-				tier_id: 2,
+				role_uuid: "role-uuid-3",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,
@@ -165,6 +167,8 @@ describe("DashboardPage", () => {
 
 		render(<DashboardPage />);
 
+		expect(useUserRole).toHaveBeenCalledWith("user-uuid-7");
+		expect(usePosts).toHaveBeenCalledWith("user-uuid-7", 1, 500);
 		expect(screen.queryByRole("heading", { name: /awaiting approval/i })).toBeNull();
 	});
 });

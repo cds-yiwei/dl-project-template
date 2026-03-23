@@ -7,11 +7,15 @@ from src.app.services.oidc_service import OidcService
 
 class TestOidcService:
     @pytest.mark.asyncio
-    async def test_callback_stores_session_and_redirects(self, mock_db, monkeypatch):
+    async def test_callback_stores_user_uuid_in_session_and_redirects(self, mock_db, monkeypatch):
         service = OidcService()
         request = Mock(session={})
         claims = {"sub": "subject-123", "email": "oidc.user@example.com"}
-        oidc_user = {"id": 11, "username": "oidcuser", "email": "oidc.user@example.com"}
+        oidc_user = {
+            "uuid": "019cfc22-bff2-7168-ae43-387a301d8fcb",
+            "username": "oidcuser",
+            "email": "oidc.user@example.com",
+        }
         client = Mock()
         client.authorize_access_token = AsyncMock(return_value={"userinfo": claims})
 
@@ -25,6 +29,6 @@ class TestOidcService:
                     response = await service.callback(request=request, db=mock_db)
 
         mock_regenerate.assert_called_once_with(request)
-        assert request.session["user_id"] == oidc_user["id"]
+        assert request.session["user_uuid"] == oidc_user["uuid"]
         assert response.status_code == 307
         assert response.headers["location"] == "/app"

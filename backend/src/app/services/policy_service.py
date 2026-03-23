@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import Any
 
 from fastcrud import compute_offset, paginated_response
@@ -30,13 +31,14 @@ class PolicyService:
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             is_deleted=False,
+            schema_to_select=AccessPolicyOut,
         )
         return paginated_response(crud_data=policies_data, page=page, items_per_page=items_per_page)
 
-    async def get_policy(self, db: AsyncSession, policy_id: int) -> dict[str, Any]:
+    async def get_policy(self, db: AsyncSession, policy_uuid: uuid_pkg.UUID | str) -> dict[str, Any]:
         db_policy = await crud_access_policies.get(
             db=db,
-            id=policy_id,
+            uuid=policy_uuid,
             is_deleted=False,
             schema_to_select=AccessPolicyOut,
         )
@@ -44,8 +46,10 @@ class PolicyService:
             raise NotFoundException("Policy not found")
         return db_policy
 
-    async def update_policy(self, db: AsyncSession, policy_id: int, values: AccessPolicyUpdate) -> dict[str, str]:
-        db_policy = await self.get_policy(db=db, policy_id=policy_id)
+    async def update_policy(
+        self, db: AsyncSession, policy_uuid: uuid_pkg.UUID | str, values: AccessPolicyUpdate
+    ) -> dict[str, str]:
+        db_policy = await self.get_policy(db=db, policy_uuid=policy_uuid)
 
         next_subject = values.subject if values.subject is not None else db_policy["subject"]
         next_resource = values.resource if values.resource is not None else db_policy["resource"]
@@ -58,13 +62,13 @@ class PolicyService:
             action=next_action,
             is_deleted=False,
         )
-        if matching_policy and matching_policy["id"] != policy_id:
+        if matching_policy and str(matching_policy["uuid"]) != str(policy_uuid):
             raise DuplicateValueException("Policy already exists")
 
-        await crud_access_policies.update(db=db, object=values, id=policy_id)
+        await crud_access_policies.update(db=db, object=values, uuid=policy_uuid)
         return {"message": "Policy updated"}
 
-    async def delete_policy(self, db: AsyncSession, policy_id: int) -> dict[str, str]:
-        await self.get_policy(db=db, policy_id=policy_id)
-        await crud_access_policies.delete(db=db, id=policy_id)
+    async def delete_policy(self, db: AsyncSession, policy_uuid: uuid_pkg.UUID | str) -> dict[str, str]:
+        await self.get_policy(db=db, policy_uuid=policy_uuid)
+        await crud_access_policies.delete(db=db, uuid=policy_uuid)
         return {"message": "Policy deleted"}

@@ -28,7 +28,7 @@ async def oidc_login(request: Request):
 async def oidc_callback(request: Request, db: AsyncSession):
     token = await get_oidc_client().authorize_access_token(request)
     user = await sync_oidc_user(db, token["userinfo"])
-    request.session["user_id"] = user["id"]
+    request.session["user_uuid"] = str(user["uuid"])
     return RedirectResponse(url=settings.OIDC_POST_LOGIN_REDIRECT)
 ```
 

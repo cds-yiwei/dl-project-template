@@ -13,8 +13,10 @@ from src.app.schemas.user import UserRead
 class TestLocalPasswordAuthentication:
     @pytest.mark.asyncio
     async def test_authenticate_user_rejects_external_user_without_password(self, mock_db):
+        user_uuid = "019cfc22-bff2-7168-ae43-387a301d8fcb"
         external_user = {
             "id": 1,
+            "uuid": user_uuid,
             "username": "oidcuser",
             "email": "oidc.user@example.com",
             "hashed_password": None,
@@ -23,7 +25,7 @@ class TestLocalPasswordAuthentication:
         with patch("src.app.core.security.crud_users") as mock_crud:
             mock_crud.get = AsyncMock(return_value=external_user)
 
-            result = await authenticate_user("oidcuser", "irrelevant", mock_db)
+            result = await authenticate_user(user_uuid, "irrelevant", mock_db)
 
             assert result is False
 
@@ -46,8 +48,11 @@ class TestExternalIdentitySchemas:
     def test_access_policy_out_uses_pydantic_v2_from_attributes(self):
         assert AccessPolicyOut.model_config.get("from_attributes") is True
 
-    def test_user_read_exposes_role_id_for_rbac(self):
-        assert "role_id" in UserRead.model_fields
+    def test_user_read_exposes_public_role_and_tier_uuids_only(self):
+        assert "role_uuid" in UserRead.model_fields
+        assert "tier_uuid" in UserRead.model_fields
+        assert "role_id" not in UserRead.model_fields
+        assert "tier_id" not in UserRead.model_fields
 
     def test_access_control_tables_include_timestamps_and_soft_delete_columns(self):
         required_columns = {"created_at", "updated_at", "deleted_at", "is_deleted"}

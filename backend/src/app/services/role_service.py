@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import Any
 
 from fastcrud import compute_offset, paginated_response
@@ -28,21 +29,22 @@ class RoleService:
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             is_deleted=False,
+            schema_to_select=RoleRead,
         )
         return paginated_response(crud_data=roles_data, page=page, items_per_page=items_per_page)
 
-    async def get_role_by_name(self, db: AsyncSession, name: str) -> dict[str, Any]:
-        db_role = await crud_roles.get(db=db, name=name, is_deleted=False, schema_to_select=RoleRead)
+    async def get_role_by_uuid(self, db: AsyncSession, role_uuid: uuid_pkg.UUID | str) -> dict[str, Any]:
+        db_role = await crud_roles.get(db=db, uuid=role_uuid, is_deleted=False, schema_to_select=RoleRead)
         if db_role is None:
             raise NotFoundException("Role not found")
         return db_role
 
-    async def update_role(self, db: AsyncSession, name: str, values: RoleUpdate) -> dict[str, str]:
-        await self.get_role_by_name(db=db, name=name)
-        await crud_roles.update(db=db, object=values, name=name)
+    async def update_role(self, db: AsyncSession, role_uuid: uuid_pkg.UUID | str, values: RoleUpdate) -> dict[str, str]:
+        await self.get_role_by_uuid(db=db, role_uuid=role_uuid)
+        await crud_roles.update(db=db, object=values, uuid=role_uuid)
         return {"message": "Role updated"}
 
-    async def delete_role(self, db: AsyncSession, name: str) -> dict[str, str]:
-        await self.get_role_by_name(db=db, name=name)
-        await crud_roles.delete(db=db, name=name)
+    async def delete_role(self, db: AsyncSession, role_uuid: uuid_pkg.UUID | str) -> dict[str, str]:
+        await self.get_role_by_uuid(db=db, role_uuid=role_uuid)
+        await crud_roles.delete(db=db, uuid=role_uuid)
         return {"message": "Role deleted"}

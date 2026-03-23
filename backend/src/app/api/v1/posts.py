@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
@@ -14,124 +15,135 @@ from ...services.post_service import PostService
 router = APIRouter(tags=["posts"])
 
 
-@router.post("/{username}/post", response_model=PostRead, status_code=201)
-@cache("{username}_posts", resource_id_name="username", pattern_to_invalidate_extra=["{username}_posts:*"])
+@router.post("/user/{user_uuid}/post", response_model=PostRead, status_code=201)
+@cache("{user_uuid}_posts", resource_id_name="user_uuid", pattern_to_invalidate_extra=["{user_uuid}_posts:*"])
 async def write_post(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     post: PostCreate,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, Any]:
-    return await service.create_post(db=db, username=username, current_user=current_user, post=post)
+    return await service.create_post(db=db, user_uuid=user_uuid, current_user=current_user, post=post)
 
 
-@router.get("/{username}/posts", response_model=PaginatedListResponse[PostRead])
+@router.get("/user/{user_uuid}/posts", response_model=PaginatedListResponse[PostRead])
 @cache(
-    key_prefix="{username}_posts:page_{page}:items_per_page:{items_per_page}",
-    resource_id_name="username",
+    key_prefix="{user_uuid}_posts:page_{page}:items_per_page:{items_per_page}",
+    resource_id_name="user_uuid",
     expiration=60,
 )
 async def read_posts(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
     page: int = 1,
     items_per_page: int = 10,
 ) -> dict:
-    return await service.list_posts_by_username(db=db, username=username, page=page, items_per_page=items_per_page)
+    return await service.list_posts_by_user_uuid(db=db, user_uuid=user_uuid, page=page, items_per_page=items_per_page)
 
 
-@router.get("/{username}/post/{id}", response_model=PostRead)
-@cache(key_prefix="{username}_post_cache", resource_id_name="id")
+@router.get("/user/{user_uuid}/post/{post_uuid}", response_model=PostRead)
+@cache(key_prefix="{user_uuid}_post_cache", resource_id_name="post_uuid")
 async def read_post(
     request: Request,
-    username: str,
-    id: int,
+    user_uuid: uuid_pkg.UUID,
+    post_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, Any]:
-    return await service.get_post_by_username(db=db, username=username, post_id=id)
+    return await service.get_post_by_user_uuid(db=db, user_uuid=user_uuid, post_uuid=post_uuid)
 
 
-@router.patch("/{username}/post/{id}")
-@cache("{username}_post_cache", resource_id_name="id", pattern_to_invalidate_extra=["{username}_posts:*"])
+@router.patch("/user/{user_uuid}/post/{post_uuid}")
+@cache("{user_uuid}_post_cache", resource_id_name="post_uuid", pattern_to_invalidate_extra=["{user_uuid}_posts:*"])
 async def patch_post(
     request: Request,
-    username: str,
-    id: int,
+    user_uuid: uuid_pkg.UUID,
+    post_uuid: uuid_pkg.UUID,
     values: PostUpdate,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, str]:
-    return await service.update_post(db=db, username=username, post_id=id, current_user=current_user, values=values)
+    return await service.update_post(
+        db=db,
+        user_uuid=user_uuid,
+        post_uuid=post_uuid,
+        current_user=current_user,
+        values=values,
+    )
 
 
-@router.delete("/{username}/post/{id}")
-@cache("{username}_post_cache", resource_id_name="id", pattern_to_invalidate_extra=["{username}_posts:*"])
+@router.delete("/user/{user_uuid}/post/{post_uuid}")
+@cache("{user_uuid}_post_cache", resource_id_name="post_uuid", pattern_to_invalidate_extra=["{user_uuid}_posts:*"])
 async def erase_post(
     request: Request,
-    username: str,
-    id: int,
+    user_uuid: uuid_pkg.UUID,
+    post_uuid: uuid_pkg.UUID,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, str]:
-    return await service.delete_post(db=db, username=username, post_id=id, current_user=current_user)
+    return await service.delete_post(db=db, user_uuid=user_uuid, post_uuid=post_uuid, current_user=current_user)
 
 
-@router.delete("/{username}/db_post/{id}", dependencies=[Depends(get_current_superuser)])
-@cache("{username}_post_cache", resource_id_name="id", pattern_to_invalidate_extra=["{username}_posts:*"])
+@router.delete("/user/{user_uuid}/db_post/{post_uuid}", dependencies=[Depends(get_current_superuser)])
+@cache("{user_uuid}_post_cache", resource_id_name="post_uuid", pattern_to_invalidate_extra=["{user_uuid}_posts:*"])
 async def erase_db_post(
     request: Request,
-    username: str,
-    id: int,
+    user_uuid: uuid_pkg.UUID,
+    post_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, str]:
-    return await service.delete_post_from_db(db=db, username=username, post_id=id)
+    return await service.delete_post_from_db(db=db, user_uuid=user_uuid, post_uuid=post_uuid)
 
 
-@router.post("/{username}/post/{id}/submit-review")
-@cache("{username}_post_cache", resource_id_name="id", pattern_to_invalidate_extra=["{username}_posts:*"])
+@router.post("/user/{user_uuid}/post/{post_uuid}/submit-review")
+@cache("{user_uuid}_post_cache", resource_id_name="post_uuid", pattern_to_invalidate_extra=["{user_uuid}_posts:*"])
 async def submit_post_for_review(
     request: Request,
-    username: str,
-    id: int,
+    user_uuid: uuid_pkg.UUID,
+    post_uuid: uuid_pkg.UUID,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, str]:
-    return await service.submit_for_review(db=db, username=username, post_id=id, current_user=current_user)
+    return await service.submit_for_review(
+        db=db,
+        user_uuid=user_uuid,
+        post_uuid=post_uuid,
+        current_user=current_user,
+    )
 
 
-@router.post("/posts/{id}/approve")
+@router.post("/posts/{post_uuid}/approve")
 @casbin_guard.require_permission("posts", "approve")
 async def approve_post(
     request: Request,
-    id: int,
+    post_uuid: uuid_pkg.UUID,
     payload: PostApprove,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, str]:
-    return await service.approve_post(db=db, post_id=id, current_user=current_user, payload=payload)
+    return await service.approve_post(db=db, post_uuid=post_uuid, current_user=current_user, payload=payload)
 
 
-@router.post("/posts/{id}/reject")
+@router.post("/posts/{post_uuid}/reject")
 @casbin_guard.require_permission("posts", "reject")
 async def reject_post(
     request: Request,
-    id: int,
+    post_uuid: uuid_pkg.UUID,
     payload: PostReject,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[PostService, Depends(get_post_service)],
 ) -> dict[str, str]:
-    return await service.reject_post(db=db, post_id=id, current_user=current_user, payload=payload)
+    return await service.reject_post(db=db, post_uuid=post_uuid, current_user=current_user, payload=payload)
 
 
 @router.get("/posts/pending-review", response_model=PaginatedListResponse[PostRead])

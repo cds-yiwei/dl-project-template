@@ -11,11 +11,11 @@ import { tiersQueryKey, useTiers, type TiersState } from "./use-tiers";
 
 export type TierManagementState = TiersState & {
 	createTier: (payload: TierCreate) => Promise<void>;
-	deleteTier: (name: string) => Promise<void>;
+	deleteTier: (tierUuid: string) => Promise<void>;
 	isCreating: boolean;
 	isDeleting: boolean;
 	isUpdating: boolean;
-	updateTier: (name: string, payload: TierUpdate) => Promise<void>;
+	updateTier: (tierUuid: string, payload: TierUpdate) => Promise<void>;
 };
 
 export const useTierManagement = (
@@ -39,8 +39,8 @@ export const useTierManagement = (
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: ({ name, payload }: { name: string; payload: TierUpdate }) =>
-			patchTier(name, payload),
+		mutationFn: ({ payload, tierUuid }: { payload: TierUpdate; tierUuid: string }) =>
+			patchTier(tierUuid, payload),
 		onSuccess: refreshTiers,
 	});
 
@@ -54,14 +54,14 @@ export const useTierManagement = (
 		createTier: async (payload: TierCreate): Promise<void> => {
 			await createMutation.mutateAsync(payload);
 		},
-		deleteTier: async (name: string): Promise<void> => {
-			await deleteMutation.mutateAsync(name);
+		deleteTier: async (tierUuid: string): Promise<void> => {
+			await deleteMutation.mutateAsync(tierUuid);
 		},
 		isCreating: createMutation.isPending,
 		isDeleting: deleteMutation.isPending,
 		isUpdating: updateMutation.isPending,
-		updateTier: async (name: string, payload: TierUpdate): Promise<void> => {
-			await updateMutation.mutateAsync({ name, payload });
+		updateTier: async (tierUuid: string, payload: TierUpdate): Promise<void> => {
+			await updateMutation.mutateAsync({ payload, tierUuid });
 		},
 	};
 };

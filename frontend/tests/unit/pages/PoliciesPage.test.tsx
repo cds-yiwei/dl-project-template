@@ -49,7 +49,7 @@ vi.mock("@/components/ui", () => ({
 		</button>
 	),
 	ConfirmDialog: ({ isOpen, title }: { isOpen: boolean; title: string }): ReactElement | null => (isOpen ? <section><h2>{title}</h2></section> : null),
-	DataTable: ({ action, pageNumber, primaryAction, title, rows, summary }: { action?: { buttonLabel: string; onAction: (row: { action: string; id: number; resource: string; subject: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ action: string; id: number; resource: string; subject: string }>; title?: string; summary?: string }): ReactElement => (
+	DataTable: ({ action, pageNumber, primaryAction, title, rows, summary }: { action?: { buttonLabel: string; onAction: (row: { action: string; resource: string; subject: string; uuid: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ action: string; resource: string; subject: string; uuid: string }>; title?: string; summary?: string }): ReactElement => (
 		<section>
 			{title ? <h2>{title}</h2> : null}
 			<p>{summary ?? `Showing ${rows?.length ?? 0} policies on page ${pageNumber ?? 1}`}</p>
@@ -92,10 +92,10 @@ describe("PoliciesPage", () => {
 			isUpdating: false,
 			itemsPerPage: 10,
 			page: 1,
-			policies: [{ action: "read", id: 4, resource: "roles", subject: "analyst" }],
+			policies: [{ action: "read", resource: "roles", subject: "analyst", uuid: "policy-uuid-4" }],
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: {
-				data: [{ action: "read", id: 4, resource: "roles", subject: "analyst" }],
+				data: [{ action: "read", resource: "roles", subject: "analyst", uuid: "policy-uuid-4" }],
 				"has_more": false,
 				"items_per_page": 10,
 				page: 1,

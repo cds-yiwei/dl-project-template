@@ -8,7 +8,7 @@ import { useSession, useUserTier } from "@/hooks";
 export const AccessPage = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const { currentUser } = useSession();
-	const { error, isLoading, tier } = useUserTier(currentUser?.username);
+	const { error, isLoading, tier } = useUserTier(currentUser?.uuid);
 	const errorNotice = getRequestErrorNotice(error, {
 		bodyKey: "access.errorBody",
 		titleKey: "access.errorTitle",

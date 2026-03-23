@@ -45,7 +45,7 @@ vi.mock("@/components/ui", () => ({
 		<button type={type ?? "button"} onClick={onGcdsClick}>{children}</button>
 	),
 	ConfirmDialog: ({ isOpen, title }: { isOpen: boolean; title: string }): ReactElement | null => (isOpen ? <section><h2>{title}</h2></section> : null),
-	DataTable: ({ action, pageNumber, primaryAction, rows, title, summary }: { action?: { buttonLabel: string; onAction: (row: { createdAt: string; id: number; name: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ createdAt: string; id: number; name: string }>; title?: string; summary?: string }): ReactElement => (
+	DataTable: ({ action, pageNumber, primaryAction, rows, title, summary }: { action?: { buttonLabel: string; onAction: (row: { createdAt: string; name: string; uuid: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ createdAt: string; name: string; uuid: string }>; title?: string; summary?: string }): ReactElement => (
 		<section>
 			{title ? <h2>{title}</h2> : null}
 			<p>{summary ?? `Showing ${rows?.length ?? 0} tiers on page ${pageNumber ?? 1}`}</p>
@@ -87,13 +87,13 @@ describe("TiersPage", () => {
 			page: 1,
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: {
-				data: [{ id: 2, name: "free", created_at: "2026-03-17T00:00:00Z" }],
+				data: [{ name: "free", created_at: "2026-03-17T00:00:00Z", uuid: "tier-uuid-2" }],
 				"has_more": false,
 				"items_per_page": 10,
 				page: 1,
 				"total_count": 1,
 			},
-			tiers: [{ id: 2, name: "free", created_at: "2026-03-17T00:00:00Z" }],
+			tiers: [{ name: "free", created_at: "2026-03-17T00:00:00Z", uuid: "tier-uuid-2" }],
 			updateTier: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 

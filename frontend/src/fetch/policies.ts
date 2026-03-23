@@ -3,9 +3,9 @@ import type { ApiMessageResponse } from "./api-types";
 
 export type PolicyRead = {
 	action: string;
-	id: number;
 	resource: string;
 	subject: string;
+	uuid: string;
 };
 
 export type PolicyCreate = {
@@ -52,17 +52,17 @@ export const createPolicy = async (
 	});
 
 export const updatePolicy = async (
-	policyId: number,
+	policyUuid: string,
 	payload: PolicyUpdate,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/policy/${policyId}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/policy/${policyUuid}`, {
 		body: JSON.stringify(payload),
 		method: "PATCH",
 	});
 
 export const deletePolicy = async (
-	policyId: number,
+	policyUuid: string,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/policy/${policyId}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/policy/${policyUuid}`, {
 		method: "DELETE",
 	});

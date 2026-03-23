@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
@@ -9,7 +10,7 @@ from ...core.access_control import casbin_guard
 from ...core.db.database import async_get_db
 from ...core.security import oauth2_scheme
 from ...schemas.role import RoleRead
-from ...schemas.user import UserCreate, UserRead, UserRoleUpdate, UserTierUpdate, UserUpdate
+from ...schemas.user import UserCreate, UserRateLimitsRead, UserRead, UserRoleUpdate, UserTierRead, UserTierUpdate, UserUpdate
 from ...services.user_service import UserService
 
 router = APIRouter(tags=["users"])
@@ -41,105 +42,105 @@ async def read_users_me(request: Request, current_user: Annotated[dict, Depends(
     return current_user
 
 
-@router.get("/user/{username}", response_model=UserRead)
+@router.get("/user/{user_uuid}", response_model=UserRead)
 async def read_user(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict[str, Any]:
-    return await service.get_user_by_username(db=db, username=username)
+    return await service.get_user_by_uuid(db=db, user_uuid=user_uuid)
 
 
-@router.patch("/user/{username}")
+@router.patch("/user/{user_uuid}")
 @casbin_guard.require_permission("users_admin", "write")
 async def patch_user(
     request: Request,
     values: UserUpdate,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict[str, str]:
-    return await service.update_user(db=db, username=username, current_user=current_user, values=values)
+    return await service.update_user(db=db, user_uuid=user_uuid, current_user=current_user, values=values)
 
 
-@router.delete("/user/{username}")
+@router.delete("/user/{user_uuid}")
 @casbin_guard.require_permission("users_admin", "write")
 async def erase_user(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
     token: str = Depends(oauth2_scheme),
 ) -> dict[str, str]:
-    return await service.delete_user(db=db, username=username, current_user=current_user, token=token)
+    return await service.delete_user(db=db, user_uuid=user_uuid, current_user=current_user, token=token)
 
 
-@router.delete("/db_user/{username}")
+@router.delete("/db_user/{user_uuid}")
 @casbin_guard.require_permission("users_admin", "write")
 async def erase_db_user(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
     token: str = Depends(oauth2_scheme),
 ) -> dict[str, str]:
-    return await service.delete_user_from_db(db=db, username=username, token=token)
+    return await service.delete_user_from_db(db=db, user_uuid=user_uuid, token=token)
 
 
-@router.get("/user/{username}/rate_limits")
+@router.get("/user/{user_uuid}/rate_limits", response_model=UserRateLimitsRead)
 @casbin_guard.require_permission("users_admin", "read")
 async def read_user_rate_limits(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict[str, Any]:
-    return await service.get_user_rate_limits(db=db, username=username)
+    return await service.get_user_rate_limits(db=db, user_uuid=user_uuid)
 
 
-@router.get("/user/{username}/tier")
+@router.get("/user/{user_uuid}/tier", response_model=UserTierRead | None)
 async def read_user_tier(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict | None:
-    return await service.get_user_tier(db=db, username=username)
+    return await service.get_user_tier(db=db, user_uuid=user_uuid)
 
 
-@router.get("/user/{username}/role", response_model=RoleRead | None)
+@router.get("/user/{user_uuid}/role", response_model=RoleRead | None)
 @casbin_guard.require_permission("users_admin", "read")
 async def read_user_role(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict | None:
-    return await service.get_user_role(db=db, username=username)
+    return await service.get_user_role(db=db, user_uuid=user_uuid)
 
 
-@router.patch("/user/{username}/role")
+@router.patch("/user/{user_uuid}/role")
 @casbin_guard.require_permission("users_admin", "write")
 async def patch_user_role(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     values: UserRoleUpdate,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict[str, str]:
-    return await service.update_user_role(db=db, username=username, values=values)
+    return await service.update_user_role(db=db, user_uuid=user_uuid, values=values)
 
 
-@router.patch("/user/{username}/tier")
+@router.patch("/user/{user_uuid}/tier")
 @casbin_guard.require_permission("users_admin", "write")
 async def patch_user_tier(
     request: Request,
-    username: str,
+    user_uuid: uuid_pkg.UUID,
     values: UserTierUpdate,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict[str, str]:
-    return await service.update_user_tier(db=db, username=username, values=values)
+    return await service.update_user_tier(db=db, user_uuid=user_uuid, values=values)

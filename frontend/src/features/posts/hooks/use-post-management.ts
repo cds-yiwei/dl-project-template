@@ -15,72 +15,72 @@ import { pendingReviewPostsQueryKey } from "./use-pending-review-posts";
 import { postsQueryKey, usePosts, type PostsState } from "./use-posts";
 
 export type PostManagementState = PostsState & {
-	approve: (postId: number, payload: PostReviewPayload) => Promise<void>;
+	approve: (postUuid: string, payload: PostReviewPayload) => Promise<void>;
 	createPost: (payload: PostCreate) => Promise<void>;
-	deletePost: (postId: number) => Promise<void>;
+	deletePost: (postUuid: string) => Promise<void>;
 	isApproving: boolean;
 	isCreating: boolean;
 	isDeleting: boolean;
 	isRejecting: boolean;
 	isSubmittingForReview: boolean;
 	isUpdating: boolean;
-	reject: (postId: number, payload: PostReviewPayload) => Promise<void>;
-	submitForReview: (postId: number) => Promise<void>;
-	updatePost: (postId: number, payload: PostUpdate) => Promise<void>;
+	reject: (postUuid: string, payload: PostReviewPayload) => Promise<void>;
+	submitForReview: (postUuid: string) => Promise<void>;
+	updatePost: (postUuid: string, payload: PostUpdate) => Promise<void>;
 };
 
 export const usePostManagement = (
-	username: string | null | undefined,
+	userUuid: string | null | undefined,
 	page = 1,
 	itemsPerPage = 25,
 ): PostManagementState => {
 	const queryClient = useQueryClient();
-	const query = usePosts(username, page, itemsPerPage);
+	const query = usePosts(userUuid, page, itemsPerPage);
 
 	const refreshPosts = async (): Promise<void> => {
-		if (!username) {
+		if (!userUuid) {
 			return;
 		}
 
 		await refreshActiveListQuery(queryClient, {
-			exactQueryKey: postsQueryKey(username, page, itemsPerPage),
-			invalidationKeys: [["posts", username]],
+			exactQueryKey: postsQueryKey(userUuid, page, itemsPerPage),
+			invalidationKeys: [["posts", userUuid]],
 			refetchActiveQuery: query.refetch,
 		});
 	};
 
 	const createMutation = useMutation({
-		mutationFn: (payload: PostCreate) => postCreate(username ?? "", payload),
+		mutationFn: (payload: PostCreate) => postCreate(userUuid ?? "", payload),
 		onSuccess: refreshPosts,
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: ({ payload, postId }: { payload: PostUpdate; postId: number }) =>
-			patchPost(username ?? "", postId, payload),
+		mutationFn: ({ payload, postUuid }: { payload: PostUpdate; postUuid: string }) =>
+			patchPost(userUuid ?? "", postUuid, payload),
 		onSuccess: refreshPosts,
 	});
 
 	const deleteMutation = useMutation({
-		mutationFn: (postId: number) => removePost(username ?? "", postId),
+		mutationFn: (postUuid: string) => removePost(userUuid ?? "", postUuid),
 		onSuccess: refreshPosts,
 	});
 
 	const submitMutation = useMutation({
-		mutationFn: (postId: number) => postSubmission(username ?? "", postId),
+		mutationFn: (postUuid: string) => postSubmission(userUuid ?? "", postUuid),
 		onSuccess: refreshPosts,
 	});
 
 	const approveMutation = useMutation({
-		mutationFn: ({ payload, postId }: { payload: PostReviewPayload; postId: number }) =>
-			postApproval(postId, payload),
+		mutationFn: ({ payload, postUuid }: { payload: PostReviewPayload; postUuid: string }) =>
+			postApproval(postUuid, payload),
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: pendingReviewPostsQueryKey(1, 10) });
 		},
 	});
 
 	const rejectMutation = useMutation({
-		mutationFn: ({ payload, postId }: { payload: PostReviewPayload; postId: number }) =>
-			postRejection(postId, payload),
+		mutationFn: ({ payload, postUuid }: { payload: PostReviewPayload; postUuid: string }) =>
+			postRejection(postUuid, payload),
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({ queryKey: ["pending-review-posts"] });
 		},
@@ -88,14 +88,14 @@ export const usePostManagement = (
 
 	return {
 		...query,
-		approve: async (postId: number, payload: PostReviewPayload): Promise<void> => {
-			await approveMutation.mutateAsync({ payload, postId });
+		approve: async (postUuid: string, payload: PostReviewPayload): Promise<void> => {
+			await approveMutation.mutateAsync({ payload, postUuid });
 		},
 		createPost: async (payload: PostCreate): Promise<void> => {
 			await createMutation.mutateAsync(payload);
 		},
-		deletePost: async (postId: number): Promise<void> => {
-			await deleteMutation.mutateAsync(postId);
+		deletePost: async (postUuid: string): Promise<void> => {
+			await deleteMutation.mutateAsync(postUuid);
 		},
 		isApproving: approveMutation.isPending,
 		isCreating: createMutation.isPending,
@@ -103,14 +103,14 @@ export const usePostManagement = (
 		isRejecting: rejectMutation.isPending,
 		isSubmittingForReview: submitMutation.isPending,
 		isUpdating: updateMutation.isPending,
-		reject: async (postId: number, payload: PostReviewPayload): Promise<void> => {
-			await rejectMutation.mutateAsync({ payload, postId });
+		reject: async (postUuid: string, payload: PostReviewPayload): Promise<void> => {
+			await rejectMutation.mutateAsync({ payload, postUuid });
 		},
-		submitForReview: async (postId: number): Promise<void> => {
-			await submitMutation.mutateAsync(postId);
+		submitForReview: async (postUuid: string): Promise<void> => {
+			await submitMutation.mutateAsync(postUuid);
 		},
-		updatePost: async (postId: number, payload: PostUpdate): Promise<void> => {
-			await updateMutation.mutateAsync({ payload, postId });
+		updatePost: async (postUuid: string, payload: PostUpdate): Promise<void> => {
+			await updateMutation.mutateAsync({ payload, postUuid });
 		},
 	};
 };

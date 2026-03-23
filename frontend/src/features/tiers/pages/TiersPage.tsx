@@ -21,8 +21,8 @@ const emptyTierForm: TierFormState = {
 
 type TierTableRow = {
 	createdAt: string;
-	id: number;
 	name: string;
+	uuid: string;
 };
 
 export const TiersPage = (): FunctionComponent => {
@@ -44,7 +44,7 @@ export const TiersPage = (): FunctionComponent => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [form, setForm] = useState<TierFormState>(emptyTierForm);
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
-	const [selectedTierName, setSelectedTierName] = useState<string | null>(null);
+	const [selectedTierUuid, setSelectedTierUuid] = useState<string | null>(null);
 	const errorNotice = error && isForbiddenRequestError(error)
 		? {
 			bodyKey: "tiers.forbiddenBody",
@@ -56,11 +56,11 @@ export const TiersPage = (): FunctionComponent => {
 			titleKey: "tiers.errorTitle",
 		});
 
-	const selectedTier = tiers.find((tier) => tier.name === selectedTierName) ?? null;
+	const selectedTier = tiers.find((tier) => tier.uuid === selectedTierUuid) ?? null;
 	const tierRows: Array<TierTableRow> = tiers.map((tier) => ({
 		createdAt: tier.created_at,
-		id: tier.id,
 		name: tier.name,
+		uuid: tier.uuid,
 	}));
 	const tierColumns: Array<DataTableColumn<TierTableRow>> = [
 		{ field: "name", headerName: t("tiers.nameLabel"), pinned: "left" },
@@ -73,15 +73,15 @@ export const TiersPage = (): FunctionComponent => {
 			return;
 		}
 
-		if (!selectedTierName || tiers.some((tier) => tier.name === selectedTierName)) {
+		if (!selectedTierUuid || tiers.some((tier) => tier.uuid === selectedTierUuid)) {
 			return;
 		}
 
-		setSelectedTierName(null);
+		setSelectedTierUuid(null);
 		setDeleteDialogOpen(false);
 		setModalMode(null);
 		setForm(emptyTierForm);
-	}, [deleteDialogOpen, modalMode, selectedTierName, tiers]);
+	}, [deleteDialogOpen, modalMode, selectedTierUuid, tiers]);
 
 	const closeModal = (): void => {
 		setModalMode(null);
@@ -90,20 +90,20 @@ export const TiersPage = (): FunctionComponent => {
 
 	const openCreateModal = (): void => {
 		releaseActiveElementFocus();
-		setSelectedTierName(null);
+		setSelectedTierUuid(null);
 		setForm(emptyTierForm);
 		setModalMode("create");
 	};
 
-	const openEditModal = (tierName: string): void => {
-		const tier = tiers.find((item) => item.name === tierName);
+	const openEditModal = (tierUuid: string): void => {
+		const tier = tiers.find((item) => item.uuid === tierUuid);
 
 		if (!tier) {
 			return;
 		}
 
 		releaseActiveElementFocus();
-		setSelectedTierName(tier.name);
+		setSelectedTierUuid(tier.uuid);
 		setForm({ name: tier.name });
 		setModalMode("edit");
 	};
@@ -119,7 +119,7 @@ export const TiersPage = (): FunctionComponent => {
 			return;
 		}
 
-		await updateTier(selectedTier.name, form);
+		await updateTier(selectedTier.uuid, form);
 		setPage(1);
 		closeModal();
 	};
@@ -129,10 +129,10 @@ export const TiersPage = (): FunctionComponent => {
 			return;
 		}
 
-		await deleteTier(selectedTier.name);
+		await deleteTier(selectedTier.uuid);
 		setPage(1);
 		setDeleteDialogOpen(false);
-		setSelectedTierName(null);
+		setSelectedTierUuid(null);
 		closeModal();
 	};
 
@@ -170,16 +170,16 @@ export const TiersPage = (): FunctionComponent => {
 				<div className="grid gap-300">
 					<DataTable
 						action={{
-							buttonId: (row) => `manage-tier-${row.id}`,
+							buttonId: (row) => `manage-tier-${row.uuid}`,
 							buttonLabel: t("tiers.manageAction"),
 							onAction: (row) => {
-								openEditModal(row.name);
+								openEditModal(row.uuid);
 							},
 							screenReaderLabel: (row) => row.name,
 						}}
 						columns={tierColumns}
 						exportFileName="tiers.csv"
-						getRowId={(row) => String(row.id)}
+						getRowId={(row) => row.uuid}
 						itemLabel="tiers"
 						pagination={false}
 						primaryAction={{

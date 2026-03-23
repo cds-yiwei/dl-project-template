@@ -36,10 +36,10 @@ const emptyEditForm: EditUserFormState = {
 
 type UserTableRow = {
 	email: string;
-	id: number;
 	name: string;
 	provider: string;
 	roleName: string;
+	uuid: string;
 	username: string;
 };
 
@@ -64,7 +64,7 @@ export const UsersPage = (): FunctionComponent => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [editForm, setEditForm] = useState<EditUserFormState>(emptyEditForm);
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
-	const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+	const [selectedRoleUuid, setSelectedRoleUuid] = useState<string>("");
 	const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
 	const {
 		error: userRoleError,
@@ -73,7 +73,7 @@ export const UsersPage = (): FunctionComponent => {
 		role,
 		updateUserRole,
 	} = useUserRole(modalMode === "edit" ? selectedUsername : null);
-	const selectedUser = users.find((user) => user.username === selectedUsername) ?? null;
+	const selectedUser = users.find((user) => user.uuid === selectedUsername) ?? null;
 	const currentRoleName = role?.name ?? t("users.noRole");
 	const combinedError = error ?? rolesError ?? userRoleError;
 	const errorNotice = getRequestErrorNotice(combinedError, {
@@ -83,10 +83,10 @@ export const UsersPage = (): FunctionComponent => {
 	const isBusy = isLoading || isRolesLoading;
 	const userRows: Array<UserTableRow> = users.map((user) => ({
 		email: user.email,
-		id: user.id,
 		name: user.name,
 		provider: user.auth_provider ?? t("users.noProvider"),
-		roleName: roles.find((entry) => entry.id === user.role_id)?.name ?? t("users.noRole"),
+		roleName: roles.find((entry) => entry.uuid === user.role_uuid)?.name ?? (user.role_uuid == null ? t("users.noRole") : t("users.manageRoleTitle")),
+		uuid: user.uuid,
 		username: user.username,
 	}));
 	const userColumns: Array<DataTableColumn<UserTableRow>> = [
@@ -99,22 +99,22 @@ export const UsersPage = (): FunctionComponent => {
 	const totalPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
 
 	useEffect(() => {
-		setSelectedRoleId(role?.id ? String(role.id) : "");
-	}, [role]);
+		setSelectedRoleUuid(selectedUser?.role_uuid ?? "");
+	}, [selectedUser]);
 
 	useEffect(() => {
 		if (modalMode !== "edit" && !deleteDialogOpen) {
 			return;
 		}
 
-		if (!selectedUsername || users.some((user) => user.username === selectedUsername)) {
+		if (!selectedUsername || users.some((user) => user.uuid === selectedUsername)) {
 			return;
 		}
 
 		setDeleteDialogOpen(false);
 		setEditForm(emptyEditForm);
 		setModalMode(null);
-		setSelectedRoleId("");
+		setSelectedRoleUuid("");
 		setSelectedUsername(null);
 	}, [deleteDialogOpen, modalMode, selectedUsername, users]);
 
@@ -123,7 +123,7 @@ export const UsersPage = (): FunctionComponent => {
 		setCreateForm(emptyCreateForm);
 		setDeleteDialogOpen(false);
 		setEditForm(emptyEditForm);
-		setSelectedRoleId("");
+		setSelectedRoleUuid("");
 		setSelectedUsername(null);
 	};
 
@@ -131,12 +131,12 @@ export const UsersPage = (): FunctionComponent => {
 		releaseActiveElementFocus();
 		setCreateForm(emptyCreateForm);
 		setSelectedUsername(null);
-		setSelectedRoleId("");
+		setSelectedRoleUuid("");
 		setModalMode("create");
 	};
 
-	const openEditModal = (username: string): void => {
-		const user = users.find((entry) => entry.username === username);
+	const openEditModal = (userUuid: string): void => {
+		const user = users.find((entry) => entry.uuid === userUuid);
 
 		if (!user) {
 			return;
@@ -148,7 +148,7 @@ export const UsersPage = (): FunctionComponent => {
 			name: user.name,
 			username: user.username,
 		});
-		setSelectedUsername(user.username);
+		setSelectedUsername(user.uuid);
 		setModalMode("edit");
 	};
 
@@ -163,7 +163,7 @@ export const UsersPage = (): FunctionComponent => {
 			return;
 		}
 
-		await updateUser(selectedUser.username, editForm);
+		await updateUser(selectedUser.uuid, editForm);
 		setPage(1);
 		closeModal();
 	};
@@ -173,7 +173,7 @@ export const UsersPage = (): FunctionComponent => {
 			return;
 		}
 
-		await deleteUser(selectedUser.username);
+		await deleteUser(selectedUser.uuid);
 		setPage(1);
 		closeModal();
 	};
@@ -183,8 +183,8 @@ export const UsersPage = (): FunctionComponent => {
 			return;
 		}
 
-		await updateUserRole(selectedUser.username, {
-			role_id: selectedRoleId.length > 0 ? Number(selectedRoleId) : null,
+		await updateUserRole(selectedUser.uuid, {
+			role_uuid: selectedRoleUuid.length > 0 ? selectedRoleUuid : null,
 		});
 		setPage(1);
 	};
@@ -222,16 +222,16 @@ export const UsersPage = (): FunctionComponent => {
 				<div className="grid gap-300">
 					<DataTable
 						action={{
-							buttonId: (row) => `manage-user-${row.id}`,
+							buttonId: (row) => `manage-user-${row.uuid}`,
 							buttonLabel: t("users.manageAction"),
 							onAction: (row) => {
-								openEditModal(row.username);
+								openEditModal(row.uuid);
 							},
 							screenReaderLabel: (row) => row.name,
 						}}
 						columns={userColumns}
 						exportFileName="users.csv"
-						getRowId={(row) => String(row.id)}
+						getRowId={(row) => row.uuid}
 						itemLabel="users"
 						pagination={false}
 						primaryAction={{
@@ -315,11 +315,11 @@ export const UsersPage = (): FunctionComponent => {
 							{isUserRoleLoading ? <Text>{t("users.loadingRoleBody")}</Text> : null}
 							<Text>{t("users.role", { value: currentRoleName })}</Text>
 							<Select label={t("users.roleLabel")} name="role" onInput={(event): void => {
-								setSelectedRoleId(event.target.value);
-							}} selectId="user-role-select" value={selectedRoleId}>
+								setSelectedRoleUuid(event.target.value);
+							}} selectId="user-role-select" value={selectedRoleUuid}>
 								<option value="">{t("users.noRole")}</option>
 								{roles.map((entry) => (
-									<option key={entry.id} value={String(entry.id)}>{entry.name}</option>
+									<option key={entry.uuid} value={entry.uuid}>{entry.name}</option>
 								))}
 							</Select>
 							<Button buttonId="save-user-role-action" disabled={isUpdatingRole || isUserRoleLoading} onGcdsClick={() => {

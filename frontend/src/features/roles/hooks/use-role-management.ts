@@ -11,11 +11,11 @@ import { rolesQueryKey, useRoles, type RolesState } from "./use-roles";
 
 export type RoleManagementState = RolesState & {
 	createRole: (payload: RoleCreate) => Promise<void>;
-	deleteRole: (name: string) => Promise<void>;
+	deleteRole: (roleUuid: string) => Promise<void>;
 	isCreating: boolean;
 	isDeleting: boolean;
 	isUpdating: boolean;
-	updateRole: (name: string, payload: RoleUpdate) => Promise<void>;
+	updateRole: (roleUuid: string, payload: RoleUpdate) => Promise<void>;
 };
 
 export const useRoleManagement = (
@@ -39,8 +39,8 @@ export const useRoleManagement = (
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: ({ name, payload }: { name: string; payload: RoleUpdate }) =>
-			patchRole(name, payload),
+		mutationFn: ({ payload, roleUuid }: { payload: RoleUpdate; roleUuid: string }) =>
+			patchRole(roleUuid, payload),
 		onSuccess: refreshRoles,
 	});
 
@@ -54,14 +54,14 @@ export const useRoleManagement = (
 		createRole: async (payload: RoleCreate): Promise<void> => {
 			await createMutation.mutateAsync(payload);
 		},
-		deleteRole: async (name: string): Promise<void> => {
-			await deleteMutation.mutateAsync(name);
+		deleteRole: async (roleUuid: string): Promise<void> => {
+			await deleteMutation.mutateAsync(roleUuid);
 		},
 		isCreating: createMutation.isPending,
 		isDeleting: deleteMutation.isPending,
 		isUpdating: updateMutation.isPending,
-		updateRole: async (name: string, payload: RoleUpdate): Promise<void> => {
-			await updateMutation.mutateAsync({ name, payload });
+		updateRole: async (roleUuid: string, payload: RoleUpdate): Promise<void> => {
+			await updateMutation.mutateAsync({ payload, roleUuid });
 		},
 	};
 };

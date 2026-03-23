@@ -67,7 +67,7 @@ vi.mock("@/components/ui", () => ({
 			{title ? <h2>{title}</h2> : null}
 			{primaryAction ? <button onClick={primaryAction.onAction} type="button">{primaryAction.buttonLabel}</button> : null}
 			{rows?.map((row) => (
-				<div key={String(row["id"])}>
+				<div key={String(row["uuid"] ?? row["id"])}>
 					{columns?.map((column) => (
 						<div key={column.headerName}>
 							{column.cellRenderer ? column.cellRenderer(row) : <span>{String(row[column.field ?? ""] ?? "")}</span>}
@@ -88,15 +88,15 @@ describe("PostManagementPage", () => {
 
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 3,
-				tier_id: 2,
+				role_uuid: "role-uuid-3",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,
@@ -119,7 +119,7 @@ describe("PostManagementPage", () => {
 			itemsPerPage: 25,
 			page: 1,
 			posts: [
-				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, id: 11, media_url: null, status: "draft", text: "Draft", title: "Draft post" },
+				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 7, media_url: null, status: "draft", text: "Draft", title: "Draft post", uuid: "post-uuid-11" },
 			],
 			reject,
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
@@ -133,7 +133,7 @@ describe("PostManagementPage", () => {
 			itemsPerPage: 10,
 			page: 1,
 			posts: [
-				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 9, id: 21, media_url: null, status: "in_review", text: "Waiting", title: "Needs review" },
+				{ created_at: "2026-03-18T00:00:00Z", created_by_user_id: 9, media_url: null, status: "in_review", text: "Waiting", title: "Needs review", uuid: "post-uuid-21" },
 			],
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: null,
@@ -141,6 +141,7 @@ describe("PostManagementPage", () => {
 
 		render(<PostManagementPage />);
 
+		expect(usePostManagement).toHaveBeenCalledWith("user-uuid-7", 1, 25);
 		expect(screen.getByRole("heading", { name: /post management/i })).toBeTruthy();
 		const reviewHeading = screen.getByRole("heading", { name: /posts awaiting review/i });
 		const myPostsHeading = screen.getByRole("heading", { name: /my posts/i });
@@ -157,22 +158,22 @@ describe("PostManagementPage", () => {
 		fireEvent.click(screen.getAllByRole("button", { name: /manage/i })[1]!);
 		fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
 
-		expect(approve).toHaveBeenCalledWith(21, { comment: "Looks good" });
-		expect(submitForReview).toHaveBeenCalledWith(11);
+		expect(approve).toHaveBeenCalledWith("post-uuid-21", { comment: "Looks good" });
+		expect(submitForReview).toHaveBeenCalledWith("post-uuid-11");
 	});
 
 	it("hides reviewer actions when the user cannot access the approval queue", () => {
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 3,
-				tier_id: 2,
+				role_uuid: "role-uuid-3",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,
@@ -213,6 +214,7 @@ describe("PostManagementPage", () => {
 
 		render(<PostManagementPage />);
 
+		expect(usePostManagement).toHaveBeenCalledWith("user-uuid-7", 1, 25);
 		expect(screen.queryByRole("heading", { name: /posts awaiting review/i })).toBeNull();
 	});
 
@@ -221,15 +223,15 @@ describe("PostManagementPage", () => {
 
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 3,
-				tier_id: 2,
+				role_uuid: "role-uuid-3",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,
@@ -283,15 +285,15 @@ describe("PostManagementPage", () => {
 
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 3,
-				tier_id: 2,
+				role_uuid: "role-uuid-3",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,

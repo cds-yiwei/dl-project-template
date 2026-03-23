@@ -7,11 +7,11 @@ export type UserRead = {
 	auth_provider: string | null;
 	auth_subject: string | null;
 	email: string;
-	id: number;
 	name: string;
 	profile_image_url: string | null;
-	role_id: number | null;
-	tier_id: number | null;
+	role_uuid: string | null;
+	tier_uuid: string | null;
+	uuid: string;
 	username: string;
 };
 

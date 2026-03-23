@@ -21,3 +21,4 @@ class TestPostApprovalModel:
         required_fields = {"uuid", "created_at", "updated_at", "deleted_at", "is_deleted"}
 
         assert required_fields.issubset(PostApprovalRead.model_fields.keys())
+        assert "id" not in PostApprovalRead.model_fields

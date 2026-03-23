@@ -47,7 +47,7 @@ vi.mock("@/components/ui", () => ({
 		</button>
 	),
 	ConfirmDialog: ({ isOpen, title }: { isOpen: boolean; title: string }): ReactElement | null => (isOpen ? <section><h2>{title}</h2></section> : null),
-	DataTable: ({ action, pageNumber, primaryAction, title, rows, summary }: { action?: { buttonLabel: string; onAction: (row: { description: string; id: number; name: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ description: string; id: number; name: string }>; title?: string; summary?: string }): ReactElement => (
+	DataTable: ({ action, pageNumber, primaryAction, title, rows, summary }: { action?: { buttonLabel: string; onAction: (row: { description: string; name: string; uuid: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ description: string; name: string; uuid: string }>; title?: string; summary?: string }): ReactElement => (
 		<section>
 			{title ? <h2>{title}</h2> : null}
 			<p>{summary ?? `Showing ${rows?.length ?? 0} roles on page ${pageNumber ?? 1}`}</p>
@@ -92,13 +92,13 @@ describe("RolesPage", () => {
 			page: 1,
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: {
-				data: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", id: 3, name: "admin" }],
+				data: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" }],
 				"has_more": false,
 				"items_per_page": 10,
 				page: 1,
 				"total_count": 1,
 			},
-			roles: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", id: 3, name: "admin" }],
+			roles: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" }],
 			updateRole: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 

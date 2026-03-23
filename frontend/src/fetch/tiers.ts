@@ -10,9 +10,9 @@ export type TierUpdate = {
 };
 
 export type TierRead = {
-	id: number;
 	name: string;
 	created_at: string;
+	uuid: string;
 };
 
 export type TiersListResponse = {
@@ -44,13 +44,13 @@ export const getTiers = async (
 	})) as TiersListResponse;
 };
 
-export const updateTier = async (name: string, payload: TierUpdate): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/tier/${encodeURIComponent(name)}`, {
+export const updateTier = async (tierUuid: string, payload: TierUpdate): Promise<ApiMessageResponse | null> =>
+	requestJson<ApiMessageResponse>(`/api/v1/tier/${encodeURIComponent(tierUuid)}`, {
 		body: JSON.stringify(payload),
 		method: "PATCH",
 	});
 
-export const deleteTier = async (name: string): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/tier/${encodeURIComponent(name)}`, {
+export const deleteTier = async (tierUuid: string): Promise<ApiMessageResponse | null> =>
+	requestJson<ApiMessageResponse>(`/api/v1/tier/${encodeURIComponent(tierUuid)}`, {
 		method: "DELETE",
 	});

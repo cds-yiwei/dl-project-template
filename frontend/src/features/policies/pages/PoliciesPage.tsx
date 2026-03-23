@@ -22,9 +22,9 @@ const emptyPolicyForm: PolicyFormState = {
 
 type PolicyTableRow = {
 	action: string;
-	id: number;
 	resource: string;
 	subject: string;
+	uuid: string;
 };
 
 export const PoliciesPage = (): FunctionComponent => {
@@ -46,18 +46,18 @@ export const PoliciesPage = (): FunctionComponent => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [form, setForm] = useState<PolicyFormState>(emptyPolicyForm);
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
-	const [selectedPolicyId, setSelectedPolicyId] = useState<number | null>(null);
+	const [selectedPolicyUuid, setSelectedPolicyUuid] = useState<string | null>(null);
 	const errorNotice = getRequestErrorNotice(error, {
 		bodyKey: "policies.errorBody",
 		titleKey: "policies.errorTitle",
 	});
 
-	const selectedPolicy = policies.find((policy) => policy.id === selectedPolicyId) ?? null;
+	const selectedPolicy = policies.find((policy) => policy.uuid === selectedPolicyUuid) ?? null;
 	const policyRows: Array<PolicyTableRow> = policies.map((policy) => ({
 		action: policy.action,
-		id: policy.id,
 		resource: policy.resource,
 		subject: policy.subject,
+		uuid: policy.uuid,
 	}));
 	const policyColumns: Array<DataTableColumn<PolicyTableRow>> = [
 		{ field: "subject", headerName: t("policies.subjectLabel"), pinned: "left" },
@@ -71,15 +71,15 @@ export const PoliciesPage = (): FunctionComponent => {
 			return;
 		}
 
-		if (!selectedPolicyId || policies.some((policy) => policy.id === selectedPolicyId)) {
+		if (!selectedPolicyUuid || policies.some((policy) => policy.uuid === selectedPolicyUuid)) {
 			return;
 		}
 
-		setSelectedPolicyId(null);
+		setSelectedPolicyUuid(null);
 		setDeleteDialogOpen(false);
 		setModalMode(null);
 		setForm(emptyPolicyForm);
-	}, [deleteDialogOpen, modalMode, policies, selectedPolicyId]);
+	}, [deleteDialogOpen, modalMode, policies, selectedPolicyUuid]);
 
 	const closeModal = (): void => {
 		setModalMode(null);
@@ -88,20 +88,20 @@ export const PoliciesPage = (): FunctionComponent => {
 
 	const openCreateModal = (): void => {
 		releaseActiveElementFocus();
-		setSelectedPolicyId(null);
+		setSelectedPolicyUuid(null);
 		setForm(emptyPolicyForm);
 		setModalMode("create");
 	};
 
-	const openEditModal = (policyId: number): void => {
-		const policy = policies.find((item) => item.id === policyId);
+	const openEditModal = (policyUuid: string): void => {
+		const policy = policies.find((item) => item.uuid === policyUuid);
 
 		if (!policy) {
 			return;
 		}
 
 		releaseActiveElementFocus();
-		setSelectedPolicyId(policy.id);
+		setSelectedPolicyUuid(policy.uuid);
 		setForm({
 			action: policy.action,
 			resource: policy.resource,
@@ -121,7 +121,7 @@ export const PoliciesPage = (): FunctionComponent => {
 			return;
 		}
 
-		await updatePolicy(selectedPolicy.id, form);
+		await updatePolicy(selectedPolicy.uuid, form);
 		setPage(1);
 		closeModal();
 	};
@@ -131,10 +131,10 @@ export const PoliciesPage = (): FunctionComponent => {
 			return;
 		}
 
-		await deletePolicy(selectedPolicy.id);
+		await deletePolicy(selectedPolicy.uuid);
 		setPage(1);
 		setDeleteDialogOpen(false);
-		setSelectedPolicyId(null);
+		setSelectedPolicyUuid(null);
 		closeModal();
 	};
 
@@ -168,16 +168,16 @@ export const PoliciesPage = (): FunctionComponent => {
 				<div className="grid gap-300">
 					<DataTable
 						action={{
-							buttonId: (row) => `manage-policy-${row.id}`,
+							buttonId: (row) => `manage-policy-${row.uuid}`,
 							buttonLabel: t("policies.manageAction"),
 							onAction: (row) => {
-								openEditModal(row.id);
+								openEditModal(row.uuid);
 							},
 							screenReaderLabel: (row) => `${row.subject} ${row.resource}`,
 						}}
 						columns={policyColumns}
 						exportFileName="policies.csv"
-						getRowId={(row) => String(row.id)}
+						getRowId={(row) => row.uuid}
 						itemLabel="policies"
 						pagination={false}
 						primaryAction={{

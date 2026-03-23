@@ -26,16 +26,17 @@ class TestTierService:
             mock_tiers.get = AsyncMock(return_value=None)
 
             with pytest.raises(NotFoundException, match="Tier not found"):
-                await service.get_tier_by_name(db=mock_db, name="missing")
+                await service.get_tier_by_uuid(db=mock_db, tier_uuid="018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401")
 
     @pytest.mark.asyncio
     async def test_update_tier_updates_existing_tier(self, mock_db) -> None:
         service = TierService()
+        tier_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401"
 
         with patch("src.app.services.tier_service.crud_tiers") as mock_tiers:
-            mock_tiers.get = AsyncMock(return_value={"id": 1, "name": "free"})
+            mock_tiers.get = AsyncMock(return_value={"id": 1, "uuid": tier_uuid, "name": "free"})
             mock_tiers.update = AsyncMock(return_value=None)
 
-            result = await service.update_tier(db=mock_db, name="free", values=TierUpdate(name="pro"))
+            result = await service.update_tier(db=mock_db, tier_uuid=tier_uuid, values=TierUpdate(name="pro"))
 
         assert result == {"message": "Tier updated"}

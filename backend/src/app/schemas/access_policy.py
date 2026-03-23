@@ -1,3 +1,5 @@
+import uuid as uuid_pkg
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -14,7 +16,7 @@ class AccessPolicyUpdate(BaseModel):
 
 
 class AccessPolicyOut(BaseModel):
-    id: int
+    uuid: uuid_pkg.UUID
     subject: str
     resource: str
     action: str

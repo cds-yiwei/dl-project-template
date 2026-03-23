@@ -18,6 +18,30 @@ class TestAuthService:
             await service.login(form_data=form_data, db=mock_db)
 
     @pytest.mark.asyncio
+    async def test_login_issues_uuid_subject_tokens(self, mock_db) -> None:
+        service = AuthService()
+        form_data = Mock(username="demo", password="secret")
+        user = {
+            "uuid": "019cfc22-bff2-7168-ae43-387a301d8fcb",
+            "username": "demo",
+        }
+
+        with patch("src.app.services.auth_service.authenticate_user", new_callable=AsyncMock) as mock_authenticate:
+            with patch("src.app.services.auth_service.create_access_token", new_callable=AsyncMock) as mock_access:
+                with patch("src.app.services.auth_service.create_refresh_token", new_callable=AsyncMock) as mock_refresh:
+                    mock_authenticate.return_value = user
+                    mock_access.return_value = "access-token"
+                    mock_refresh.return_value = "refresh-token"
+
+                    result = await service.login(form_data=form_data, db=mock_db)
+
+        assert result["access_token"] == "access-token"
+        assert result["refresh_token"] == "refresh-token"
+        mock_access.assert_awaited_once()
+        mock_refresh.assert_awaited_once_with(data={"sub": user["uuid"]})
+        assert mock_access.await_args.kwargs["data"] == {"sub": user["uuid"]}
+
+    @pytest.mark.asyncio
     async def test_logout_blacklists_tokens_when_present(self, mock_db) -> None:
         service = AuthService()
         request = Mock(session={})

@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from datetime import datetime
 from enum import Enum
 from typing import Annotated
@@ -30,6 +31,7 @@ class Post(TimestampSchema, PostBase, UUIDSchema, PersistentDeletion):
 
 class PostRead(BaseModel):
     id: int
+    uuid: uuid_pkg.UUID
     title: Annotated[str, Field(min_length=2, max_length=30, examples=["This is my post"])]
     text: Annotated[str, Field(min_length=1, max_length=63206, examples=["This is the content of my post."])]
     media_url: Annotated[

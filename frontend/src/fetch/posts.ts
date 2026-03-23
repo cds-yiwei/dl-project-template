@@ -6,11 +6,11 @@ export type PostStatus = "draft" | "in_review" | "approved" | "rejected";
 export type PostRead = {
 	created_at: string;
 	created_by_user_id: number;
-	id: number;
 	media_url: string | null;
 	status: PostStatus;
 	text: string;
 	title: string;
+	uuid: string;
 };
 
 export type PostCreate = {
@@ -59,7 +59,7 @@ const getPaginatedPosts = async (path: string): Promise<PostsListResponse> =>
 	})) as PostsListResponse;
 
 export const getUserPosts = async (
-	username: string,
+	userUuid: string,
 	page = 1,
 	itemsPerPage = 25,
 ): Promise<PostsListResponse> => {
@@ -68,7 +68,7 @@ export const getUserPosts = async (
 		page: String(page),
 	});
 
-	return getPaginatedPosts(`/api/v1/${username}/posts?${searchParameters.toString()}`);
+	return getPaginatedPosts(`/api/v1/user/${userUuid}/posts?${searchParameters.toString()}`);
 };
 
 export const getPendingReviewPosts = async (
@@ -84,54 +84,54 @@ export const getPendingReviewPosts = async (
 };
 
 export const createPost = async (
-	username: string,
+	userUuid: string,
 	payload: PostCreate,
 ): Promise<PostRead | null> =>
-	requestJson<PostRead>(`/api/v1/${username}/post`, {
+	requestJson<PostRead>(`/api/v1/user/${userUuid}/post`, {
 		body: JSON.stringify(normalizePostPayload(payload)),
 		method: "POST",
 	});
 
 export const updatePost = async (
-	username: string,
-	postId: number,
+	userUuid: string,
+	postUuid: string,
 	payload: PostUpdate,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/${username}/post/${postId}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}/post/${postUuid}`, {
 		body: JSON.stringify(normalizePostPayload(payload)),
 		method: "PATCH",
 	});
 
 export const deletePost = async (
-	username: string,
-	postId: number,
+	userUuid: string,
+	postUuid: string,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/${username}/post/${postId}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}/post/${postUuid}`, {
 		method: "DELETE",
 	});
 
 export const submitPostForReview = async (
-	username: string,
-	postId: number,
+	userUuid: string,
+	postUuid: string,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/${username}/post/${postId}/submit-review`, {
+	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}/post/${postUuid}/submit-review`, {
 		method: "POST",
 	});
 
 export const approvePost = async (
-	postId: number,
+	postUuid: string,
 	payload: PostReviewPayload,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/posts/${postId}/approve`, {
+	requestJson<ApiMessageResponse>(`/api/v1/posts/${postUuid}/approve`, {
 		body: JSON.stringify(payload),
 		method: "POST",
 	});
 
 export const rejectPost = async (
-	postId: number,
+	postUuid: string,
 	payload: PostReviewPayload,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/posts/${postId}/reject`, {
+	requestJson<ApiMessageResponse>(`/api/v1/posts/${postUuid}/reject`, {
 		body: JSON.stringify(payload),
 		method: "POST",
 	});

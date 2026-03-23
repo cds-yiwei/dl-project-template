@@ -46,7 +46,7 @@ class TestLoginEndpoint:
 class TestLogoutEndpoint:
     @pytest.mark.asyncio
     async def test_logout_route_delegates_to_service(self, mock_db):
-        request = make_request(session={"user_id": 5})
+        request = make_request(session={"user_uuid": "019cfc22-bff2-7168-ae43-387a301d8fcb"})
         response = Response()
         mock_service = Mock()
         mock_service.logout = AsyncMock(return_value={"message": "Logged out successfully", "clear_cookies": True})
@@ -65,7 +65,7 @@ class TestLogoutEndpoint:
 
     @pytest.mark.asyncio
     async def test_logout_clears_cookies_with_matching_security_attributes(self, mock_db):
-        request = make_request(session={"user_id": 5})
+        request = make_request(session={"user_uuid": "019cfc22-bff2-7168-ae43-387a301d8fcb"})
         response = Response()
         mock_service = Mock()
         mock_service.logout = AsyncMock(return_value={"message": "Logged out successfully", "clear_cookies": True})
@@ -107,7 +107,7 @@ def build_logout_app(store: TrackingInMemoryStore) -> TestClient:
 
     @router.post("/session-login")
     async def session_login(request: Request) -> dict[str, str]:
-        request.session["user_id"] = 5
+        request.session["user_uuid"] = "019cfc22-bff2-7168-ae43-387a301d8fcb"
         return {"message": "logged in"}
 
     router.include_router(logout_router)

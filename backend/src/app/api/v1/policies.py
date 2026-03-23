@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
@@ -36,35 +37,35 @@ async def read_policies(
 	return await service.list_policies(db=db, page=page, items_per_page=items_per_page)
 
 
-@router.get("/policy/{policy_id}", response_model=AccessPolicyOut)
+@router.get("/policy/{policy_uuid}", response_model=AccessPolicyOut)
 @casbin_guard.require_permission("policies", "read")
 async def read_policy(
 	request: Request,
-	policy_id: int,
+	policy_uuid: uuid_pkg.UUID,
 	db: Annotated[AsyncSession, Depends(async_get_db)],
 	service: Annotated[PolicyService, Depends(get_policy_service)],
 ) -> dict[str, Any]:
-	return await service.get_policy(db=db, policy_id=policy_id)
+	return await service.get_policy(db=db, policy_uuid=policy_uuid)
 
 
-@router.patch("/policy/{policy_id}")
+@router.patch("/policy/{policy_uuid}")
 @casbin_guard.require_permission("policies", "write")
 async def patch_policy(
 	request: Request,
-	policy_id: int,
+	policy_uuid: uuid_pkg.UUID,
 	values: AccessPolicyUpdate,
 	db: Annotated[AsyncSession, Depends(async_get_db)],
 	service: Annotated[PolicyService, Depends(get_policy_service)],
 ) -> dict[str, str]:
-	return await service.update_policy(db=db, policy_id=policy_id, values=values)
+	return await service.update_policy(db=db, policy_uuid=policy_uuid, values=values)
 
 
-@router.delete("/policy/{policy_id}")
+@router.delete("/policy/{policy_uuid}")
 @casbin_guard.require_permission("policies", "write")
 async def erase_policy(
 	request: Request,
-	policy_id: int,
+	policy_uuid: uuid_pkg.UUID,
 	db: Annotated[AsyncSession, Depends(async_get_db)],
 	service: Annotated[PolicyService, Depends(get_policy_service)],
 ) -> dict[str, str]:
-	return await service.delete_policy(db=db, policy_id=policy_id)
+	return await service.delete_policy(db=db, policy_uuid=policy_uuid)

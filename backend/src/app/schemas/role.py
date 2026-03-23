@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from datetime import datetime
 from typing import Annotated
 
@@ -17,6 +18,7 @@ class Role(TimestampSchema, RoleBase, PersistentDeletion):
 
 class RoleRead(RoleBase):
     id: int
+    uuid: uuid_pkg.UUID
     created_at: datetime
 
 

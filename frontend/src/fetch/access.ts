@@ -4,12 +4,12 @@ import type { UserRead } from "./auth";
 export type UserTierRead = UserRead & {
 	tier_name: string;
 	tier_created_at: string;
-	tier_id: number;
+	tier_uuid: string;
 };
 
 export const getUserTier = async (
-	username: string,
+	userUuid: string,
 ): Promise<UserTierRead | null> =>
-	requestJson<UserTierRead>(`/api/v1/user/${encodeURIComponent(username)}/tier`, {
+	requestJson<UserTierRead>(`/api/v1/user/${encodeURIComponent(userUuid)}/tier`, {
 		method: "GET",
 	});

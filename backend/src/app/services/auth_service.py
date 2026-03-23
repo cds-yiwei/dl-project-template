@@ -23,13 +23,14 @@ class AuthService:
         if not settings.LOCAL_PASSWORD_LOGIN_ENABLED:
             raise UnauthorizedException("Local password login is disabled.")
 
-        user = await authenticate_user(username_or_email=form_data.username, password=form_data.password, db=db)
+        user = await authenticate_user(identifier=form_data.username, password=form_data.password, db=db)
         if not user:
-            raise UnauthorizedException("Wrong username, email or password.")
+            raise UnauthorizedException("Wrong credentials.")
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = await create_access_token(data={"sub": user["username"]}, expires_delta=access_token_expires)
-        refresh_token = await create_refresh_token(data={"sub": user["username"]})
+        subject = str(user["uuid"])
+        access_token = await create_access_token(data={"sub": subject}, expires_delta=access_token_expires)
+        refresh_token = await create_refresh_token(data={"sub": subject})
         max_age = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
         return {
             "access_token": access_token,
@@ -47,7 +48,7 @@ class AuthService:
         if not user_data:
             raise UnauthorizedException("Invalid refresh token.")
 
-        new_access_token = await create_access_token(data={"sub": user_data.username_or_email})
+        new_access_token = await create_access_token(data={"sub": user_data.subject})
         return {"access_token": new_access_token, "token_type": "bearer"}
 
     async def logout(

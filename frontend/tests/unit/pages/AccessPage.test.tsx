@@ -46,15 +46,15 @@ describe("AccessPage", () => {
 	it("renders the current user's tier details", () => {
 		vi.mocked(useSession).mockReturnValue({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 4,
-				tier_id: 2,
+				role_uuid: "role-uuid-4",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 			isAuthenticated: true,
 			isLoading: false,
@@ -66,17 +66,17 @@ describe("AccessPage", () => {
 			error: null,
 			isLoading: false,
 			tier: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				profile_image_url: "https://example.com/jane.png",
 				auth_provider: "gc-sso",
 				auth_subject: "subject-123",
-				role_id: 4,
-				tier_id: 2,
+				role_uuid: "role-uuid-4",
 				tier_name: "free",
 				tier_created_at: "2026-03-17T00:00:00Z",
+				tier_uuid: "tier-uuid-2",
+				uuid: "user-uuid-7",
 			},
 		});
 

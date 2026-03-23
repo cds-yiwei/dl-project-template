@@ -5,6 +5,7 @@ from starlette.requests import Request
 
 from src.app.api.v1.oidc import oidc_callback, oidc_login
 from src.app.core.oidc import sync_oidc_user
+from src.app.schemas.user import UserReadInternal
 
 
 def make_request(session: dict | None = None) -> Request:
@@ -46,6 +47,43 @@ class TestSyncOidcUser:
 
             assert result == created_user
             mock_crud.create.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_sync_oidc_user_uses_internal_schema_for_session_user_id(self, mock_db):
+        claims = {
+            "sub": "subject-123",
+            "email": "oidc.user@example.com",
+            "name": "OIDC User",
+        }
+        existing_user = {
+            "id": 7,
+            "uuid": "019cfc22-bff2-7168-ae43-387a301d8fcb",
+            "username": "oidcuser",
+            "email": "oidc.user@example.com",
+            "auth_provider": "CanadaLogin",
+            "auth_subject": "subject-123",
+        }
+
+        with patch("src.app.core.oidc.crud_users") as mock_crud:
+            mock_crud.get = AsyncMock(return_value=existing_user)
+            mock_crud.update = AsyncMock(return_value=None)
+
+            result = await sync_oidc_user(mock_db, claims)
+
+        assert result == existing_user
+        mock_crud.get.assert_any_await(
+            db=mock_db,
+            auth_provider="CanadaLogin",
+            auth_subject="subject-123",
+            is_deleted=False,
+            schema_to_select=UserReadInternal,
+        )
+        mock_crud.get.assert_any_await(
+            db=mock_db,
+            uuid="019cfc22-bff2-7168-ae43-387a301d8fcb",
+            is_deleted=False,
+            schema_to_select=UserReadInternal,
+        )
 
 
 class TestOidcCallback:

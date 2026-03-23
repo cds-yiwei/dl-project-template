@@ -19,6 +19,6 @@ class OidcService:
         claims = token.get("userinfo", {})
         oidc_user = await sync_oidc_user(db, claims)
         regenerate_session_id(request)
-        request.session["user_id"] = oidc_user["id"]
+        request.session["user_uuid"] = str(oidc_user["uuid"])
         request.session["tokens"] = token
         return RedirectResponse(url=settings.OIDC_POST_LOGIN_REDIRECT)

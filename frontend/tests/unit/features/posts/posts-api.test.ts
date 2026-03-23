@@ -14,13 +14,14 @@ describe("posts-api", () => {
 	});
 
 	it("loads posts for a specific user", async () => {
+		const userUuid = "019cfc22-bff2-7168-ae43-387a301d8fcb";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			json: () => Promise.resolve({
 				data: [
 					{
 						created_at: "2026-03-18T00:00:00Z",
 						created_by_user_id: 7,
-						id: 11,
+						uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f1",
 						media_url: null,
 						status: "draft",
 						text: "Draft body",
@@ -36,27 +37,33 @@ describe("posts-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await getUserPosts("jdoe", 1, 25);
+		const response = await getUserPosts(userUuid, 1, 25);
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/jdoe/posts?items_per_page=25&page=1",
+			`http://localhost:8000/api/v1/user/${userUuid}/posts?items_per_page=25&page=1`,
 			expect.objectContaining({
 				credentials: "include",
 				method: "GET",
 			}),
 		);
 		expect(response.total_count).toBe(1);
-		expect(response.data[0]).toMatchObject({ id: 11, status: "draft", title: "Draft post" });
+		expect(response.data[0]).toMatchObject({
+			status: "draft",
+			title: "Draft post",
+			uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f1",
+		});
 	});
 
 	it("creates and submits a post for review", async () => {
+		const userUuid = "019cfc22-bff2-7168-ae43-387a301d8fcb";
+		const postUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f1";
 		const fetchMock = vi.spyOn(globalThis, "fetch")
 			.mockResolvedValueOnce({
 				headers: new Headers({ "content-type": "application/json" }),
 				json: () => Promise.resolve({
 					created_at: "2026-03-18T00:00:00Z",
 					created_by_user_id: 7,
-					id: 12,
+					uuid: postUuid,
 					media_url: null,
 					status: "draft",
 					text: "Body",
@@ -72,12 +79,12 @@ describe("posts-api", () => {
 				status: 200,
 			} as Response);
 
-		await createPost("jdoe", { text: "Body", title: "New post" });
-		await submitPostForReview("jdoe", 12);
+		await createPost(userUuid, { text: "Body", title: "New post" });
+		await submitPostForReview(userUuid, postUuid);
 
 		expect(fetchMock).toHaveBeenNthCalledWith(
 			1,
-			"http://localhost:8000/api/v1/jdoe/post",
+			`http://localhost:8000/api/v1/user/${userUuid}/post`,
 			expect.objectContaining({
 				body: JSON.stringify({ text: "Body", title: "New post" }),
 				method: "POST",
@@ -85,12 +92,14 @@ describe("posts-api", () => {
 		);
 		expect(fetchMock).toHaveBeenNthCalledWith(
 			2,
-			"http://localhost:8000/api/v1/jdoe/post/12/submit-review",
+			`http://localhost:8000/api/v1/user/${userUuid}/post/${postUuid}/submit-review`,
 			expect.objectContaining({ method: "POST" }),
 		);
 	});
 
 	it("loads pending review posts and sends review decisions", async () => {
+		const approvedUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f2";
+		const rejectedUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f3";
 		const fetchMock = vi.spyOn(globalThis, "fetch")
 			.mockResolvedValueOnce({
 				json: () => Promise.resolve({
@@ -117,8 +126,8 @@ describe("posts-api", () => {
 			} as Response);
 
 		await getPendingReviewPosts(1, 10);
-		await approvePost(19, { comment: "Looks good" });
-		await rejectPost(20, { comment: "Needs revisions" });
+		await approvePost(approvedUuid, { comment: "Looks good" });
+		await rejectPost(rejectedUuid, { comment: "Needs revisions" });
 
 		expect(fetchMock).toHaveBeenNthCalledWith(
 			1,
@@ -127,7 +136,7 @@ describe("posts-api", () => {
 		);
 		expect(fetchMock).toHaveBeenNthCalledWith(
 			2,
-			"http://localhost:8000/api/v1/posts/19/approve",
+			`http://localhost:8000/api/v1/posts/${approvedUuid}/approve`,
 			expect.objectContaining({
 				body: JSON.stringify({ comment: "Looks good" }),
 				method: "POST",
@@ -135,7 +144,7 @@ describe("posts-api", () => {
 		);
 		expect(fetchMock).toHaveBeenNthCalledWith(
 			3,
-			"http://localhost:8000/api/v1/posts/20/reject",
+			`http://localhost:8000/api/v1/posts/${rejectedUuid}/reject`,
 			expect.objectContaining({
 				body: JSON.stringify({ comment: "Needs revisions" }),
 				method: "POST",
@@ -144,12 +153,13 @@ describe("posts-api", () => {
 	});
 
 	it("omits a blank media url from create payloads", async () => {
+		const userUuid = "019cfc22-bff2-7168-ae43-387a301d8fcb";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({
 				created_at: "2026-03-18T00:00:00Z",
 				created_by_user_id: 7,
-				id: 12,
+				uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f1",
 				media_url: null,
 				status: "draft",
 				text: "Body",
@@ -159,10 +169,10 @@ describe("posts-api", () => {
 			status: 201,
 		} as Response);
 
-		await createPost("jdoe", { media_url: "", text: "Body", title: "New post" });
+		await createPost(userUuid, { media_url: "", text: "Body", title: "New post" });
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/jdoe/post",
+			`http://localhost:8000/api/v1/user/${userUuid}/post`,
 			expect.objectContaining({
 				body: JSON.stringify({ text: "Body", title: "New post" }),
 				method: "POST",

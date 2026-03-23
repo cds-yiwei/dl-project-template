@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from datetime import datetime
 from typing import Annotated
 
@@ -27,7 +28,7 @@ class RateLimit(TimestampSchema, RateLimitBase):
 
 class RateLimitRead(RateLimitBase):
     id: int
-    tier_id: int
+    uuid: uuid_pkg.UUID
     name: str
 
 

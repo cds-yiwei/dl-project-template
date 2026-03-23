@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from datetime import datetime
 from typing import Annotated
 
@@ -16,6 +17,7 @@ class Tier(TimestampSchema, TierBase):
 
 class TierRead(TierBase):
     id: int
+    uuid: uuid_pkg.UUID
     created_at: datetime
 
 

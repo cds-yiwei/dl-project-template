@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import Any
 
 from fastcrud import compute_offset, paginated_response
@@ -11,8 +12,10 @@ from ..schemas.tier import TierRead
 
 
 class RateLimitService:
-    async def create_rate_limit(self, db: AsyncSession, tier_name: str, rate_limit: RateLimitCreate) -> dict[str, Any]:
-        db_tier = await self._get_tier(db=db, tier_name=tier_name)
+    async def create_rate_limit(
+        self, db: AsyncSession, tier_uuid: uuid_pkg.UUID | str, rate_limit: RateLimitCreate
+    ) -> dict[str, Any]:
+        db_tier = await self._get_tier(db=db, tier_uuid=tier_uuid)
         payload = rate_limit.model_dump()
         payload["tier_id"] = db_tier["id"]
 
@@ -28,22 +31,27 @@ class RateLimitService:
             raise NotFoundException("Failed to create rate limit")
         return created_rate_limit
 
-    async def list_rate_limits(self, db: AsyncSession, tier_name: str, page: int, items_per_page: int) -> dict[str, Any]:
-        db_tier = await self._get_tier(db=db, tier_name=tier_name)
+    async def list_rate_limits(
+        self, db: AsyncSession, tier_uuid: uuid_pkg.UUID | str, page: int, items_per_page: int
+    ) -> dict[str, Any]:
+        db_tier = await self._get_tier(db=db, tier_uuid=tier_uuid)
         rate_limits_data = await crud_rate_limits.get_multi(
             db=db,
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             tier_id=db_tier["id"],
+            schema_to_select=RateLimitRead,
         )
         return paginated_response(crud_data=rate_limits_data, page=page, items_per_page=items_per_page)
 
-    async def get_rate_limit(self, db: AsyncSession, tier_name: str, rate_limit_id: int) -> dict[str, Any]:
-        db_tier = await self._get_tier(db=db, tier_name=tier_name)
+    async def get_rate_limit(
+        self, db: AsyncSession, tier_uuid: uuid_pkg.UUID | str, rate_limit_uuid: uuid_pkg.UUID | str
+    ) -> dict[str, Any]:
+        db_tier = await self._get_tier(db=db, tier_uuid=tier_uuid)
         db_rate_limit = await crud_rate_limits.get(
             db=db,
             tier_id=db_tier["id"],
-            id=rate_limit_id,
+            uuid=rate_limit_uuid,
             schema_to_select=RateLimitRead,
         )
         if db_rate_limit is None:
@@ -51,19 +59,25 @@ class RateLimitService:
         return db_rate_limit
 
     async def update_rate_limit(
-        self, db: AsyncSession, tier_name: str, rate_limit_id: int, values: RateLimitUpdate
+        self,
+        db: AsyncSession,
+        tier_uuid: uuid_pkg.UUID | str,
+        rate_limit_uuid: uuid_pkg.UUID | str,
+        values: RateLimitUpdate,
     ) -> dict[str, str]:
-        await self.get_rate_limit(db=db, tier_name=tier_name, rate_limit_id=rate_limit_id)
-        await crud_rate_limits.update(db=db, object=values, id=rate_limit_id)
+        await self.get_rate_limit(db=db, tier_uuid=tier_uuid, rate_limit_uuid=rate_limit_uuid)
+        await crud_rate_limits.update(db=db, object=values, uuid=rate_limit_uuid)
         return {"message": "Rate Limit updated"}
 
-    async def delete_rate_limit(self, db: AsyncSession, tier_name: str, rate_limit_id: int) -> dict[str, str]:
-        await self.get_rate_limit(db=db, tier_name=tier_name, rate_limit_id=rate_limit_id)
-        await crud_rate_limits.delete(db=db, id=rate_limit_id)
+    async def delete_rate_limit(
+        self, db: AsyncSession, tier_uuid: uuid_pkg.UUID | str, rate_limit_uuid: uuid_pkg.UUID | str
+    ) -> dict[str, str]:
+        await self.get_rate_limit(db=db, tier_uuid=tier_uuid, rate_limit_uuid=rate_limit_uuid)
+        await crud_rate_limits.delete(db=db, uuid=rate_limit_uuid)
         return {"message": "Rate Limit deleted"}
 
-    async def _get_tier(self, db: AsyncSession, tier_name: str) -> dict[str, Any]:
-        db_tier = await crud_tiers.get(db=db, name=tier_name, schema_to_select=TierRead)
+    async def _get_tier(self, db: AsyncSession, tier_uuid: uuid_pkg.UUID | str) -> dict[str, Any]:
+        db_tier = await crud_tiers.get(db=db, uuid=tier_uuid)
         if not db_tier:
             raise NotFoundException("Tier not found")
         return db_tier

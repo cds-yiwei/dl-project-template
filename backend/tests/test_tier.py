@@ -17,7 +17,9 @@ class TestTierRoutes:
     @pytest.mark.asyncio
     async def test_create_tier_delegates_to_service(self, mock_db):
         mock_service = Mock()
-        mock_service.create_tier = AsyncMock(return_value={"id": 1, "name": "free", "created_at": "2026-03-17T00:00:00"})
+        mock_service.create_tier = AsyncMock(
+            return_value={"uuid": "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", "name": "free", "created_at": "2026-03-17T00:00:00"}
+        )
 
         result = await unwrap_endpoint(write_tier)(Mock(), TierCreate(name="free"), mock_db, mock_service)
 
@@ -36,15 +38,16 @@ class TestTierRoutes:
 
     @pytest.mark.asyncio
     async def test_read_patch_delete_tier_delegate_to_service(self, mock_db):
+        tier_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401"
         mock_service = Mock()
-        mock_service.get_tier_by_name = AsyncMock(return_value={"id": 1, "name": "free"})
+        mock_service.get_tier_by_uuid = AsyncMock(return_value={"uuid": tier_uuid, "name": "free"})
         mock_service.update_tier = AsyncMock(return_value={"message": "Tier updated"})
         mock_service.delete_tier = AsyncMock(return_value={"message": "Tier deleted"})
 
-        read_result = await unwrap_endpoint(read_tier)(Mock(), "free", mock_db, mock_service)
-        patch_result = await unwrap_endpoint(patch_tier)(Mock(), "free", TierUpdate(name="pro"), mock_db, mock_service)
-        delete_result = await unwrap_endpoint(erase_tier)(Mock(), "free", mock_db, mock_service)
+        read_result = await unwrap_endpoint(read_tier)(Mock(), tier_uuid, mock_db, mock_service)
+        patch_result = await unwrap_endpoint(patch_tier)(Mock(), tier_uuid, TierUpdate(name="pro"), mock_db, mock_service)
+        delete_result = await unwrap_endpoint(erase_tier)(Mock(), tier_uuid, mock_db, mock_service)
 
-        assert read_result == {"id": 1, "name": "free"}
+        assert read_result == {"uuid": tier_uuid, "name": "free"}
         assert patch_result == {"message": "Tier updated"}
         assert delete_result == {"message": "Tier deleted"}

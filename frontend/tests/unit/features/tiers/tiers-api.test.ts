@@ -22,7 +22,7 @@ describe("tiers-api", () => {
 	it("requests the backend tiers list with pagination parameters", async () => {
 		globalThis.fetch = vi.fn().mockResolvedValue({
 			json: () => Promise.resolve({
-				data: [{ id: 2, name: "free", created_at: "2026-03-17T00:00:00Z" }],
+				data: [{ uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", name: "free", created_at: "2026-03-17T00:00:00Z" }],
 				"has_more": false,
 				"items_per_page": 20,
 				page: 2,
@@ -40,12 +40,12 @@ describe("tiers-api", () => {
 				method: "GET",
 			}),
 		);
-		expect(response.data[0]).toMatchObject({ id: 2, name: "free" });
+		expect(response.data[0]).toMatchObject({ name: "free", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401" });
 	});
 
 	it("creates a tier through the backend write endpoint", async () => {
 		globalThis.fetch = vi.fn().mockResolvedValue({
-			json: () => Promise.resolve({ id: 4, name: "enterprise", created_at: "2026-03-17T00:00:00Z" }),
+			json: () => Promise.resolve({ uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b402", name: "enterprise", created_at: "2026-03-17T00:00:00Z" }),
 			ok: true,
 		} as Response) as typeof fetch;
 
@@ -62,15 +62,16 @@ describe("tiers-api", () => {
 	});
 
 	it("updates a tier through the backend patch endpoint", async () => {
+		const tierUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401";
 		globalThis.fetch = vi.fn().mockResolvedValue({
 			json: () => Promise.resolve({ message: "Tier updated" }),
 			ok: true,
 		} as Response) as typeof fetch;
 
-		await updateTier("free", { name: "starter" });
+		await updateTier(tierUuid, { name: "starter" });
 
 		expect(globalThis.fetch).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/tier/free",
+			`http://localhost:8000/api/v1/tier/${tierUuid}`,
 			expect.objectContaining({
 				body: JSON.stringify({ name: "starter" }),
 				credentials: "include",
@@ -80,15 +81,16 @@ describe("tiers-api", () => {
 	});
 
 	it("deletes a tier through the backend erase endpoint", async () => {
+		const tierUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401";
 		globalThis.fetch = vi.fn().mockResolvedValue({
 			json: () => Promise.resolve({ message: "Tier deleted" }),
 			ok: true,
 		} as Response) as typeof fetch;
 
-		await deleteTier("free");
+		await deleteTier(tierUuid);
 
 		expect(globalThis.fetch).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/tier/free",
+			`http://localhost:8000/api/v1/tier/${tierUuid}`,
 			expect.objectContaining({
 				credentials: "include",
 				method: "DELETE",

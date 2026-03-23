@@ -6,7 +6,7 @@ from authlib.integrations.starlette_client import OAuth
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..crud.crud_users import crud_users
-from ..schemas.user import UserCreateInternal, UserRead
+from ..schemas.user import UserCreateInternal, UserReadInternal
 from .config import settings
 from .exceptions.http_exceptions import UnauthorizedException
 
@@ -86,18 +86,23 @@ async def sync_oidc_user(db: AsyncSession, claims: dict[str, Any]) -> dict[str, 
         auth_provider=provider,
         auth_subject=subject,
         is_deleted=False,
-        schema_to_select=UserRead,
+        schema_to_select=UserReadInternal,
     )
     if existing_user is not None:
         await crud_users.update(
             db=db,
             object={"last_login_at": datetime.now(UTC)},
-            id=existing_user["id"],
+            uuid=existing_user["uuid"],
         )
-        return await crud_users.get(db=db, id=existing_user["id"], is_deleted=False, schema_to_select=UserRead)
+        return await crud_users.get(
+            db=db,
+            uuid=existing_user["uuid"],
+            is_deleted=False,
+            schema_to_select=UserReadInternal,
+        )
 
     if email:
-        email_user = await crud_users.get(db=db, email=email, is_deleted=False, schema_to_select=UserRead)
+        email_user = await crud_users.get(db=db, email=email, is_deleted=False, schema_to_select=UserReadInternal)
         if email_user is not None:
             await crud_users.update(
                 db=db,
@@ -106,9 +111,14 @@ async def sync_oidc_user(db: AsyncSession, claims: dict[str, Any]) -> dict[str, 
                     "auth_subject": subject,
                     "last_login_at": datetime.now(UTC),
                 },
-                id=email_user["id"],
+                uuid=email_user["uuid"],
             )
-            return await crud_users.get(db=db, id=email_user["id"], is_deleted=False, schema_to_select=UserRead)
+            return await crud_users.get(
+                db=db,
+                uuid=email_user["uuid"],
+                is_deleted=False,
+                schema_to_select=UserReadInternal,
+            )
 
     username = await generate_unique_username(db, claims)
     name = claims.get("name") or claims.get("preferred_username") or email or username
@@ -122,7 +132,7 @@ async def sync_oidc_user(db: AsyncSession, claims: dict[str, Any]) -> dict[str, 
             auth_provider=provider,
             auth_subject=subject,
         ),
-        schema_to_select=UserRead,
+        schema_to_select=UserReadInternal,
     )
     if created_user is None:
         raise UnauthorizedException("Unable to create the OIDC user.")

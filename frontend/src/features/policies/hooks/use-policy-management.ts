@@ -11,11 +11,11 @@ import { policiesQueryKey, usePolicies, type PoliciesState } from "./use-policie
 
 export type PolicyManagementState = PoliciesState & {
 	createPolicy: (payload: PolicyCreate) => Promise<void>;
-	deletePolicy: (policyId: number) => Promise<void>;
+	deletePolicy: (policyUuid: string) => Promise<void>;
 	isCreating: boolean;
 	isDeleting: boolean;
 	isUpdating: boolean;
-	updatePolicy: (policyId: number, payload: PolicyUpdate) => Promise<void>;
+	updatePolicy: (policyUuid: string, payload: PolicyUpdate) => Promise<void>;
 };
 
 export const usePolicyManagement = (
@@ -38,8 +38,8 @@ export const usePolicyManagement = (
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: ({ payload, policyId }: { payload: PolicyUpdate; policyId: number }) =>
-			patchPolicy(policyId, payload),
+		mutationFn: ({ payload, policyUuid }: { payload: PolicyUpdate; policyUuid: string }) =>
+			patchPolicy(policyUuid, payload),
 		onSuccess: refreshPolicies,
 	});
 
@@ -53,14 +53,14 @@ export const usePolicyManagement = (
 		createPolicy: async (payload: PolicyCreate): Promise<void> => {
 			await createMutation.mutateAsync(payload);
 		},
-		deletePolicy: async (policyId: number): Promise<void> => {
-			await deleteMutation.mutateAsync(policyId);
+		deletePolicy: async (policyUuid: string): Promise<void> => {
+			await deleteMutation.mutateAsync(policyUuid);
 		},
 		isCreating: createMutation.isPending,
 		isDeleting: deleteMutation.isPending,
 		isUpdating: updateMutation.isPending,
-		updatePolicy: async (policyId: number, payload: PolicyUpdate): Promise<void> => {
-			await updateMutation.mutateAsync({ payload, policyId });
+		updatePolicy: async (policyUuid: string, payload: PolicyUpdate): Promise<void> => {
+			await updateMutation.mutateAsync({ payload, policyUuid });
 		},
 	};
 };

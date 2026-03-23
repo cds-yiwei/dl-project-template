@@ -18,11 +18,18 @@ class TestPolicyRoutes:
     async def test_write_policy_delegates_to_service(self, mock_db):
         payload = AccessPolicyCreate(subject="member", resource="roles", action="read")
         mock_service = Mock()
-        mock_service.create_policy = AsyncMock(return_value={"id": 1, "subject": "member", "resource": "roles", "action": "read"})
+        mock_service.create_policy = AsyncMock(
+            return_value={
+                "uuid": "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101",
+                "subject": "member",
+                "resource": "roles",
+                "action": "read",
+            }
+        )
 
         result = await unwrap_endpoint(write_policy)(Mock(), payload, mock_db, mock_service)
 
-        assert result["id"] == 1
+        assert result["uuid"] == "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101"
         mock_service.create_policy.assert_awaited_once_with(db=mock_db, policy=payload)
 
     @pytest.mark.asyncio
@@ -37,15 +44,18 @@ class TestPolicyRoutes:
 
     @pytest.mark.asyncio
     async def test_read_patch_delete_policy_delegate_to_service(self, mock_db):
+        policy_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101"
         mock_service = Mock()
-        mock_service.get_policy = AsyncMock(return_value={"id": 1})
+        mock_service.get_policy = AsyncMock(return_value={"uuid": policy_uuid})
         mock_service.update_policy = AsyncMock(return_value={"message": "Policy updated"})
         mock_service.delete_policy = AsyncMock(return_value={"message": "Policy deleted"})
 
-        read_result = await unwrap_endpoint(read_policy)(Mock(), 1, mock_db, mock_service)
-        patch_result = await unwrap_endpoint(patch_policy)(Mock(), 1, AccessPolicyUpdate(action="write"), mock_db, mock_service)
-        delete_result = await unwrap_endpoint(erase_policy)(Mock(), 1, mock_db, mock_service)
+        read_result = await unwrap_endpoint(read_policy)(Mock(), policy_uuid, mock_db, mock_service)
+        patch_result = await unwrap_endpoint(
+            patch_policy, 
+        )(Mock(), policy_uuid, AccessPolicyUpdate(action="write"), mock_db, mock_service)
+        delete_result = await unwrap_endpoint(erase_policy)(Mock(), policy_uuid, mock_db, mock_service)
 
-        assert read_result == {"id": 1}
+        assert read_result == {"uuid": policy_uuid}
         assert patch_result == {"message": "Policy updated"}
         assert delete_result == {"message": "Policy deleted"}

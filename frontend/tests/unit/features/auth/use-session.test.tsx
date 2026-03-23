@@ -42,15 +42,15 @@ describe("useSession", () => {
 
 	it("keeps the user signed out when a stale current-user request resolves after logout", async () => {
 		const deferredCurrentUser = createDeferred<{
-			id: number;
 			name: string;
 			username: string;
 			email: string;
 			profile_image_url: string;
 			auth_provider: string | null;
 			auth_subject: string | null;
-			role_id: number | null;
-			tier_id: number | null;
+			role_uuid: string | null;
+			tier_uuid: string | null;
+			uuid: string;
 		}>();
 
 		vi.mocked(getCurrentUser).mockImplementation(() => deferredCurrentUser.promise);
@@ -74,11 +74,11 @@ describe("useSession", () => {
 			auth_provider: "gc-sso",
 			auth_subject: "subject-123",
 			email: "jane@example.com",
-			id: 7,
 			name: "Jane Doe",
 			profile_image_url: "https://example.com/jane.png",
-			role_id: 2,
-			tier_id: 3,
+			role_uuid: "role-uuid-2",
+			tier_uuid: "tier-uuid-3",
+			uuid: "user-uuid-7",
 			username: "jdoe",
 		});
 

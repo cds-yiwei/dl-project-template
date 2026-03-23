@@ -20,8 +20,8 @@ const emptyRoleForm: RoleFormState = {
 
 type RoleTableRow = {
 	description: string;
-	id: number;
 	name: string;
+	uuid: string;
 };
 
 export const RolesPage = (): FunctionComponent => {
@@ -43,17 +43,17 @@ export const RolesPage = (): FunctionComponent => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [form, setForm] = useState<RoleFormState>(emptyRoleForm);
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
-	const [selectedRoleName, setSelectedRoleName] = useState<string | null>(null);
+	const [selectedRoleUuid, setSelectedRoleUuid] = useState<string | null>(null);
 	const errorNotice = getRequestErrorNotice(error, {
 		bodyKey: "roles.errorBody",
 		titleKey: "roles.errorTitle",
 	});
 
-	const selectedRole = roles.find((role) => role.name === selectedRoleName) ?? null;
+	const selectedRole = roles.find((role) => role.uuid === selectedRoleUuid) ?? null;
 	const roleRows: Array<RoleTableRow> = roles.map((role) => ({
 		description: role.description ?? t("roles.noDescription"),
-		id: role.id,
 		name: role.name,
+		uuid: role.uuid,
 	}));
 	const roleColumns: Array<DataTableColumn<RoleTableRow>> = [
 		{ field: "name", headerName: t("roles.nameLabel"), pinned: "left" },
@@ -66,15 +66,15 @@ export const RolesPage = (): FunctionComponent => {
 			return;
 		}
 
-		if (!selectedRoleName || roles.some((role) => role.name === selectedRoleName)) {
+		if (!selectedRoleUuid || roles.some((role) => role.uuid === selectedRoleUuid)) {
 			return;
 		}
 
-		setSelectedRoleName(null);
+		setSelectedRoleUuid(null);
 		setDeleteDialogOpen(false);
 		setModalMode(null);
 		setForm(emptyRoleForm);
-	}, [deleteDialogOpen, modalMode, roles, selectedRoleName]);
+	}, [deleteDialogOpen, modalMode, roles, selectedRoleUuid]);
 
 	const closeModal = (): void => {
 		setModalMode(null);
@@ -83,20 +83,20 @@ export const RolesPage = (): FunctionComponent => {
 
 	const openCreateModal = (): void => {
 		releaseActiveElementFocus();
-		setSelectedRoleName(null);
+		setSelectedRoleUuid(null);
 		setForm(emptyRoleForm);
 		setModalMode("create");
 	};
 
-	const openEditModal = (roleName: string): void => {
-		const role = roles.find((item) => item.name === roleName);
+	const openEditModal = (roleUuid: string): void => {
+		const role = roles.find((item) => item.uuid === roleUuid);
 
 		if (!role) {
 			return;
 		}
 
 		releaseActiveElementFocus();
-		setSelectedRoleName(role.name);
+		setSelectedRoleUuid(role.uuid);
 		setForm({
 			description: role.description ?? "",
 			name: role.name,
@@ -115,7 +115,7 @@ export const RolesPage = (): FunctionComponent => {
 			return;
 		}
 
-		await updateRole(selectedRole.name, form);
+		await updateRole(selectedRole.uuid, form);
 		setPage(1);
 		closeModal();
 	};
@@ -125,10 +125,10 @@ export const RolesPage = (): FunctionComponent => {
 			return;
 		}
 
-		await deleteRole(selectedRole.name);
+		await deleteRole(selectedRole.uuid);
 		setPage(1);
 		setDeleteDialogOpen(false);
-		setSelectedRoleName(null);
+		setSelectedRoleUuid(null);
 		closeModal();
 	};
 
@@ -162,16 +162,16 @@ export const RolesPage = (): FunctionComponent => {
 				<div className="grid gap-300">
 					<DataTable
 						action={{
-							buttonId: (row) => `manage-role-${row.id}`,
+							buttonId: (row) => `manage-role-${row.uuid}`,
 							buttonLabel: t("roles.manageAction"),
 							onAction: (row) => {
-								openEditModal(row.name);
+								openEditModal(row.uuid);
 							},
 							screenReaderLabel: (row) => row.name,
 						}}
 						columns={roleColumns}
 						exportFileName="roles.csv"
-						getRowId={(row) => String(row.id)}
+						getRowId={(row) => row.uuid}
 						itemLabel="roles"
 						pagination={false}
 						primaryAction={{

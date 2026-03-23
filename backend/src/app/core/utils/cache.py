@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 import functools
 import json
 import re
@@ -183,16 +184,18 @@ async def _delete_keys_by_pattern(pattern: str) -> None:
             break
 
 
-async def invalidate_post_cache(username: str, post_id: int | None = None) -> None:
+async def invalidate_post_cache(user_uuid: str | uuid_pkg.UUID, post_uuid: str | uuid_pkg.UUID | None = None) -> None:
     """Invalidate cached post detail and paginated post list entries for a user."""
     if client is None:
         return
 
-    if post_id is not None:
-        await client.delete(f"{username}_post_cache:{post_id}")
+    normalized_user_uuid = str(user_uuid)
 
-    await client.delete(f"{username}_posts:{username}")
-    await _delete_keys_by_pattern(f"{username}_posts:*")
+    if post_uuid is not None:
+        await client.delete(f"{normalized_user_uuid}_post_cache:{post_uuid}")
+
+    await client.delete(f"{normalized_user_uuid}_posts:{normalized_user_uuid}")
+    await _delete_keys_by_pattern(f"{normalized_user_uuid}_posts:*")
 
 
 def cache(

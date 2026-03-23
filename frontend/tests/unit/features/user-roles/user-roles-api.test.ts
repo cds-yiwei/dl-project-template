@@ -8,33 +8,36 @@ describe("user-roles-api", () => {
 	});
 
 	it("loads the assigned role for a user", async () => {
+		const userUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			json: () => Promise.resolve({
 				created_at: "2026-03-17T00:00:00Z",
 				description: "Administrator role",
-				id: 3,
 				name: "admin",
+				uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301",
 			}),
 			ok: true,
 			status: 200,
 		} as Response);
 
-		const response = await getUserRole("jdoe");
+		const response = await getUserRole(userUuid);
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/user/jdoe/role",
+			`http://localhost:8000/api/v1/user/${userUuid}/role`,
 			expect.objectContaining({
 				credentials: "include",
 				method: "GET",
 			}),
 		);
 		expect(response).toMatchObject({
-			id: 3,
 			name: "admin",
+			uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301",
 		});
 	});
 
 	it("updates the assigned role for a user", async () => {
+		const userUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102";
+		const roleUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({ message: "Role updated successfully" }),
@@ -42,12 +45,12 @@ describe("user-roles-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await updateUserRole("jdoe", { role_id: 3 });
+		const response = await updateUserRole(userUuid, { role_uuid: roleUuid });
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/user/jdoe/role",
+			`http://localhost:8000/api/v1/user/${userUuid}/role`,
 			expect.objectContaining({
-				body: JSON.stringify({ role_id: 3 }),
+				body: JSON.stringify({ role_uuid: roleUuid }),
 				credentials: "include",
 				method: "PATCH",
 			}),
@@ -61,6 +64,6 @@ describe("user-roles-api", () => {
 			status: 401,
 		} as Response);
 
-		await expect(getUserRole("jdoe")).rejects.toBeInstanceOf(UnauthorizedRequestError);
+		await expect(getUserRole("018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102")).rejects.toBeInstanceOf(UnauthorizedRequestError);
 	});
 });

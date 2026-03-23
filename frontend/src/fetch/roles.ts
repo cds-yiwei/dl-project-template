@@ -4,8 +4,8 @@ import type { ApiMessageResponse } from "./api-types";
 export type RoleRead = {
 	created_at: string;
 	description?: string | null;
-	id: number;
 	name: string;
+	uuid: string;
 };
 
 export type RoleCreate = {
@@ -48,17 +48,17 @@ export const createRole = async (payload: RoleCreate): Promise<RoleRead | null> 
 	});
 
 export const updateRole = async (
-	name: string,
+	roleUuid: string,
 	payload: RoleUpdate,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/role/${name}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/role/${roleUuid}`, {
 		body: JSON.stringify(payload),
 		method: "PATCH",
 	});
 
 export const deleteRole = async (
-	name: string,
+	roleUuid: string,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/role/${name}`, {
+	requestJson<ApiMessageResponse>(`/api/v1/role/${roleUuid}`, {
 		method: "DELETE",
 	});

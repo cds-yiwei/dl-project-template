@@ -12,8 +12,7 @@ from ..core.utils.rate_limit import rate_limiter
 from ..crud.crud_rate_limit import crud_rate_limits
 from ..crud.crud_tier import crud_tiers
 from ..crud.crud_users import crud_users
-from ..schemas.rate_limit import RateLimitRead, sanitize_path
-from ..schemas.tier import TierRead
+from ..schemas.rate_limit import sanitize_path
 from ..services import (
     AuthService,
     HealthService,
@@ -75,14 +74,14 @@ def get_health_service() -> HealthService:
 
 async def get_user_from_session(request: Request, db: AsyncSession) -> dict[str, Any] | None:
     try:
-        user_id = request.session.get("user_id")
+        user_uuid = request.session.get("user_uuid")
     except AssertionError:
         return None
 
-    if user_id is None:
+    if user_uuid is None:
         return None
 
-    return await crud_users.get(db=db, id=user_id, is_deleted=False)
+    return await crud_users.get(db=db, uuid=user_uuid, is_deleted=False)
 
 
 async def get_user_from_bearer_token(token: str | None, db: AsyncSession) -> dict[str, Any] | None:
@@ -93,10 +92,7 @@ async def get_user_from_bearer_token(token: str | None, db: AsyncSession) -> dic
     if token_data is None:
         return None
 
-    if "@" in token_data.username_or_email:
-        return await crud_users.get(db=db, email=token_data.username_or_email, is_deleted=False)
-
-    return await crud_users.get(db=db, username=token_data.username_or_email, is_deleted=False)
+    return await crud_users.get(db=db, uuid=token_data.subject, is_deleted=False)
 
 
 async def get_current_user(
@@ -156,10 +152,10 @@ async def rate_limiter_dependency(
     path = sanitize_path(request.url.path)
     if user:
         user_id = user["id"]
-        tier = await crud_tiers.get(db, id=user["tier_id"], schema_to_select=TierRead)
+        tier = await crud_tiers.get(db, id=user["tier_id"])
         if tier:
             rate_limit = await crud_rate_limits.get(
-                db=db, tier_id=tier["id"], path=path, schema_to_select=RateLimitRead
+                db=db, tier_id=tier["id"], path=path
             )
             if rate_limit:
                 limit, period = rate_limit["limit"], rate_limit["period"]

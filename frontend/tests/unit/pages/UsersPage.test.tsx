@@ -56,7 +56,7 @@ vi.mock("@/components/ui", () => ({
 		</button>
 	),
 	ConfirmDialog: ({ isOpen, title }: { isOpen: boolean; title: string }): ReactElement | null => (isOpen ? <section><h2>{title}</h2></section> : null),
-	DataTable: ({ action, pageNumber, primaryAction, rows, title, summary }: { action?: { buttonLabel: string; onAction: (row: { email: string; id: number; name: string; provider: string; roleName: string; username: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ email: string; id: number; name: string; provider: string; roleName: string; username: string }>; title?: string; summary?: string }): ReactElement => (
+	DataTable: ({ action, pageNumber, primaryAction, rows, title, summary }: { action?: { buttonLabel: string; onAction: (row: { email: string; name: string; provider: string; roleName: string; username: string; uuid: string }) => void }; pageNumber?: number; primaryAction?: { buttonLabel: string; onAction: () => void }; rows?: Array<{ email: string; name: string; provider: string; roleName: string; username: string; uuid: string }>; title?: string; summary?: string }): ReactElement => (
 		<section>
 			{title ? <h2>{title}</h2> : null}
 			<p>{summary ?? `Showing ${rows?.length ?? 0} users on page ${pageNumber ?? 1}`}</p>
@@ -121,11 +121,11 @@ describe("UsersPage", () => {
 						"auth_provider": "gc-sso",
 						"auth_subject": "subject-123",
 						email: "jane@example.com",
-						id: 7,
 						name: "Jane Doe",
 						"profile_image_url": "https://example.com/jane.png",
-						"role_id": 3,
-						"tier_id": 3,
+						"role_uuid": "role-uuid-3",
+						"tier_uuid": "tier-uuid-3",
+						uuid: "user-uuid-7",
 						username: "jdoe",
 					},
 				],
@@ -139,11 +139,11 @@ describe("UsersPage", () => {
 					"auth_provider": "gc-sso",
 					"auth_subject": "subject-123",
 					email: "jane@example.com",
-					id: 7,
 					name: "Jane Doe",
 					"profile_image_url": "https://example.com/jane.png",
-					"role_id": 3,
-					"tier_id": 3,
+					"role_uuid": "role-uuid-3",
+					"tier_uuid": "tier-uuid-3",
+					uuid: "user-uuid-7",
 					username: "jdoe",
 				},
 			],
@@ -156,19 +156,19 @@ describe("UsersPage", () => {
 			page: 1,
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: {
-				data: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", id: 3, name: "admin" }],
+				data: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" }],
 				"has_more": false,
 				"items_per_page": 10,
 				page: 1,
 				"total_count": 1,
 			},
-			roles: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", id: 3, name: "admin" }],
+			roles: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" }],
 		});
 		vi.mocked(useUserRole).mockReturnValue({
 			error: null,
 			isLoading: false,
 			isUpdating: false,
-			role: { created_at: "2026-03-17T00:00:00Z", description: "Administrator role", id: 3, name: "admin" },
+			role: { created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" },
 			updateUserRole: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 
@@ -185,6 +185,9 @@ describe("UsersPage", () => {
 		expect(screen.getByRole("heading", { name: /edit user/i })).toBeTruthy();
 		expect(screen.getByRole("heading", { name: /assigned role/i })).toBeTruthy();
 		expect(screen.getByRole("button", { name: /save role/i })).toBeTruthy();
+		fireEvent.input(screen.getByLabelText(/users.roleLabel/i), { target: { value: "role-uuid-3" } });
+		fireEvent.click(screen.getByRole("button", { name: /save role/i }));
+		expect(vi.mocked(useUserRole).mock.results[0]?.value.updateUserRole).toHaveBeenCalledWith("user-uuid-7", { role_uuid: "role-uuid-3" });
 	});
 
 	it("does not render a generic error notice for unauthorized hook errors", () => {

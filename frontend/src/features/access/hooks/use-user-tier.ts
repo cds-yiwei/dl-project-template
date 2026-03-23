@@ -7,14 +7,14 @@ export type UserTierState = {
 	tier: UserTierRead | null;
 };
 
-export const userTierQueryKey = (username: string) =>
-	["user-tier", username] as const;
+export const userTierQueryKey = (userUuid: string) =>
+	["user-tier", userUuid] as const;
 
-export const useUserTier = (username: string | null | undefined): UserTierState => {
+export const useUserTier = (userUuid: string | null | undefined): UserTierState => {
 	const query = useQuery<UserTierRead | null, Error>({
-		enabled: Boolean(username),
-		queryFn: () => getUserTier(username as string),
-		queryKey: userTierQueryKey(username ?? "anonymous"),
+		enabled: Boolean(userUuid),
+		queryFn: () => getUserTier(userUuid as string),
+		queryKey: userTierQueryKey(userUuid ?? "anonymous"),
 	});
 
 	return {

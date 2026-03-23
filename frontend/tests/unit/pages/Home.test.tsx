@@ -104,15 +104,15 @@ describe("Home", () => {
 	it("shows the signed-in user and a sign-out action when authenticated", () => {
 		mockedUseSession.mockReturnValue(createSessionState({
 			currentUser: {
-				id: 7,
 				name: "Jane Doe",
 				username: "jdoe",
 				email: "jane@example.com",
 				"profile_image_url": "https://example.com/avatar.png",
 				"auth_provider": "gc-sso",
 				"auth_subject": "subject-123",
-				"role_id": 2,
-				"tier_id": 3,
+				"role_uuid": "role-uuid-2",
+				"tier_uuid": "tier-uuid-3",
+				uuid: "user-uuid-7",
 			},
 			isLoading: false,
 			isAuthenticated: true,

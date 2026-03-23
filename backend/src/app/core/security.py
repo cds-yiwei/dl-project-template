@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from enum import Enum
+import uuid as uuid_pkg
 from typing import Any, Literal
 
 import bcrypt
@@ -40,11 +41,16 @@ def get_password_hash(password: str) -> str:
     return hashed_password
 
 
-async def authenticate_user(username_or_email: str, password: str, db: AsyncSession) -> dict[str, Any] | Literal[False]:
-    if "@" in username_or_email:
-        db_user = await crud_users.get(db=db, email=username_or_email, is_deleted=False)
+async def authenticate_user(identifier: str, password: str, db: AsyncSession) -> dict[str, Any] | Literal[False]:
+    if "@" in identifier:
+        db_user = await crud_users.get(db=db, email=identifier, is_deleted=False)
     else:
-        db_user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
+        try:
+            user_uuid = str(uuid_pkg.UUID(identifier))
+        except ValueError:
+            return False
+
+        db_user = await crud_users.get(db=db, uuid=user_uuid, is_deleted=False)
 
     if not db_user:
         return False
@@ -103,13 +109,13 @@ async def verify_token(token: str, expected_token_type: TokenType, db: AsyncSess
 
     try:
         payload = jwt.decode(token, SECRET_KEY.get_secret_value(), algorithms=[ALGORITHM])
-        username_or_email: str | None = payload.get("sub")
+        subject: str | None = payload.get("sub")
         token_type: str | None = payload.get("token_type")
 
-        if username_or_email is None or token_type != expected_token_type:
+        if subject is None or token_type != expected_token_type:
             return None
 
-        return TokenData(username_or_email=username_or_email)
+        return TokenData(subject=subject)
 
     except JWTError:
         return None

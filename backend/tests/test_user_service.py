@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from src.app.core.exceptions.http_exceptions import DuplicateValueException, ForbiddenException, NotFoundException
-from src.app.schemas.user import UserCreate, UserRoleUpdate, UserUpdate
+from src.app.schemas.user import UserCreate, UserReadInternal, UserRoleUpdate, UserTierUpdate, UserUpdate
 from src.app.services.user_service import UserService
 
 
@@ -40,6 +40,7 @@ class TestUserService:
         service = UserService()
         db_user = sample_user_read.model_dump()
         db_user["username"] = "different-user"
+        user_uuid = str(sample_user_read.uuid)
 
         with patch("src.app.services.user_service.crud_users") as mock_users:
             mock_users.get = AsyncMock(return_value=db_user)
@@ -47,14 +48,51 @@ class TestUserService:
             with pytest.raises(ForbiddenException):
                 await service.update_user(
                     db=mock_db,
-                    username="different-user",
+                    user_uuid=user_uuid,
                     current_user={"username": "owner", "id": 1, "is_superuser": False},
                     values=UserUpdate(name="Updated"),
                 )
 
     @pytest.mark.asyncio
+    async def test_get_user_by_uuid_returns_user(self, mock_db, sample_user_read) -> None:
+        service = UserService()
+        user_uuid = str(sample_user_read.uuid)
+        db_user = {
+            **sample_user_read.model_dump(),
+            "role_id": 3,
+            "tier_id": 2,
+        }
+        expected_user = {
+            **sample_user_read.model_dump(),
+            "role_uuid": "role-uuid-3",
+            "tier_uuid": "tier-uuid-2",
+        }
+
+        with patch("src.app.services.user_service.crud_users") as mock_users:
+            mock_users.get = AsyncMock(return_value=db_user)
+
+            with patch("src.app.services.user_service.crud_roles") as mock_roles:
+                mock_roles.get = AsyncMock(return_value={"uuid": "role-uuid-3"})
+
+                with patch("src.app.services.user_service.crud_tiers") as mock_tiers:
+                    mock_tiers.get = AsyncMock(return_value={"uuid": "tier-uuid-2"})
+
+                    result = await service.get_user_by_uuid(db=mock_db, user_uuid=user_uuid)
+
+        assert result == expected_user
+        assert "role_id" not in result
+        assert "tier_id" not in result
+        mock_users.get.assert_awaited_once_with(
+            db=mock_db,
+            uuid=user_uuid,
+            schema_to_select=UserReadInternal,
+            is_deleted=False,
+        )
+
+    @pytest.mark.asyncio
     async def test_delete_user_blacklists_token_after_delete(self, mock_db, sample_user_read) -> None:
         service = UserService()
+        user_uuid = str(sample_user_read.uuid)
 
         with patch("src.app.services.user_service.crud_users") as mock_users:
             mock_users.get = AsyncMock(return_value=sample_user_read.model_dump())
@@ -63,8 +101,8 @@ class TestUserService:
             with patch("src.app.services.user_service.blacklist_token", new_callable=AsyncMock) as mock_blacklist:
                 result = await service.delete_user(
                     db=mock_db,
-                    username=sample_user_read.username,
-                    current_user={"username": sample_user_read.username, "id": sample_user_read.id, "is_superuser": False},
+                    user_uuid=user_uuid,
+                    current_user={"username": sample_user_read.username, "id": 1, "is_superuser": False},
                     token="token-value",
                 )
 
@@ -76,17 +114,20 @@ class TestUserService:
         service = UserService()
         db_user = sample_user_read.model_dump()
         db_user["role_id"] = None
+        user_uuid = str(sample_user_read.uuid)
 
         with patch("src.app.services.user_service.crud_users") as mock_users:
             mock_users.get = AsyncMock(return_value=db_user)
 
-            result = await service.get_user_role(db=mock_db, username=db_user["username"])
+            result = await service.get_user_role(db=mock_db, user_uuid=user_uuid)
 
         assert result is None
 
     @pytest.mark.asyncio
     async def test_update_user_role_rejects_missing_role(self, mock_db, sample_user_read) -> None:
         service = UserService()
+        user_uuid = str(sample_user_read.uuid)
+        role_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301"
 
         with patch("src.app.services.user_service.crud_users") as mock_users:
             mock_users.get = AsyncMock(return_value=sample_user_read.model_dump())
@@ -95,4 +136,27 @@ class TestUserService:
                 mock_roles.get = AsyncMock(return_value=None)
 
                 with pytest.raises(NotFoundException, match="Role not found"):
-                    await service.update_user_role(db=mock_db, username=sample_user_read.username, values=UserRoleUpdate(role_id=99))
+                    await service.update_user_role(
+                        db=mock_db,
+                        user_uuid=user_uuid,
+                        values=UserRoleUpdate(role_uuid=role_uuid),
+                    )
+
+    @pytest.mark.asyncio
+    async def test_update_user_tier_rejects_missing_tier(self, mock_db, sample_user_read) -> None:
+        service = UserService()
+        user_uuid = str(sample_user_read.uuid)
+        tier_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401"
+
+        with patch("src.app.services.user_service.crud_users") as mock_users:
+            mock_users.get = AsyncMock(return_value=sample_user_read.model_dump())
+
+            with patch("src.app.services.user_service.crud_tiers") as mock_tiers:
+                mock_tiers.get = AsyncMock(return_value=None)
+
+                with pytest.raises(NotFoundException, match="Tier not found"):
+                    await service.update_user_tier(
+                        db=mock_db,
+                        user_uuid=user_uuid,
+                        values=UserTierUpdate(tier_uuid=tier_uuid),
+                    )

@@ -3,15 +3,15 @@ import { ServerRequestError, getApiBaseUrl } from "@/fetch";
 import { getCurrentUser, getOidcLoginUrl, logoutCurrentUser } from "@/fetch/auth";
 
 const createUserFixture = (): Record<string, string | number> => ({
-	id: 1,
+	uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102",
 	name: "Jane Doe",
 	username: "jdoe",
 	email: "jane@example.com",
 	"profile_image_url": "https://example.com/avatar.png",
 	"auth_provider": "gc-sso",
 	"auth_subject": "subject-123",
-	"role_id": 1,
-	"tier_id": 2,
+	"role_uuid": "role-uuid-1",
+	"tier_uuid": "tier-uuid-2",
 });
 
 describe("fetch auth", () => {

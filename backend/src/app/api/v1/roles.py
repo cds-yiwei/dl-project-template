@@ -1,3 +1,4 @@
+import uuid as uuid_pkg
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
@@ -36,35 +37,35 @@ async def read_roles(
     return await service.list_roles(db=db, page=page, items_per_page=items_per_page)
 
 
-@router.get("/role/{name}", response_model=RoleRead)
+@router.get("/role/{role_uuid}", response_model=RoleRead)
 @casbin_guard.require_permission("roles", "read")
 async def read_role(
     request: Request,
-    name: str,
+    role_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[RoleService, Depends(get_role_service)],
 ) -> dict[str, Any]:
-    return await service.get_role_by_name(db=db, name=name)
+    return await service.get_role_by_uuid(db=db, role_uuid=role_uuid)
 
 
-@router.patch("/role/{name}")
+@router.patch("/role/{role_uuid}")
 @casbin_guard.require_permission("roles", "write")
 async def patch_role(
     request: Request,
-    name: str,
+    role_uuid: uuid_pkg.UUID,
     values: RoleUpdate,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[RoleService, Depends(get_role_service)],
 ) -> dict[str, str]:
-    return await service.update_role(db=db, name=name, values=values)
+    return await service.update_role(db=db, role_uuid=role_uuid, values=values)
 
 
-@router.delete("/role/{name}")
+@router.delete("/role/{role_uuid}")
 @casbin_guard.require_permission("roles", "write")
 async def erase_role(
     request: Request,
-    name: str,
+    role_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[RoleService, Depends(get_role_service)],
 ) -> dict[str, str]:
-    return await service.delete_role(db=db, name=name)
+    return await service.delete_role(db=db, role_uuid=role_uuid)

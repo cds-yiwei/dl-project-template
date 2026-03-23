@@ -10,7 +10,7 @@ describe("roles-api", () => {
 	it("requests the backend roles list with pagination parameters", async () => {
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			json: () => Promise.resolve({
-				data: [{ created_at: "2026-03-17T00:00:00Z", id: 3, name: "admin" }],
+				data: [{ created_at: "2026-03-17T00:00:00Z", name: "admin", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301" }],
 				"has_more": false,
 				"items_per_page": 10,
 				page: 1,
@@ -29,7 +29,7 @@ describe("roles-api", () => {
 			}),
 		);
 		expect(response).toMatchObject({
-			data: [{ id: 3, name: "admin" }],
+			data: [{ name: "admin", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301" }],
 		});
 	});
 
@@ -39,8 +39,8 @@ describe("roles-api", () => {
 			json: () => Promise.resolve({
 				created_at: "2026-03-17T00:00:00Z",
 				description: "Administrator role",
-				id: 3,
 				name: "admin",
+				uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301",
 			}),
 			ok: true,
 			status: 201,
@@ -64,12 +64,13 @@ describe("roles-api", () => {
 		);
 		expect(response).toMatchObject({
 			description: "Administrator role",
-			id: 3,
 			name: "admin",
+			uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301",
 		});
 	});
 
 	it("updates a role through the backend API", async () => {
+		const roleUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({ message: "Role updated successfully" }),
@@ -77,13 +78,13 @@ describe("roles-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await updateRole("admin", {
+		const response = await updateRole(roleUuid, {
 			description: "Updated administrator role",
 			name: "super-admin",
 		});
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/role/admin",
+			`http://localhost:8000/api/v1/role/${roleUuid}`,
 			expect.objectContaining({
 				body: JSON.stringify({
 					description: "Updated administrator role",
@@ -97,6 +98,7 @@ describe("roles-api", () => {
 	});
 
 	it("deletes a role through the backend API", async () => {
+		const roleUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301";
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
 			headers: new Headers({ "content-type": "application/json" }),
 			json: () => Promise.resolve({ message: "Role deleted successfully" }),
@@ -104,10 +106,10 @@ describe("roles-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await deleteRole("admin");
+		const response = await deleteRole(roleUuid);
 
 		expect(fetchMock).toHaveBeenCalledWith(
-			"http://localhost:8000/api/v1/role/admin",
+			`http://localhost:8000/api/v1/role/${roleUuid}`,
 			expect.objectContaining({
 				credentials: "include",
 				method: "DELETE",
