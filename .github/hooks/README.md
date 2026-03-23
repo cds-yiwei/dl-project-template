@@ -7,6 +7,8 @@ This folder contains the workspace hook configuration and the runtime scripts th
 ```text
 .github/hooks/
   orchestrated-agent.json
+  runtime/
+    .gitignore
   scripts/
     orchestrated_common.mjs
     orchestrated_session_start.mjs
@@ -16,6 +18,17 @@ This folder contains the workspace hook configuration and the runtime scripts th
     orchestrated_stop.mjs
   tests/
     orchestrated-hooks.test.mjs
+
+docs/
+  specs/
+    .gitignore
+    spec.schema.json
+    current/
+      <goal-slug>/
+        spec.json
+    archive/
+      <timestamp>-<goal-slug>/
+        spec.json
 ```
 
 ## Runtime model
@@ -54,7 +67,15 @@ This verifies the current behavior for:
 
 ## State model
 
-The hooks maintain a small persisted state file under `.git/copilot-hook-state/`.
+The hooks persist runtime files directly in the repo under `.github/hooks/runtime/`.
+
+Runtime files:
+
+- `orchestrated-agent-state.json`: persistent hook state and preferences
+- `orchestrated-agent-session.json`: current session snapshot for the active task and the tasks extracted from the current spec
+- `orchestrated-agent-sessions.jsonl`: append-only session history
+
+The `runtime/` directory is intended to stay in the repo tree for visibility, but the generated JSON and JSONL files are ignored by git.
 
 Core fields:
 
@@ -62,12 +83,38 @@ Core fields:
 - `conversationState`: either `idle` or `executing`
 - `stopSignal`: blocks future tool use until `resume`
 - `autoSkillHint`: deterministic repo routing hint inferred from the current prompt (`backend-developer`, `frontend-developer`, or `full-stack`)
+- `currentSpecFolderPath`: repo-relative path to the active goal folder in `docs/specs/current/`
+- `currentSpecPath`: repo-relative path to the active `spec.json`
 - `lastTaskTimestamp`: last actual execution time for cooldown-managed tools
 - `toolAudit`: recent tool executions
 - `preferences.verbosity`: persisted verbosity preference
 - `preferences.preferredSkill`: persisted routing hint
 
 The hooks no longer maintain a queued-task model. They track a single active goal at a time.
+
+## Spec-driven workflow
+
+The hooks now enforce a lightweight spec-driven workflow for each active task.
+
+- Starting a goal creates a folder in `docs/specs/current/<goal-slug>/`
+- Each goal folder includes a schema-backed `spec.json`
+- The schema lives at `docs/specs/spec.schema.json`
+- The prompt guidance tells the agent to brainstorm the spec first
+- `clarify:` and `continue:` append updates into arrays inside the active `spec.json`
+- The session task list is derived from the explicit `tasks` array in `spec.json`
+- Switching goals archives the previous goal folder into `docs/specs/archive/`
+- Ending the session also archives the active goal folder into `docs/specs/archive/`
+
+The active spec bundle is intentionally lightweight. It captures:
+
+- goal
+- brainstorming notes
+- open questions
+- constraints
+- success criteria
+- session notes
+- task execution status
+- schema versioning metadata
 
 ## Command vocabulary
 
@@ -125,14 +172,14 @@ Why this works well:
 
 High-level flow:
 
-1. `SessionStart` resets transient state and restores persisted preferences.
-2. A normal `UserPromptSubmit` sets or replaces `activeTaskName` and moves the session to `executing`.
+1. `SessionStart` resets transient state, restores persisted preferences, and reinitializes the current session snapshot.
+2. A normal `UserPromptSubmit` sets or replaces `activeTaskName`, creates an active goal folder under `docs/specs/current/`, and moves the session to `executing`.
 3. `PreToolUse` may deny execution if `stopSignal` is active.
 4. `PreToolUse` may ask for confirmation when a cooldown-managed tool is requested too soon after a prior real execution.
-5. `PostToolUse` appends tool audit data and updates cooldown timing only after an actual tool run.
+5. `PostToolUse` appends tool audit data, updates cooldown timing only after an actual tool run, and resyncs session tasks from the current `spec.json`.
 6. `UserPromptSubmit` also infers whether repo work looks backend, frontend, or full-stack and injects local skill guidance for `backend-developer`, `frontend-developer`, or both.
-7. Explicit prompt prefixes can continue, clarify, or switch the active goal without relying on inference.
-8. `Stop` appends a session summary to the JSONL session log.
+7. Explicit prompt prefixes can continue, clarify, or switch the active goal without relying on inference, and `clarify:` or `continue:` append entries to the active `spec.json`.
+8. `Stop` archives the active goal folder and appends a session summary to the JSONL session log.
 
 ## Repo skill routing
 
@@ -156,11 +203,11 @@ Mermaid diagram:
 
 ```mermaid
 flowchart TD
-  A[SessionStart] --> B[state = idle\nstopSignal = false\nactiveTaskName = null]
+  A[SessionStart] --> B[state = idle\nstopSignal = false\nactiveTaskName = null\ncurrentSpecFolderPath = null]
   B --> C[UserPromptSubmit: normal prompt]
   C --> D{active task exists?}
-  D -->|no| E[set active goal\nstate = executing]
-  D -->|yes| F[replace active goal\nstate = executing]
+  D -->|no| E[set active goal\ncreate docs/specs/current/<goal>\nstate = executing]
+  D -->|yes| F[archive current goal folder\ncreate next goal folder\nstate = executing]
   E --> G[PreToolUse]
   F --> G
   G --> H{stopSignal?}
@@ -174,11 +221,11 @@ flowchart TD
   N --> O[update cooldown timestamp\non actual execution]
   O --> S[UserPromptSubmit: control or goal update]
   S --> T{prompt type}
-  T -->|resume| U[clear stop mode\nstate = idle\nactiveTaskName = null]
-  T -->|goal: ...| AB[set active goal\nstate = executing]
-  T -->|clarify: ...| AC[keep active goal\nadd constraint/context]
-  T -->|continue: ...| AD[keep active goal\ncontinue execution]
-  T -->|switch: ...| AE[replace active goal\nstate = executing]
+  T -->|resume| U[clear stop mode\nstate = idle\nactive goal pointers = null]
+  T -->|goal: ...| AB[set active goal\ncreate goal folder\nstate = executing]
+  T -->|clarify: ...| AC[keep active goal\nappend to spec.json\nresync tasks]
+  T -->|continue: ...| AD[keep active goal\nappend to spec.json\nresync tasks]
+  T -->|switch: ...| AE[archive current folder\ncreate next goal folder\nstate = executing]
   T -->|prefer verbose/brief/normal| V[update verbosity]
   T -->|prefer skill X| W[update preferredSkill]
   T -->|stop:| Y[stopSignal = true]
@@ -191,7 +238,7 @@ flowchart TD
   W --> G
   Y --> G
   G --> Z[Stop]
-  Z --> AA[append session log]
+  Z --> AA[archive active goal folder\nappend session log]
 ```
 
 ## Updating an existing hook
@@ -219,6 +266,7 @@ flowchart TD
 ## Behavior notes and tradeoffs
 
 - The hooks intentionally track one active goal, not a backlog.
+- The hooks keep one active goal folder for the current goal and archive that whole folder when the goal changes or the session ends.
 - A later normal user prompt replaces the current active goal instead of being queued.
 - Explicit `goal:`, `clarify:`, `continue:`, and `switch:` commands let the user avoid that ambiguity when they want precise behavior.
 - `stop:` uses the same explicit command style as the rest of the vocabulary.
@@ -226,10 +274,12 @@ flowchart TD
 - The hooks no longer ask for per-task ratings after tool execution.
 - `resume` clears stop mode and resets the active goal so the next prompt starts fresh.
 - Preferences such as verbosity and preferred skill survive across sessions.
+- The task list is explicit. It is read from the `tasks` array in `spec.json`.
 
 Known tradeoffs:
 
 - The hooks still do not try to infer whether an unprefixed follow-up prompt is a clarification versus a brand-new task. They avoid that ambiguity by always treating a new normal prompt as the current active goal.
+- Task status changes should be written into `spec.json`; the hooks mirror that state into the session snapshot.
 - This system is intentionally lightweight. It is a policy layer, not a full workflow engine.
 
 ## Common commands

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./spec.schema.json",
+  "title": "Hook Task Spec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "task",
+    "status",
+    "createdAt",
+    "updatedAt",
+    "goal",
+    "brainstorming",
+    "openQuestions",
+    "constraints",
+    "successCriteria",
+    "clarifications",
+    "sessionUpdates",
+    "notes",
+    "tasks"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["drafting", "executing", "completed", "archived"]
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "brainstorming": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "openQuestions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "successCriteria": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "clarifications": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/timestampedText" }
+    },
+    "sessionUpdates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/timestampedText" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/timestampedText" }
+    },
+    "tasks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/taskItem" }
+    }
+  },
+  "$defs": {
+    "timestampedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timestamp", "text"],
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "taskItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": ["not_started", "in_progress", "completed", "blocked"]
+        }
+      }
+    }
+  }
+}

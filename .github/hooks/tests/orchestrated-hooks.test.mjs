@@ -15,16 +15,61 @@ async function createTempRepo() {
   return tempRoot;
 }
 
-async function readState(repoDir) {
-  const statePath = path.join(repoDir, '.git', 'copilot-hook-state', 'orchestrated-agent-state.json');
-  const raw = await fs.readFile(statePath, 'utf8');
+function resolveRepoPath(repoDir, repoRelativePath) {
+  return path.join(repoDir, ...repoRelativePath.split('/'));
+}
+
+async function readJsonFile(repoDir, repoRelativePath) {
+  const raw = await fs.readFile(resolveRepoPath(repoDir, repoRelativePath), 'utf8');
   return JSON.parse(raw);
 }
 
+async function writeJsonFile(repoDir, repoRelativePath, value) {
+  await fs.writeFile(resolveRepoPath(repoDir, repoRelativePath), `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+async function readState(repoDir) {
+  return readJsonFile(repoDir, '.github/hooks/runtime/orchestrated-agent-state.json');
+}
+
+async function readSessionState(repoDir) {
+  return readJsonFile(repoDir, '.github/hooks/runtime/orchestrated-agent-session.json');
+}
+
 async function readSessionLog(repoDir) {
-  const logPath = path.join(repoDir, '.git', 'copilot-hook-state', 'orchestrated-agent-sessions.jsonl');
+  const logPath = resolveRepoPath(repoDir, '.github/hooks/runtime/orchestrated-agent-sessions.jsonl');
   const raw = await fs.readFile(logPath, 'utf8');
   return raw.trim().split('\n').filter(Boolean).map((line) => JSON.parse(line));
+}
+
+async function readActiveSpec(repoDir, state) {
+  assert.ok(state?.currentSpecPath, 'expected currentSpecPath to be set');
+  return readJsonFile(repoDir, state.currentSpecPath);
+}
+
+async function updateActiveSpec(repoDir, state, updater) {
+  const spec = await readActiveSpec(repoDir, state);
+  const nextSpec = updater(structuredClone(spec));
+  await writeJsonFile(repoDir, state.currentSpecPath, nextSpec);
+}
+
+async function readArchivedFolders(repoDir) {
+  const archiveDir = resolveRepoPath(repoDir, 'docs/specs/archive');
+  const entries = await fs.readdir(archiveDir);
+  return entries.sort();
+}
+
+async function readArchivedSpec(repoDir, archivedFolderPath) {
+  return readJsonFile(repoDir, `${archivedFolderPath}/spec.json`);
+}
+
+async function pathExists(repoDir, repoRelativePath) {
+  try {
+    await fs.access(resolveRepoPath(repoDir, repoRelativePath));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function runHook(scriptName, payload) {
@@ -69,17 +114,26 @@ test('session start resets volatile state and returns startup context', async ()
 
   assert.equal(response.hookSpecificOutput.hookEventName, 'SessionStart');
   assert.match(response.hookSpecificOutput.additionalContext, /Orchestrated-agent hooks active/);
-  assert.doesNotMatch(response.hookSpecificOutput.additionalContext, /rate great|feedback/);
+  assert.match(response.hookSpecificOutput.additionalContext, /spec-driven workflow/);
 
   const state = await readState(repoDir);
   assert.equal(state.stopSignal, false);
   assert.equal(state.conversationState, 'idle');
   assert.equal(state.activeTaskName, null);
-  assert.equal(state.lastFeedbackHintTaskName, undefined);
-  assert.equal(state.feedbackLog, undefined);
+  assert.equal(state.currentSpecPath, null);
+  assert.equal(state.currentSpecFolderPath, null);
+  assert.equal(state.currentTaskListPath ?? null, null);
+
+  const sessionState = await readSessionState(repoDir);
+  assert.equal(sessionState.activeTaskName, null);
+  assert.equal(sessionState.currentSpecPath, null);
+  assert.equal(sessionState.currentSpecFolderPath, null);
+  assert.equal(sessionState.currentTaskListPath ?? null, null);
+  assert.equal(sessionState.status, 'idle');
+  assert.deepEqual(sessionState.tasks ?? [], []);
 });
 
-test('user prompt tracks a single active goal, preserves stop control, and resets on resume', async () => {
+test('user prompt creates a schema-backed spec.json and archives the previous goal folder on switch', async () => {
   const repoDir = await createTempRepo();
 
   const firstGoalResponse = await runHook('orchestrated_user_prompt.mjs', {
@@ -89,9 +143,22 @@ test('user prompt tracks a single active goal, preserves stop control, and reset
 
   assert.match(firstGoalResponse.systemMessage, /active goal set/);
   let state = await readState(repoDir);
-  assert.equal(state.conversationState, 'executing');
-  assert.equal(state.activeTaskName, 'rewrite the agent hooks in typescript');
-  assert.equal(state.autoSkillHint, null);
+  assert.equal(state.currentSpecFolderPath, 'docs/specs/current/rewrite-the-agent-hooks-in-typescript');
+  assert.equal(state.currentSpecPath, 'docs/specs/current/rewrite-the-agent-hooks-in-typescript/spec.json');
+  assert.equal(state.currentTaskListPath ?? null, null);
+
+  let sessionState = await readSessionState(repoDir);
+  assert.equal(sessionState.currentSpecPath, state.currentSpecPath);
+  assert.equal(sessionState.tasks.length, 4);
+
+  const activeSpec = await readActiveSpec(repoDir, state);
+  assert.equal(activeSpec.$schema, '../../spec.schema.json');
+  assert.equal(activeSpec.task, 'rewrite the agent hooks in typescript');
+  assert.ok(Array.isArray(activeSpec.tasks));
+  assert.equal(activeSpec.tasks.length, 4);
+  assert.equal(activeSpec.tasks[0].status, 'in_progress');
+  assert.equal(activeSpec.clarifications.length, 0);
+  assert.equal(activeSpec.sessionUpdates.length, 0);
 
   const switchedGoalResponse = await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
@@ -99,30 +166,99 @@ test('user prompt tracks a single active goal, preserves stop control, and reset
   });
 
   assert.match(switchedGoalResponse.systemMessage, /switched active goal/);
-  state = await readState(repoDir);
-  assert.equal(state.conversationState, 'executing');
-  assert.equal(state.activeTaskName, 'document the hook state machine');
+  assert.match(switchedGoalResponse.systemMessage, /Archived the previous spec folder/);
 
-  const stopResponse = await runHook('orchestrated_user_prompt.mjs', {
+  state = await readState(repoDir);
+  assert.equal(state.currentSpecFolderPath, 'docs/specs/current/document-the-hook-state-machine');
+  assert.equal(state.currentSpecPath, 'docs/specs/current/document-the-hook-state-machine/spec.json');
+
+  const archivedFolders = await readArchivedFolders(repoDir);
+  assert.equal(archivedFolders.length, 1);
+  assert.match(archivedFolders[0], /^\d{4}-\d{2}-\d{2}t.*-rewrite-the-agent-hooks-in-typescript$/i);
+  const archivedSpec = await readArchivedSpec(repoDir, `docs/specs/archive/${archivedFolders[0]}`);
+  assert.equal(archivedSpec.task, 'rewrite the agent hooks in typescript');
+  assert.equal(archivedSpec.tasks[0].status, 'in_progress');
+});
+
+test('explicit goal commands append into spec.json and session tasks sync from explicit task statuses', async () => {
+  const repoDir = await createTempRepo();
+
+  await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
-    prompt: 'stop:',
+    prompt: 'goal: migrate the hook docs to plain esm',
   });
 
-  assert.match(stopResponse.systemMessage, /stop mode enabled/);
-  state = await readState(repoDir);
-  assert.equal(state.stopSignal, true);
-  assert.equal(state.feedbackLog, undefined);
+  let state = await readState(repoDir);
+  let spec = await readActiveSpec(repoDir, state);
+  assert.equal(spec.tasks[0].status, 'in_progress');
 
-  const resumeResponse = await runHook('orchestrated_user_prompt.mjs', {
+  const clarifyResponse = await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
-    prompt: 'resume',
+    prompt: 'clarify: keep the examples short and user-facing',
   });
 
-  assert.match(resumeResponse.systemMessage, /stop mode cleared/);
+  assert.match(clarifyResponse.systemMessage, /clarification recorded/);
   state = await readState(repoDir);
-  assert.equal(state.stopSignal, false);
-  assert.equal(state.conversationState, 'idle');
-  assert.equal(state.activeTaskName, null);
+  spec = await readActiveSpec(repoDir, state);
+  assert.equal(spec.clarifications.length, 1);
+  assert.match(spec.clarifications[0].text, /keep the examples short and user-facing/);
+
+  await updateActiveSpec(repoDir, state, (draft) => {
+    draft.tasks[0].status = 'completed';
+    draft.tasks[1].status = 'in_progress';
+    return draft;
+  });
+
+  await runHook('orchestrated_pre_tool.mjs', {
+    cwd: repoDir,
+    tool_name: 'apply_patch',
+  });
+
+  let sessionState = await readSessionState(repoDir);
+  assert.equal(sessionState.tasks[0].status, 'completed');
+  assert.equal(sessionState.tasks[1].status, 'in_progress');
+
+  const continueResponse = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'continue: add a short quick-start section too',
+  });
+
+  assert.match(continueResponse.systemMessage, /continue the active goal/);
+  state = await readState(repoDir);
+  spec = await readActiveSpec(repoDir, state);
+  assert.equal(spec.sessionUpdates.length, 1);
+  assert.match(spec.sessionUpdates[0].text, /add a short quick-start section too/);
+
+  await updateActiveSpec(repoDir, state, (draft) => {
+    draft.tasks[1].status = 'completed';
+    draft.tasks[2].status = 'in_progress';
+    return draft;
+  });
+
+  await runHook('orchestrated_post_tool.mjs', {
+    cwd: repoDir,
+    tool_name: 'apply_patch',
+    tool_response: 'patch applied',
+  });
+
+  sessionState = await readSessionState(repoDir);
+  assert.equal(sessionState.tasks[1].status, 'completed');
+  assert.equal(sessionState.tasks[2].status, 'in_progress');
+
+  const switchResponse = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'switch: add examples for switch and clarify commands',
+  });
+
+  assert.match(switchResponse.systemMessage, /switched active goal/);
+  const archivedFolders = await readArchivedFolders(repoDir);
+  assert.equal(archivedFolders.length, 1);
+  const archivedSpec = await readArchivedSpec(repoDir, `docs/specs/archive/${archivedFolders[0]}`);
+  assert.equal(archivedSpec.clarifications.length, 1);
+  assert.equal(archivedSpec.sessionUpdates.length, 1);
+  assert.equal(archivedSpec.tasks[0].status, 'completed');
+  assert.equal(archivedSpec.tasks[1].status, 'completed');
+  assert.equal(archivedSpec.tasks[2].status, 'in_progress');
 });
 
 test('user prompt injects repo skill guidance for backend, frontend, and full-stack work', async () => {
@@ -194,65 +330,9 @@ test('user prompt recognizes repo-specific backend and frontend signals', async 
   assert.equal(state.autoSkillHint, 'frontend-developer');
 });
 
-test('user prompt supports explicit goal vocabulary for goal, clarify, continue, and switch', async () => {
+test('pre tool denies while stopped and includes active JSON spec context', async () => {
   const repoDir = await createTempRepo();
 
-  const goalResponse = await runHook('orchestrated_user_prompt.mjs', {
-    cwd: repoDir,
-    prompt: 'goal: migrate the hook docs to plain esm',
-  });
-
-  assert.match(goalResponse.systemMessage, /active goal set/);
-  let state = await readState(repoDir);
-  assert.equal(state.activeTaskName, 'migrate the hook docs to plain esm');
-  assert.equal(state.conversationState, 'executing');
-
-  const clarifyResponse = await runHook('orchestrated_user_prompt.mjs', {
-    cwd: repoDir,
-    prompt: 'clarify: keep the examples short and user-facing',
-  });
-
-  assert.match(clarifyResponse.systemMessage, /clarification recorded/);
-  assert.match(clarifyResponse.systemMessage, /migrate the hook docs to plain esm/);
-  state = await readState(repoDir);
-  assert.equal(state.activeTaskName, 'migrate the hook docs to plain esm');
-
-  await runHook('orchestrated_post_tool.mjs', {
-    cwd: repoDir,
-    tool_name: 'run_in_terminal',
-    tool_response: 'command output',
-  });
-
-  state = await readState(repoDir);
-  assert.equal(state.lastFeedbackHintTaskName, undefined);
-
-  const continueResponse = await runHook('orchestrated_user_prompt.mjs', {
-    cwd: repoDir,
-    prompt: 'continue: add a short quick-start section too',
-  });
-
-  assert.match(continueResponse.systemMessage, /continue the active goal/);
-  state = await readState(repoDir);
-  assert.equal(state.activeTaskName, 'migrate the hook docs to plain esm');
-
-  const switchResponse = await runHook('orchestrated_user_prompt.mjs', {
-    cwd: repoDir,
-    prompt: 'switch: add examples for switch and clarify commands',
-  });
-
-  assert.match(switchResponse.systemMessage, /switched active goal/);
-  state = await readState(repoDir);
-  assert.equal(state.activeTaskName, 'add examples for switch and clarify commands');
-  assert.equal(state.conversationState, 'executing');
-});
-
-test('pre tool denies while stopped and asks during cooldown after actual execution', async () => {
-  const repoDir = await createTempRepo();
-
-  await runHook('orchestrated_user_prompt.mjs', {
-    cwd: repoDir,
-    prompt: 'rewrite hooks in typescript',
-  });
   await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
     prompt: 'rewrite hooks in typescript',
@@ -265,32 +345,7 @@ test('pre tool denies while stopped and asks during cooldown after actual execut
 
   assert.equal(first.hookSpecificOutput.hookEventName, 'PreToolUse');
   assert.match(first.hookSpecificOutput.additionalContext, /Active goal/);
-
-  await runHook('orchestrated_user_prompt.mjs', {
-    cwd: repoDir,
-    prompt: 'fix the React login route and auth store',
-  });
-
-  const withSkillHint = await runHook('orchestrated_pre_tool.mjs', {
-    cwd: repoDir,
-    tool_name: 'apply_patch',
-  });
-
-  assert.match(withSkillHint.hookSpecificOutput.additionalContext, /Auto skill hint: frontend-developer/);
-
-  await runHook('orchestrated_post_tool.mjs', {
-    cwd: repoDir,
-    tool_name: 'run_in_terminal',
-    tool_response: 'completed command output',
-  });
-
-  const second = await runHook('orchestrated_pre_tool.mjs', {
-    cwd: repoDir,
-    tool_name: 'run_in_terminal',
-  });
-
-  assert.equal(second.hookSpecificOutput.permissionDecision, 'ask');
-  assert.match(second.hookSpecificOutput.permissionDecisionReason, /cooldown is active/);
+  assert.match(first.hookSpecificOutput.additionalContext, /spec\.json/);
 
   await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
@@ -306,11 +361,18 @@ test('pre tool denies while stopped and asks during cooldown after actual execut
   assert.match(denied.hookSpecificOutput.permissionDecisionReason, /stop mode is active/);
 });
 
-test('post tool audits usage without emitting rating prompts', async () => {
+test('post tool audits usage without emitting rating prompts and syncs explicit tasks from spec.json', async () => {
   const repoDir = await createTempRepo();
   await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
     prompt: 'rewrite hooks in typescript',
+  });
+
+  let state = await readState(repoDir);
+  await updateActiveSpec(repoDir, state, (draft) => {
+    draft.tasks[0].status = 'completed';
+    draft.tasks[1].status = 'in_progress';
+    return draft;
   });
 
   const response = await runHook('orchestrated_post_tool.mjs', {
@@ -323,24 +385,28 @@ test('post tool audits usage without emitting rating prompts', async () => {
   assert.equal(response.hookSpecificOutput.hookEventName, 'PostToolUse');
   assert.match(response.hookSpecificOutput.additionalContext, /terminal execution completed/);
 
-  const state = await readState(repoDir);
-  assert.equal(state.lastFeedbackHintTaskName, undefined);
+  state = await readState(repoDir);
   assert.equal(state.toolAudit.length, 1);
   assert.equal(state.toolAudit[0].tool, 'run_in_terminal');
 
-  const secondResponse = await runHook('orchestrated_post_tool.mjs', {
-    cwd: repoDir,
-    tool_name: 'run_in_terminal',
-    tool_response: 'completed command output again',
-  });
-  assert.equal(secondResponse.systemMessage, undefined);
+  const sessionState = await readSessionState(repoDir);
+  assert.equal(sessionState.tasks[0].status, 'completed');
+  assert.equal(sessionState.tasks[1].status, 'in_progress');
 });
 
-test('stop appends session log unless stop hook is already active', async () => {
+test('stop archives the full JSON spec folder and records the archive path', async () => {
   const repoDir = await createTempRepo();
   await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
     prompt: 'rewrite hooks in typescript',
+  });
+
+  const state = await readState(repoDir);
+  await updateActiveSpec(repoDir, state, (draft) => {
+    draft.tasks[0].status = 'completed';
+    draft.tasks[1].status = 'in_progress';
+    draft.notes.push({ timestamp: '2026-03-23T00:00:00.000Z', text: 'session note' });
+    return draft;
   });
 
   const emptyResponse = await runHook('orchestrated_stop.mjs', {
@@ -360,6 +426,22 @@ test('stop appends session log unless stop hook is already active', async () => 
   assert.equal(entries.length, 1);
   assert.equal(entries[0].sessionId, 'session-123');
   assert.equal(entries[0].activeTaskName, 'rewrite hooks in typescript');
-  assert.equal(entries[0].feedbackCount, undefined);
-  assert.equal(entries[0].queuedTasks, undefined);
+  assert.match(entries[0].archivedSpecPath, /^docs\/specs\/archive\//);
+
+  const archivedFolders = await readArchivedFolders(repoDir);
+  assert.equal(archivedFolders.length, 1);
+  assert.match(archivedFolders[0], /^\d{4}-\d{2}-\d{2}t.*-rewrite-hooks-in-typescript$/i);
+
+  assert.equal(await pathExists(repoDir, 'docs/specs/current/rewrite-hooks-in-typescript/spec.json'), false);
+
+  const archivedSpec = await readArchivedSpec(repoDir, `docs/specs/archive/${archivedFolders[0]}`);
+  assert.equal(archivedSpec.tasks[0].status, 'completed');
+  assert.equal(archivedSpec.tasks[1].status, 'in_progress');
+  assert.equal(archivedSpec.notes.length, 1);
+
+  const sessionState = await readSessionState(repoDir);
+  assert.equal(sessionState.currentSpecPath, null);
+  assert.equal(sessionState.currentSpecFolderPath, null);
+  assert.equal(sessionState.currentTaskListPath ?? null, null);
+  assert.equal(sessionState.lastArchivedSpecPath, entries[0].archivedSpecPath);
 });

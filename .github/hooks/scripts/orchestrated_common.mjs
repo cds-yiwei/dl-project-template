@@ -1,9 +1,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-export const STATE_DIRNAME = 'copilot-hook-state';
+export const RUNTIME_DIRNAME = path.join('.github', 'hooks', 'runtime');
+export const SPECS_DIRNAME = path.join('docs', 'specs');
+export const CURRENT_SPECS_DIRNAME = 'current';
+export const ARCHIVED_SPECS_DIRNAME = 'archive';
+export const SPEC_SCHEMA_FILENAME = 'spec.schema.json';
 export const STATE_FILENAME = 'orchestrated-agent-state.json';
+export const SESSION_STATE_FILENAME = 'orchestrated-agent-session.json';
 export const SESSION_LOG_FILENAME = 'orchestrated-agent-sessions.jsonl';
+export const SPEC_FILENAME = 'spec.json';
 
 function isRecord(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -43,16 +49,40 @@ export function repoRootFromInput(inputData) {
   return typeof cwd === 'string' && cwd.length > 0 ? cwd : process.cwd();
 }
 
-export function stateDir(repoRoot) {
-  return path.join(repoRoot, '.git', STATE_DIRNAME);
+export function runtimeDir(repoRoot) {
+  return path.join(repoRoot, RUNTIME_DIRNAME);
 }
 
 export function statePath(repoRoot) {
-  return path.join(stateDir(repoRoot), STATE_FILENAME);
+  return path.join(runtimeDir(repoRoot), STATE_FILENAME);
+}
+
+export function sessionStatePath(repoRoot) {
+  return path.join(runtimeDir(repoRoot), SESSION_STATE_FILENAME);
 }
 
 export function sessionLogPath(repoRoot) {
-  return path.join(stateDir(repoRoot), SESSION_LOG_FILENAME);
+  return path.join(runtimeDir(repoRoot), SESSION_LOG_FILENAME);
+}
+
+export function specsDir(repoRoot) {
+  return path.join(repoRoot, SPECS_DIRNAME);
+}
+
+export function currentSpecsDir(repoRoot) {
+  return path.join(specsDir(repoRoot), CURRENT_SPECS_DIRNAME);
+}
+
+export function archivedSpecsDir(repoRoot) {
+  return path.join(specsDir(repoRoot), ARCHIVED_SPECS_DIRNAME);
+}
+
+function absoluteRepoPath(repoRoot, repoRelativePath) {
+  return path.join(repoRoot, ...repoRelativePath.split('/'));
+}
+
+export function relativeRepoPath(repoRoot, absolutePath) {
+  return path.relative(repoRoot, absolutePath).split(path.sep).join('/');
 }
 
 export function defaultState() {
@@ -68,7 +98,24 @@ export function defaultState() {
     conversationState: 'idle',
     activeTaskName: null,
     autoSkillHint: null,
+    currentSpecFolderPath: null,
+    currentSpecPath: null,
+    currentTaskListPath: null,
     toolAudit: [],
+    lastUpdated: utcNowIso(),
+  };
+}
+
+export function defaultSessionState() {
+  return {
+    status: 'idle',
+    sessionStartedAt: utcNowIso(),
+    activeTaskName: null,
+    currentSpecFolderPath: null,
+    currentSpecPath: null,
+    currentTaskListPath: null,
+    lastArchivedSpecPath: null,
+    tasks: [],
     lastUpdated: utcNowIso(),
   };
 }
@@ -107,17 +154,186 @@ export async function loadState(repoRoot) {
   }
 }
 
+export async function loadSessionState(repoRoot) {
+  const filePath = sessionStatePath(repoRoot);
+
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (!isRecord(parsed)) {
+      return defaultSessionState();
+    }
+
+    return {
+      ...defaultSessionState(),
+      ...parsed,
+      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+    };
+  } catch {
+    return defaultSessionState();
+  }
+}
+
 export async function saveState(repoRoot, state) {
-  const directory = stateDir(repoRoot);
+  const directory = runtimeDir(repoRoot);
   await fs.mkdir(directory, { recursive: true });
   state.lastUpdated = utcNowIso();
   await fs.writeFile(statePath(repoRoot), `${JSON.stringify(state, null, 2)}\n`, 'utf8');
 }
 
+export async function saveSessionState(repoRoot, sessionState) {
+  const directory = runtimeDir(repoRoot);
+  await fs.mkdir(directory, { recursive: true });
+  sessionState.lastUpdated = utcNowIso();
+  await fs.writeFile(sessionStatePath(repoRoot), `${JSON.stringify(sessionState, null, 2)}\n`, 'utf8');
+}
+
 export async function appendSessionLog(repoRoot, entry) {
-  const directory = stateDir(repoRoot);
+  const directory = runtimeDir(repoRoot);
   await fs.mkdir(directory, { recursive: true });
   await fs.appendFile(sessionLogPath(repoRoot), `${JSON.stringify(entry)}\n`, 'utf8');
+}
+
+function slugify(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'task';
+}
+
+function filenameTimestamp() {
+  return utcNowIso().toLowerCase().replace(/[:.]/g, '-');
+}
+
+function createDefaultTasks() {
+  return [
+    { id: 'brainstorm-spec', title: 'Brainstorm and clarify spec', status: 'in_progress' },
+    { id: 'execute-work', title: 'Execute planned work', status: 'not_started' },
+    { id: 'verify-work', title: 'Verify completed work', status: 'not_started' },
+    { id: 'archive-artifacts', title: 'Archive session artifacts', status: 'not_started' },
+  ];
+}
+
+function createDefaultSpec(taskName) {
+  return {
+    $schema: '../../spec.schema.json',
+    schemaVersion: 1,
+    task: taskName,
+    status: 'drafting',
+    createdAt: utcNowIso(),
+    updatedAt: utcNowIso(),
+    goal: taskName,
+    brainstorming: [
+      'What is the smallest useful outcome for this task?',
+      'What constraints or repo conventions should shape the implementation?',
+      'What would make this change clearly complete?',
+    ],
+    openQuestions: ['Add any unclear requirements here before editing code.'],
+    constraints: ['Keep changes aligned with the existing repo structure and hook contracts.'],
+    successCriteria: [
+      'The task goal is clear enough to execute without hidden assumptions.',
+      'Any unresolved questions are explicit before file edits or commands run.',
+    ],
+    clarifications: [],
+    sessionUpdates: [],
+    notes: [],
+    tasks: createDefaultTasks(),
+  };
+}
+
+async function loadSpecFile(repoRoot, specPath) {
+  const filePath = absoluteRepoPath(repoRoot, specPath);
+  const raw = await fs.readFile(filePath, 'utf8');
+  return JSON.parse(raw);
+}
+
+async function saveSpecFile(repoRoot, specPath, spec) {
+  const filePath = absoluteRepoPath(repoRoot, specPath);
+  spec.updatedAt = utcNowIso();
+  await fs.writeFile(filePath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
+}
+
+export async function createActiveSpecBundle(repoRoot, taskName) {
+  await fs.mkdir(currentSpecsDir(repoRoot), { recursive: true });
+
+  const folderName = slugify(taskName);
+  const folderPath = path.join(currentSpecsDir(repoRoot), folderName);
+  await fs.rm(folderPath, { recursive: true, force: true });
+  await fs.mkdir(folderPath, { recursive: true });
+
+  const specFilePath = path.join(folderPath, SPEC_FILENAME);
+  const relativeFolderPath = relativeRepoPath(repoRoot, folderPath);
+  const relativeSpecPath = relativeRepoPath(repoRoot, specFilePath);
+  const spec = createDefaultSpec(taskName);
+
+  await saveSpecFile(repoRoot, relativeSpecPath, spec);
+
+  return {
+    folderPath: relativeFolderPath,
+    specPath: relativeSpecPath,
+    taskListPath: null,
+    tasks: spec.tasks,
+  };
+}
+
+export async function syncSessionTasksFromSpec(repoRoot, state, sessionState) {
+  if (!state.currentSpecPath) {
+    sessionState.tasks = [];
+    return null;
+  }
+
+  const spec = await loadSpecFile(repoRoot, state.currentSpecPath);
+  sessionState.tasks = Array.isArray(spec.tasks) ? spec.tasks : [];
+  return spec;
+}
+
+export async function appendToActiveSpec(repoRoot, specPath, fieldName, text) {
+  if (!specPath) {
+    return;
+  }
+
+  const spec = await loadSpecFile(repoRoot, specPath);
+  if (!Array.isArray(spec[fieldName])) {
+    spec[fieldName] = [];
+  }
+
+  spec[fieldName].push({
+    timestamp: utcNowIso(),
+    text,
+  });
+
+  await saveSpecFile(repoRoot, specPath, spec);
+}
+
+export async function archiveCurrentSpecBundle(repoRoot, state, sessionState) {
+  if (!state.currentSpecFolderPath) {
+    return null;
+  }
+
+  const currentFolderPath = absoluteRepoPath(repoRoot, state.currentSpecFolderPath);
+
+  try {
+    await fs.access(currentFolderPath);
+  } catch {
+    return null;
+  }
+
+  await syncSessionTasksFromSpec(repoRoot, state, sessionState);
+
+  const archivedFolderName = `${filenameTimestamp()}-${path.basename(currentFolderPath)}`;
+  const archiveDirectory = archivedSpecsDir(repoRoot);
+  const archivedFolderPath = path.join(archiveDirectory, archivedFolderName);
+  await fs.mkdir(archiveDirectory, { recursive: true });
+  await fs.rename(currentFolderPath, archivedFolderPath);
+
+  const archivedRepoPath = relativeRepoPath(repoRoot, archivedFolderPath);
+  sessionState.lastArchivedSpecPath = archivedRepoPath;
+
+  return {
+    archivedFolderPath: archivedRepoPath,
+    archivedSpecPath: `${archivedRepoPath}/${SPEC_FILENAME}`,
+  };
 }
 
 export function printJson(payload) {

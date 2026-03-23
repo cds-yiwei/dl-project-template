@@ -1,10 +1,13 @@
 import {
   loadHookInput,
+  loadSessionState,
   loadState,
   printJson,
   repoRootFromInput,
   runCli,
+  saveSessionState,
   saveState,
+  syncSessionTasksFromSpec,
   truncateText,
   utcNowIso,
 } from './orchestrated_common.mjs';
@@ -16,6 +19,7 @@ export async function main() {
   const inputData = await loadHookInput();
   const repoRoot = repoRootFromInput(inputData);
   const state = await loadState(repoRoot);
+  const sessionState = await loadSessionState(repoRoot);
   const toolName = typeof inputData.tool_name === 'string' ? inputData.tool_name : '';
   const toolResponse = inputData.tool_response;
 
@@ -30,11 +34,15 @@ export async function main() {
     state.lastTaskTimestamp = Date.now();
   }
 
+  await syncSessionTasksFromSpec(repoRoot, state, sessionState);
+
   let additionalContext;
   let systemMessage;
 
   if (FILE_EDIT_TOOLS.has(toolName)) {
-    additionalContext = `orchestrated-agent audit: ${toolName} completed for task '${state.activeTaskName ?? 'unspecified-task'}'.`;
+    additionalContext =
+      `orchestrated-agent audit: ${toolName} completed for task '${state.activeTaskName ?? 'unspecified-task'}'. ` +
+      `Spec: ${state.currentSpecPath ?? 'none'}.`;
   }
 
   if (toolName === 'run_in_terminal') {
@@ -45,6 +53,7 @@ export async function main() {
   }
 
   await saveState(repoRoot, state);
+  await saveSessionState(repoRoot, sessionState);
 
   const response = {};
   if (systemMessage) {

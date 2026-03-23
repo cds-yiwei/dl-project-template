@@ -1,10 +1,13 @@
 import {
   loadHookInput,
+  loadSessionState,
   loadState,
   printJson,
   repoRootFromInput,
   runCli,
+  saveSessionState,
   saveState,
+  syncSessionTasksFromSpec,
 } from './orchestrated_common.mjs';
 
 const COOLDOWN_TOOLS = new Set(['run_in_terminal', 'runSubagent', 'search_subagent']);
@@ -13,7 +16,10 @@ export async function main() {
   const inputData = await loadHookInput();
   const repoRoot = repoRootFromInput(inputData);
   const state = await loadState(repoRoot);
+  const sessionState = await loadSessionState(repoRoot);
   const toolName = typeof inputData.tool_name === 'string' ? inputData.tool_name : '';
+
+  await syncSessionTasksFromSpec(repoRoot, state, sessionState);
 
   if (state.stopSignal) {
     return printJson({
@@ -44,9 +50,13 @@ export async function main() {
   const autoSkillHint = state.autoSkillHint;
   const verbosity = state.preferences.verbosity ?? 'normal';
   const activeTask = state.activeTaskName;
+  const currentSpecPath = state.currentSpecPath;
 
   if (activeTask) {
     additionalParts.push(`Active goal: ${activeTask}`);
+  }
+  if (currentSpecPath) {
+    additionalParts.push(`Active spec: ${currentSpecPath}`);
   }
   if (preferredSkill) {
     additionalParts.push(`Preferred skill hint: ${preferredSkill}`);
@@ -59,6 +69,7 @@ export async function main() {
   }
 
   await saveState(repoRoot, state);
+  await saveSessionState(repoRoot, sessionState);
 
   const hookSpecificOutput = {
     hookEventName: 'PreToolUse',
