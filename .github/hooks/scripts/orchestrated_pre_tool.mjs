@@ -41,6 +41,7 @@ export async function main() {
 
   const additionalParts = [];
   const preferredSkill = state.preferences.preferredSkill;
+  const autoSkillHint = state.autoSkillHint;
   const verbosity = state.preferences.verbosity ?? 'normal';
   const activeTask = state.activeTaskName;
 
@@ -49,6 +50,9 @@ export async function main() {
   }
   if (preferredSkill) {
     additionalParts.push(`Preferred skill hint: ${preferredSkill}`);
+  }
+  if (autoSkillHint) {
+    additionalParts.push(`Auto skill hint: ${autoSkillHint}`);
   }
   if (verbosity !== 'normal') {
     additionalParts.push(`Response verbosity preference: ${verbosity}`);

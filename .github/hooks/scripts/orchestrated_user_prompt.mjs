@@ -1,4 +1,5 @@
 import {
+  detectRepoSkillHint,
   isStopRequest,
   loadHookInput,
   loadState,
@@ -36,6 +37,9 @@ export async function main() {
   const prompt = typeof inputData.prompt === 'string' ? inputData.prompt : '';
   const normalized = prompt.trim().toLowerCase();
   const goalCommand = parseGoalCommand(prompt);
+  const repoSkillHint = detectRepoSkillHint(prompt);
+
+  state.autoSkillHint = repoSkillHint?.key ?? null;
 
   if (normalized === 'resume') {
     state.stopSignal = false;
@@ -149,6 +153,10 @@ export async function main() {
     systemMessage =
       `orchestrated-agent: switched active goal to '${taskName}'. ` +
       'Ask one concise clarifying question before editing or executing commands unless the prompt is already fully specified.';
+  }
+
+  if (repoSkillHint) {
+    systemMessage += ` ${repoSkillHint.instruction}`;
   }
 
   await saveState(repoRoot, state);

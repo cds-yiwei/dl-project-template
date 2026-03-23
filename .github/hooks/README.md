@@ -61,6 +61,7 @@ Core fields:
 - `activeTaskName`: the current user goal being tracked
 - `conversationState`: either `idle` or `executing`
 - `stopSignal`: blocks future tool use until `resume`
+- `autoSkillHint`: deterministic repo routing hint inferred from the current prompt (`backend-developer`, `frontend-developer`, or `full-stack`)
 - `lastTaskTimestamp`: last actual execution time for cooldown-managed tools
 - `toolAudit`: recent tool executions
 - `preferences.verbosity`: persisted verbosity preference
@@ -129,8 +130,27 @@ High-level flow:
 3. `PreToolUse` may deny execution if `stopSignal` is active.
 4. `PreToolUse` may ask for confirmation when a cooldown-managed tool is requested too soon after a prior real execution.
 5. `PostToolUse` appends tool audit data and updates cooldown timing only after an actual tool run.
-6. Explicit prompt prefixes can continue, clarify, or switch the active goal without relying on inference.
-7. `Stop` appends a session summary to the JSONL session log.
+6. `UserPromptSubmit` also infers whether repo work looks backend, frontend, or full-stack and injects local skill guidance for `backend-developer`, `frontend-developer`, or both.
+7. Explicit prompt prefixes can continue, clarify, or switch the active goal without relying on inference.
+8. `Stop` appends a session summary to the JSONL session log.
+
+## Repo skill routing
+
+The current `UserPromptSubmit` hook includes deterministic repo-scope routing hints for this monorepo.
+
+Behavior:
+
+- backend-looking prompts inject guidance to use the local `backend-developer` skill
+- frontend-looking prompts inject guidance to use the local `frontend-developer` skill
+- prompts that look full-stack or mention both sides inject guidance to use both skills together
+- prompts that explicitly mention both `backend/` and `frontend/` paths are always treated as coordinated full-stack work and receive an explicit reminder to use both local skills
+
+Current repo-specific routing signals include terms such as:
+
+- backend: `FastAPI`, `Alembic`, `casbin_guard`, `access_policy`, `FastCRUD`, `backend/src/`, `src/migrations`
+- frontend: `TanStack`, `routeTree`, `auth-routing`, `request-json`, `GCDS`, `frontend/src/`, `src/routes`, `src/fetch`
+
+This does not replace skill discovery by the agent. It adds explicit runtime context so work in this repo stays aligned with the existing backend and frontend structure and coding standards.
 
 Mermaid diagram:
 

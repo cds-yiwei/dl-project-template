@@ -91,6 +91,7 @@ test('user prompt tracks a single active goal, preserves stop control, and reset
   let state = await readState(repoDir);
   assert.equal(state.conversationState, 'executing');
   assert.equal(state.activeTaskName, 'rewrite the agent hooks in typescript');
+  assert.equal(state.autoSkillHint, null);
 
   const switchedGoalResponse = await runHook('orchestrated_user_prompt.mjs', {
     cwd: repoDir,
@@ -122,6 +123,75 @@ test('user prompt tracks a single active goal, preserves stop control, and reset
   assert.equal(state.stopSignal, false);
   assert.equal(state.conversationState, 'idle');
   assert.equal(state.activeTaskName, null);
+});
+
+test('user prompt injects repo skill guidance for backend, frontend, and full-stack work', async () => {
+  const repoDir = await createTempRepo();
+
+  const backendResponse = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'fix the FastAPI roles service and add an Alembic migration',
+  });
+
+  assert.match(backendResponse.systemMessage, /backend-developer/);
+  let state = await readState(repoDir);
+  assert.equal(state.autoSkillHint, 'backend-developer');
+
+  const frontendResponse = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'update the React users page route and TanStack query hooks',
+  });
+
+  assert.match(frontendResponse.systemMessage, /frontend-developer/);
+  state = await readState(repoDir);
+  assert.equal(state.autoSkillHint, 'frontend-developer');
+
+  const fullStackResponse = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'full-stack change: update backend API and frontend page together',
+  });
+
+  assert.match(fullStackResponse.systemMessage, /backend-developer' and 'frontend-developer|backend-developer.*frontend-developer/);
+  state = await readState(repoDir);
+  assert.equal(state.autoSkillHint, 'full-stack');
+});
+
+test('user prompt treats explicit backend and frontend path mentions as full-stack work', async () => {
+  const repoDir = await createTempRepo();
+
+  const response = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'update backend/src/app/api/v1/roles.py and frontend/src/routes/roles.ts together',
+  });
+
+  assert.match(response.systemMessage, /explicitly mentions both backend\/ and frontend\/ paths/);
+  assert.match(response.systemMessage, /backend-developer/);
+  assert.match(response.systemMessage, /frontend-developer/);
+
+  const state = await readState(repoDir);
+  assert.equal(state.autoSkillHint, 'full-stack');
+});
+
+test('user prompt recognizes repo-specific backend and frontend signals', async () => {
+  const repoDir = await createTempRepo();
+
+  const backendResponse = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'update casbin_guard handling in backend/src/app/api/v1/policies.py and seed access_policy data',
+  });
+
+  assert.match(backendResponse.systemMessage, /backend-developer/);
+  let state = await readState(repoDir);
+  assert.equal(state.autoSkillHint, 'backend-developer');
+
+  const frontendResponse = await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'fix routeTree generation and auth-routing behavior in frontend/src/routes and src/fetch/request-json.ts',
+  });
+
+  assert.match(frontendResponse.systemMessage, /frontend-developer/);
+  state = await readState(repoDir);
+  assert.equal(state.autoSkillHint, 'frontend-developer');
 });
 
 test('user prompt supports explicit goal vocabulary for goal, clarify, continue, and switch', async () => {
@@ -195,6 +265,18 @@ test('pre tool denies while stopped and asks during cooldown after actual execut
 
   assert.equal(first.hookSpecificOutput.hookEventName, 'PreToolUse');
   assert.match(first.hookSpecificOutput.additionalContext, /Active goal/);
+
+  await runHook('orchestrated_user_prompt.mjs', {
+    cwd: repoDir,
+    prompt: 'fix the React login route and auth store',
+  });
+
+  const withSkillHint = await runHook('orchestrated_pre_tool.mjs', {
+    cwd: repoDir,
+    tool_name: 'apply_patch',
+  });
+
+  assert.match(withSkillHint.hookSpecificOutput.additionalContext, /Auto skill hint: frontend-developer/);
 
   await runHook('orchestrated_post_tool.mjs', {
     cwd: repoDir,
