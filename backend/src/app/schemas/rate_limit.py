@@ -2,7 +2,9 @@ import uuid as uuid_pkg
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator, BaseModel
+from pydantic.alias_generators import to_camel
+
 
 from ..core.schemas import TimestampSchema
 
@@ -12,9 +14,9 @@ def sanitize_path(path: str) -> str:
 
 
 class RateLimitBase(BaseModel):
-    path: Annotated[str, Field(examples=["users"])]
-    limit: Annotated[int, Field(examples=[5])]
-    period: Annotated[int, Field(examples=[60])]
+    path: str = Field(..., examples=["users"])
+    limit: int = Field(..., examples=[5])
+    period: int = Field(..., examples=[60])
 
     @field_validator("path")
     def validate_and_sanitize_path(cls, v: str) -> str:
@@ -22,27 +24,28 @@ class RateLimitBase(BaseModel):
 
 
 class RateLimit(TimestampSchema, RateLimitBase):
-    tier_id: int
-    name: Annotated[str | None, Field(default=None, examples=["users:5:60"])]
+    tier_id: int = Field(alias="tierId")
+    name: str | None = Field(None, examples=["users:5:60"])
 
 
 class RateLimitRead(RateLimitBase):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
     id: int
     uuid: uuid_pkg.UUID
     name: str
 
 
 class RateLimitCreate(RateLimitBase):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
-    name: Annotated[str | None, Field(default=None, examples=["api_v1_users:5:60"])]
+    name: str | None = Field(None, examples=["api_v1_users:5:60"])
 
 
 class RateLimitCreateInternal(RateLimitCreate):
     tier_id: int
 
 
-class RateLimitUpdate(BaseModel):
+class RateLimitUpdate(RateLimitBase):
     path: str | None = Field(default=None)
     limit: int | None = None
     period: int | None = None

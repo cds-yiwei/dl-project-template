@@ -2,7 +2,7 @@ import type { QueryClient, QueryKey } from "@tanstack/react-query";
 
 type RefreshActiveListQueryOptions = {
 	exactQueryKey: QueryKey;
-	invalidationKeys?: QueryKey[];
+	invalidationKeys?: Array<QueryKey>;
 	refetchActiveQuery: () => Promise<unknown>;
 };
 
@@ -16,8 +16,12 @@ export const refreshActiveListQuery = async (
 		refetchType: "none",
 	});
 
-	for (const queryKey of invalidationKeys) {
-		await queryClient.invalidateQueries({ queryKey, refetchType: "none" });
+	if (invalidationKeys.length > 0) {
+		await Promise.all(
+			invalidationKeys.map((queryKey) =>
+				queryClient.invalidateQueries({ queryKey, refetchType: "none" }),
+			),
+		);
 	}
 
 	await refetchActiveQuery();

@@ -18,9 +18,9 @@ const Header = (): FunctionComponent => {
         <a aria-label="Government of Canada" className="shrink-0" href="/">
           <GcdsSignature hasLink={false} lang={language} type="signature" />
         </a>
-        <button className="pt-100 text-sm text-[var(--gcds-text-primary)] underline underline-offset-[0.16em]" onClick={() => {
+        <button className="pt-100 text-sm text-[var(--gcds-text-primary)] underline underline-offset-[0.16em]" type="button" onClick={() => {
           void toggleLanguage();
-        }} type="button">
+        }}>
           {nextLanguageLabel}
         </button>
       </div>

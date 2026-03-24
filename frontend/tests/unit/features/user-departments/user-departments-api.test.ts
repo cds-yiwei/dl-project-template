@@ -44,12 +44,12 @@ describe("user-departments-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await updateUserDepartment(userUuid, { department_abbreviation: departmentAbbreviation });
+		const response = await updateUserDepartment(userUuid, { departmentAbbreviation: departmentAbbreviation });
 
 		expect(fetchMock).toHaveBeenCalledWith(
 			`http://localhost:8000/api/v1/user/${userUuid}/department`,
 			expect.objectContaining({
-				body: JSON.stringify({ department_abbreviation: departmentAbbreviation }),
+				body: JSON.stringify({ departmentAbbreviation: departmentAbbreviation }),
 				credentials: "include",
 				method: "PATCH",
 			}),

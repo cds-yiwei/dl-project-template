@@ -31,8 +31,8 @@ const Card: React.FC<CardProps> = React.memo(
       cardTitleTag={cardTitleTag}
       description={description}
       href={href}
-      imgSrc={imgSrc}
       imgAlt={imgAlt}
+      imgSrc={imgSrc}
       {...rest}
     >
       {children}

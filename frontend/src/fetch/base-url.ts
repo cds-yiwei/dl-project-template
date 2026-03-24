@@ -1,6 +1,6 @@
 const defaultApiBaseUrl = "http://localhost:8000";
 
-const isLocalDevHostname = (hostname: string | null | undefined): boolean =>
+const isLocalDevelopmentHostname = (hostname: string | null | undefined): boolean =>
 	hostname === "localhost" || hostname === "127.0.0.1";
 
 const getDefaultApiBaseUrl = (): string => {
@@ -12,7 +12,7 @@ const getDefaultApiBaseUrl = (): string => {
 
 	const hostname = location.hostname?.trim();
 
-	if (isLocalDevHostname(hostname)) {
+	if (isLocalDevelopmentHostname(hostname)) {
 		return `${location.protocol}//${hostname}:8000`;
 	}
 
@@ -22,14 +22,14 @@ const getDefaultApiBaseUrl = (): string => {
 const normalizeLocalConfiguredBaseUrl = (configuredBaseUrl: string): string => {
 	const location = globalThis.location;
 
-	if (!location || !isLocalDevHostname(location.hostname?.trim())) {
+	if (!location || !isLocalDevelopmentHostname(location.hostname?.trim())) {
 		return configuredBaseUrl;
 	}
 
 	try {
 		const configuredUrl = new URL(configuredBaseUrl);
 
-		if (!isLocalDevHostname(configuredUrl.hostname)) {
+		if (!isLocalDevelopmentHostname(configuredUrl.hostname)) {
 			return configuredBaseUrl;
 		}
 

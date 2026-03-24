@@ -18,19 +18,19 @@ const appPreferencesStore = createStore<AppPreferencesState>()(
 	persist(
 		(set, get) => ({
 			language: getInitialLanguage(),
-			setLanguage: async (language) => {
+			setLanguage: async (language): Promise<void> => {
 				const nextLanguage = normalizeLanguageCode(language);
 
 				set({ language: nextLanguage });
 				await i18n.changeLanguage(nextLanguage);
 			},
-			toggleLanguage: async () => {
+			toggleLanguage: async (): Promise<void> => {
 				const nextLanguage = get().language === "en" ? "fr" : "en";
 
 				set({ language: nextLanguage });
 				await i18n.changeLanguage(nextLanguage);
 			},
-			reset: async () => {
+			reset: async (): Promise<void> => {
 				const nextLanguage = getInitialLanguage();
 
 				set({ language: nextLanguage });

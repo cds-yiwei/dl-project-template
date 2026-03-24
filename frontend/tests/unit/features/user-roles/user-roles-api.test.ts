@@ -45,12 +45,12 @@ describe("user-roles-api", () => {
 			status: 200,
 		} as Response);
 
-		const response = await updateUserRole(userUuid, { role_uuid: roleUuid });
+		const response = await updateUserRole(userUuid, { roleUuid: roleUuid });
 
 		expect(fetchMock).toHaveBeenCalledWith(
 			`http://localhost:8000/api/v1/user/${userUuid}/role`,
 			expect.objectContaining({
-				body: JSON.stringify({ role_uuid: roleUuid }),
+				body: JSON.stringify({ roleUuid: roleUuid }),
 				credentials: "include",
 				method: "PATCH",
 			}),

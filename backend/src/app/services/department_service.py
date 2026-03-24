@@ -34,6 +34,7 @@ class DepartmentService:
 			db=db,
 			offset=compute_offset(page, items_per_page),
 			limit=items_per_page,
+			abbreviation__is_not=None,
 			is_deleted=False,
 			schema_to_select=DepartmentRead,
 		)

@@ -127,15 +127,15 @@ describe("UsersPage", () => {
 			response: {
 				data: [
 					{
-						"auth_provider": "gc-sso",
-						"auth_subject": "subject-123",
-						"department_abbreviation": "AAFC",
+							"authProvider": "gc-sso",
+							"authSubject": "subject-123",
+							"departmentAbbreviation": "AAFC",
 						email: "jane@example.com",
 						name: "Jane Doe",
-						"profile_image_url": "https://example.com/jane.png",
-						"department_uuid": "department-uuid-1",
-						"role_uuid": "role-uuid-3",
-						"tier_uuid": "tier-uuid-3",
+					"profileImageUrl": "https://example.com/jane.png",
+					"departmentUuid": "department-uuid-1",
+					"roleUuid": "role-uuid-3",
+					"tierUuid": "tier-uuid-3",
 						uuid: "user-uuid-7",
 						username: "jdoe",
 					},
@@ -147,15 +147,15 @@ describe("UsersPage", () => {
 			},
 			users: [
 				{
-					"auth_provider": "gc-sso",
-					"auth_subject": "subject-123",
-					"department_abbreviation": "AAFC",
+							"authProvider": "gc-sso",
+							"authSubject": "subject-123",
+							"departmentAbbreviation": "AAFC",
 					email: "jane@example.com",
 					name: "Jane Doe",
-					"profile_image_url": "https://example.com/jane.png",
-					"department_uuid": "department-uuid-1",
-					"role_uuid": "role-uuid-3",
-					"tier_uuid": "tier-uuid-3",
+					"profileImageUrl": "https://example.com/jane.png",
+					"departmentUuid": "department-uuid-1",
+					"roleUuid": "role-uuid-3",
+					"tierUuid": "tier-uuid-3",
 					uuid: "user-uuid-7",
 					username: "jdoe",
 				},
@@ -179,24 +179,24 @@ describe("UsersPage", () => {
 		});
 		const department = {
 			abbreviation: "AAFC",
-			abbreviation_fr: "AAC",
-			created_at: "2026-03-23T00:00:00Z",
-			gc_org_id: 42,
-			lead_department_name: "Agriculture and Agri-Food Canada",
-			lead_department_name_fr: "Agriculture et Agroalimentaire Canada",
+			abbreviationFr: "AAC",
+			createdAt: "2026-03-23T00:00:00Z",
+			gcOrgId: 42,
+			leadDepartmentName: "Agriculture and Agri-Food Canada",
+			leadDepartmentNameFr: "Agriculture et Agroalimentaire Canada",
 			name: "Engineering",
-			name_fr: "Ingenierie",
+			nameFr: "Ingenierie",
 			uuid: "department-uuid-1",
 		};
 		const secondDepartment = {
 			abbreviation: "FIN",
-			abbreviation_fr: "FIN",
-			created_at: "2026-03-23T00:00:00Z",
-			gc_org_id: 108,
-			lead_department_name: "Department of Finance Canada",
-			lead_department_name_fr: "Ministere des Finances Canada",
+			abbreviationFr: "FIN",
+			createdAt: "2026-03-23T00:00:00Z",
+			gcOrgId: 108,
+			leadDepartmentName: "Department of Finance Canada",
+			leadDepartmentNameFr: "Ministere des Finances Canada",
 			name: "Finance",
-			name_fr: "Finances",
+			nameFr: "Finances",
 			uuid: "department-uuid-2",
 		};
 		vi.mocked(useDepartments).mockReturnValue({
@@ -207,10 +207,10 @@ describe("UsersPage", () => {
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: {
 				data: [department, secondDepartment],
-				"has_more": false,
-				"items_per_page": 200,
+				has_more: false,
+				items_per_page: 200,
 				page: 1,
-				"total_count": 2,
+				total_count: 2,
 			},
 			departments: [department, secondDepartment],
 		});
@@ -255,8 +255,8 @@ describe("UsersPage", () => {
 		fireEvent.click(screen.getByRole("button", { name: /save role/i }));
 		fireEvent.input(screen.getByLabelText(/^department$/i), { target: { value: "FIN" } });
 		fireEvent.click(screen.getByRole("button", { name: /save department/i }));
-		expect(vi.mocked(useUserRole).mock.results[0]?.value.updateUserRole).toHaveBeenCalledWith("user-uuid-7", { role_uuid: "role-uuid-3" });
-		expect(vi.mocked(useUserDepartment).mock.results[0]?.value.updateUserDepartment).toHaveBeenCalledWith("user-uuid-7", { department_abbreviation: "FIN" });
+		expect(vi.mocked(useUserRole).mock.results[0]?.value.updateUserRole).toHaveBeenCalledWith("user-uuid-7", { roleUuid: "role-uuid-3" });
+		expect(vi.mocked(useUserDepartment).mock.results[0]?.value.updateUserDepartment).toHaveBeenCalledWith("user-uuid-7", { departmentAbbreviation: "FIN" });
 	});
 
 	it("does not render a generic error notice for unauthorized hook errors", () => {

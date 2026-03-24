@@ -37,7 +37,7 @@ export const parseLoginMessage = (value: unknown): LoginMessageKey | undefined =
 	return undefined;
 };
 
-export const buildLoginLocation = (search: LoginRedirectSearch) => ({
+export const buildLoginLocation = (search: LoginRedirectSearch): { search: LoginRedirectSearch; to: "/login" } => ({
 	search: {
 		message: parseLoginMessage(search.message),
 		reason: parseLoginReason(search.reason),

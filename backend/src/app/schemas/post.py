@@ -3,7 +3,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field, BaseModel
+from pydantic.alias_generators import to_camel
+
 
 from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 
@@ -16,74 +18,60 @@ class PostStatus(str, Enum):
 
 
 class PostBase(BaseModel):
-    title: Annotated[str, Field(min_length=2, max_length=30, examples=["This is my post"])]
-    text: Annotated[str, Field(min_length=1, max_length=63206, examples=["This is the content of my post."])]
+    title: str = Field(..., min_length=2, max_length=30, examples=["This is my post"])
+    text: str = Field(..., min_length=1, max_length=63206, examples=["This is the content of my post."])
 
 
 class Post(TimestampSchema, PostBase, UUIDSchema, PersistentDeletion):
-    media_url: Annotated[
-        str | None,
-        Field(pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], default=None),
-    ]
+    media_url: str | None = Field(None, pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"])
     created_by_user_id: int
     status: PostStatus = PostStatus.DRAFT
 
 
-class PostRead(BaseModel):
+class PostRead(PostBase):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
     id: int
     uuid: uuid_pkg.UUID
-    title: Annotated[str, Field(min_length=2, max_length=30, examples=["This is my post"])]
-    text: Annotated[str, Field(min_length=1, max_length=63206, examples=["This is the content of my post."])]
-    media_url: Annotated[
-        str | None,
-        Field(examples=["https://www.postimageurl.com"], default=None),
-    ]
-    created_by_user_id: int
+    title: str = Field(..., min_length=2, max_length=30, examples=["This is my post"])
+    text: str = Field(..., min_length=1, max_length=63206, examples=["This is the content of my post."])
+    media_url: str | None = Field(None, examples=["https://www.postimageurl.com"], alias="mediaUrl")
+    created_by_user_id: int = Field(alias="createdByUserId")
     status: PostStatus = PostStatus.DRAFT
-    created_at: datetime
+    created_at: datetime = Field(alias="createdAt")
 
 
 class PostCreate(PostBase):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
-    media_url: Annotated[
-        str | None,
-        Field(pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], default=None),
-    ]
+    media_url: str | None = Field(None, pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], alias="mediaUrl")
 
 
 class PostCreateInternal(PostCreate):
     created_by_user_id: int
 
 
-class PostSubmitForReview(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class PostSubmitForReview(PostBase):
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
 
 class PostApprove(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
-    comment: Annotated[str | None, Field(max_length=500, default=None)]
+    comment: str | None = Field(None, max_length=500)
 
 
 class PostReject(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
-    comment: Annotated[str | None, Field(max_length=500, default=None)]
+    comment: str | None = Field(None, max_length=500)
 
 
-class PostUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class PostUpdate(PostBase):
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
-    title: Annotated[str | None, Field(min_length=2, max_length=30, examples=["This is my updated post"], default=None)]
-    text: Annotated[
-        str | None,
-        Field(min_length=1, max_length=63206, examples=["This is the updated content of my post."], default=None),
-    ]
-    media_url: Annotated[
-        str | None,
-        Field(pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], default=None),
-    ]
+    title: str | None = Field(None, min_length=2, max_length=30, examples=["This is my updated post"])
+    text: str | None = Field(None, min_length=1, max_length=63206, examples=["This is the updated content of my post."])
+    media_url: str | None = Field(None, pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], alias="mediaUrl")
 
 
 class PostUpdateInternal(PostUpdate):
@@ -91,7 +79,7 @@ class PostUpdateInternal(PostUpdate):
 
 
 class PostDelete(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
     is_deleted: bool
     deleted_at: datetime

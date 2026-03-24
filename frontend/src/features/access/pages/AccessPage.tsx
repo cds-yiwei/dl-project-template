@@ -41,8 +41,8 @@ export const AccessPage = (): FunctionComponent => {
 				<Notice noticeRole="success" noticeTitle={t("access.cardTitle")} noticeTitleTag="h2">
 					<div className="flex flex-col gap-200">
 						<Text>{t("access.username", { value: tier.username })}</Text>
-						<Text>{t("access.tierName", { value: tier.tier_name })}</Text>
-						<Text>{t("access.tierCreatedAt", { value: tier.tier_created_at })}</Text>
+						<Text>{t("access.tierName", { value: tier.tierName })}</Text>
+						<Text>{t("access.tierCreatedAt", { value: tier.tierCreatedAt })}</Text>
 					</div>
 				</Notice>
 			) : null}

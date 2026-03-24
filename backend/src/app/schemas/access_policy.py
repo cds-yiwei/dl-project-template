@@ -1,6 +1,7 @@
 import uuid as uuid_pkg
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field, BaseModel
+from pydantic.alias_generators import to_camel
 
 
 class AccessPolicyCreate(BaseModel):
@@ -21,4 +22,4 @@ class AccessPolicyOut(BaseModel):
     resource: str
     action: str
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)

@@ -1,6 +1,6 @@
 import React from "react";
 import { GcdsText } from "@gcds-core/components-react";
-import { SpacingValues } from "../../utils/constants";
+import type { SpacingValues } from "../../utils/constants";
 
 interface TextProps {
   children: React.ReactNode;
@@ -21,12 +21,12 @@ const Text: React.FC<TextProps> = React.memo(
     ariaLive = undefined,
   }) => (
     <GcdsText
+      aria-live={ariaLive}
       marginBottom={marginBottom}
       marginTop={marginTop}
+      role={ariaLive ? "status" : undefined}
       size={size}
       textRole={textRole}
-      aria-live={ariaLive}
-      role={ariaLive ? "status" : undefined}
     >
       {children}
     </GcdsText>

@@ -15,12 +15,12 @@ interface CheckboxProps {
   hideLabel?: boolean;
   hideLegend?: boolean;
   name: string;
-  onInput?: (e: any) => void;
+  onInput?: React.FormEventHandler<Element>;
   value?: Array<string>;
   validateOn?: "blur" | "submit" | "other";
   required?: boolean;
   className?: string;
-  options: string | CheckObject[];
+  options: string | Array<CheckObject>;
 }
 
 const Checkboxes: React.FC<CheckboxProps> = React.memo(
@@ -37,17 +37,17 @@ const Checkboxes: React.FC<CheckboxProps> = React.memo(
     options,
   }) => (
     <GcdsCheckboxes
-      legend={legend}
+      className={className}
       hideLabel={hideLabel}
       hideLegend={hideLegend}
       hint={hint}
+      legend={legend}
       name={name}
       options={options}
-      value={value}
-      validateOn={validateOn}
-      onInput={onInput}
       required={required}
-      className={className}
+      validateOn={validateOn}
+      value={value}
+      onInput={onInput}
     ></GcdsCheckboxes>
   ),
 );

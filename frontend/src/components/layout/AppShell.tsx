@@ -15,7 +15,7 @@ export const AppShell = ({ children }: AppShellProps): FunctionComponent => {
 		<>
 			<LayoutHeader />
 			<main className="bg-[var(--gcds-bg-white)]" id="main-content">
-				<Container id="app-shell" size="xl" tag="div" alignment="center">
+				<Container alignment="center" id="app-shell" size="xl" tag="div">
 					<PageContent>{children}</PageContent>
 					<div className="border-t border-[var(--gcds-border-default)] pt-500">
 						<DateModified>{lastUpdated}</DateModified>

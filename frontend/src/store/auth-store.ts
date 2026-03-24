@@ -86,11 +86,11 @@ const authStore = createStore<AuthStoreState>()((set, get) => {
 
 	return {
 		...initialSnapshot,
-		hydrateSession: () => runHydration(false),
-		login: () => {
+		hydrateSession: (): Promise<UserRead | null> => runHydration(false),
+		login: (): void => {
 			window.location.assign(getOidcLoginUrl());
 		},
-		logout: async () => {
+		logout: async (): Promise<void> => {
 			sessionVersion += 1;
 			inFlightHydration = null;
 			set((state) => ({ ...state, ...createSessionSnapshot(null) }));
@@ -103,8 +103,8 @@ const authStore = createStore<AuthStoreState>()((set, get) => {
 				set((state) => ({ ...state, ...createSessionSnapshot(null) }));
 			}
 		},
-		refreshSession: () => runHydration(true),
-		reset: () => {
+		refreshSession: (): Promise<UserRead | null> => runHydration(true),
+		reset: (): void => {
 			sessionVersion += 1;
 			inFlightHydration = null;
 			set((state) => ({ ...state, ...initialSnapshot }));

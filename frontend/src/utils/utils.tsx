@@ -19,7 +19,7 @@ export const formatDate = (dateString: string): string => {
 };
 
 // Generates an array of year strings for a given range around the current year
-export const generateYearsList = (range: number): string[] => {
+export const generateYearsList = (range: number): Array<string> => {
   const currentYear = new Date().getFullYear();
-  return Array.from({ length: range * 2 + 1 }, (_, i) => (currentYear - range + i).toString());
+  return Array.from({ length: range * 2 + 1 }, (_, index) => (currentYear - range + index).toString());
 };

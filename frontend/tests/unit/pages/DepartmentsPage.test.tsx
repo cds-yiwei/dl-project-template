@@ -71,13 +71,13 @@ describe("DepartmentsPage", () => {
 	it("supports modal-driven department management", () => {
 			const department = {
 				abbreviation: "ENG",
-				abbreviation_fr: "ING",
-				created_at: "2026-03-23T00:00:00Z",
-				gc_org_id: 42,
-				lead_department_name: "Treasury Board of Canada Secretariat",
-				lead_department_name_fr: "Secretariat du Conseil du Tresor du Canada",
+				abbreviationFr: "ING",
+				createdAt: "2026-03-23T00:00:00Z",
+				gcOrgId: 42,
+				leadDepartmentName: "Treasury Board of Canada Secretariat",
+				leadDepartmentNameFr: "Secretariat du Conseil du Tresor du Canada",
 				name: "Engineering",
-				name_fr: "Ingenierie",
+				nameFr: "Ingenierie",
 				uuid: "department-uuid-1",
 			};
 

@@ -26,13 +26,13 @@ const createDeferred = <T,>(): DeferredPromise<T> => {
 };
 
 const sampleUser = {
-	auth_provider: "gc-sso",
-	auth_subject: "subject-123",
+	authProvider: "gc-sso",
+	authSubject: "subject-123",
 	email: "jane@example.com",
 	name: "Jane Doe",
-	profile_image_url: "https://example.com/jane.png",
-	role_uuid: "role-uuid-2",
-	tier_uuid: "tier-uuid-3",
+	profileImageUrl: "https://example.com/jane.png",
+	roleUuid: "role-uuid-2",
+	tierUuid: "tier-uuid-3",
 	uuid: "user-uuid-7",
 	username: "jdoe",
 };

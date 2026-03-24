@@ -45,11 +45,11 @@ describe("useSession", () => {
 			name: string;
 			username: string;
 			email: string;
-			profile_image_url: string;
-			auth_provider: string | null;
-			auth_subject: string | null;
-			role_uuid: string | null;
-			tier_uuid: string | null;
+			profileImageUrl: string;
+			authProvider: string | null;
+			authSubject: string | null;
+			roleUuid: string | null;
+			tierUuid: string | null;
 			uuid: string;
 		}>();
 
@@ -71,13 +71,13 @@ describe("useSession", () => {
 		expect(result.current.isAuthenticated).toBe(false);
 
 		deferredCurrentUser.resolve({
-			auth_provider: "gc-sso",
-			auth_subject: "subject-123",
+			authProvider: "gc-sso",
+			authSubject: "subject-123",
 			email: "jane@example.com",
 			name: "Jane Doe",
-			profile_image_url: "https://example.com/jane.png",
-			role_uuid: "role-uuid-2",
-			tier_uuid: "tier-uuid-3",
+			profileImageUrl: "https://example.com/jane.png",
+			roleUuid: "role-uuid-2",
+			tierUuid: "tier-uuid-3",
 			uuid: "user-uuid-7",
 			username: "jdoe",
 		});

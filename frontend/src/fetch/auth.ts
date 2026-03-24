@@ -4,15 +4,15 @@ import { UnauthorizedRequestError } from "./errors";
 import { requestJson } from "./request-json";
 
 export type UserRead = {
-	auth_provider: string | null;
-	auth_subject: string | null;
-	department_abbreviation?: string | null;
-	department_uuid?: string | null;
+	authProvider: string | null;
+	authSubject: string | null;
+	departmentAbbreviation?: string | null;
+	departmentUuid?: string | null;
 	email: string;
 	name: string;
-	profile_image_url: string | null;
-	role_uuid: string | null;
-	tier_uuid: string | null;
+	profileImageUrl: string | null;
+	roleUuid: string | null;
+	tierUuid: string | null;
 	uuid: string;
 	username: string;
 };

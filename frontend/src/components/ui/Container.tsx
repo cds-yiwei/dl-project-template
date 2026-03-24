@@ -1,6 +1,6 @@
 import React from "react";
 import { GcdsContainer } from "@gcds-core/components-react";
-import { SpacingValues } from "../../utils/constants";
+import type { SpacingValues } from "../../utils/constants";
 
 interface ContainerProps {
   border?: boolean;
@@ -27,7 +27,6 @@ const Container: React.FC<ContainerProps> = React.memo(
     children,
   }) => (
     <GcdsContainer
-      tag={tag}
       alignment={alignment}
       border={border}
       id={id}
@@ -35,6 +34,7 @@ const Container: React.FC<ContainerProps> = React.memo(
       margin={margin}
       padding={padding}
       size={size}
+      tag={tag}
     >
       {children}
     </GcdsContainer>

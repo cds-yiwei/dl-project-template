@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import Button from "./Button";
 import Modal from "./Modal";
 
@@ -21,23 +22,23 @@ const ConfirmDialog = ({
 	onClose,
 	onConfirm,
 	title,
-}: ConfirmDialogProps) => (
+}: ConfirmDialogProps): ReactElement => (
 	<Modal
 		description={description}
+		isOpen={isOpen}
+		size="narrow"
+		title={title}
 		footer={(
 			<>
-				<Button buttonRole="secondary" disabled={isPending} onGcdsClick={onClose} type="button">
+				<Button buttonRole="secondary" disabled={isPending} type="button" onGcdsClick={onClose}>
 					{cancelLabel}
 				</Button>
-				<Button buttonRole="danger" disabled={isPending} onGcdsClick={onConfirm} type="button">
+				<Button buttonRole="danger" disabled={isPending} type="button" onGcdsClick={onConfirm}>
 					{confirmLabel}
 				</Button>
 			</>
 		)}
-		isOpen={isOpen}
 		onClose={onClose}
-		size="narrow"
-		title={title}
 	>
 		<p>{description}</p>
 	</Modal>

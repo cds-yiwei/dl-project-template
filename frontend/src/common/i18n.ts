@@ -5,7 +5,7 @@ import { initReactI18next } from "react-i18next";
 import translationEN from "../assets/locales/en/translations.json";
 import translationFR from "../assets/locales/fr/translations.json";
 import { normalizeLanguageCode, supportedLanguages } from "./language";
-import { isProduction } from "./utils";
+import { isProduction } from "./utilities";
 
 export const defaultNS = "translations";
 export const resources = {
@@ -20,7 +20,7 @@ const i18nOptions: InitOptions<HttpBackendOptions> = {
 	supportedLngs: [...supportedLanguages],
 	nonExplicitSupportedLngs: true,
 	load: "languageOnly",
-	fallbackLng: (code): string[] => [normalizeLanguageCode(code)],
+	fallbackLng: (code): Array<string> => [normalizeLanguageCode(code)],
 	detection: {
 		order: ["querystring", "localStorage", "sessionStorage", "navigator", "htmlTag"],
 		lookupQuerystring: "lng",

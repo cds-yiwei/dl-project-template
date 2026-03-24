@@ -10,7 +10,7 @@ interface DetailsProps {
 
 const Details: React.FC<DetailsProps> = React.memo(
   ({ children, detailsTitle, open = false, className }) => (
-    <GcdsDetails detailsTitle={detailsTitle} open={open} className={className}>
+    <GcdsDetails className={className} detailsTitle={detailsTitle} open={open}>
       {children}
     </GcdsDetails>
   ),

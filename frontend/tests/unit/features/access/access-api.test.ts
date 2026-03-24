@@ -18,17 +18,17 @@ describe("access-api", () => {
 		const userUuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102";
 		globalThis.fetch = vi.fn().mockResolvedValue({
 			json: () => Promise.resolve({
-				uuid: userUuid,
-				username: "jdoe",
-				name: "Jane Doe",
-				email: "jane@example.com",
-				profile_image_url: "https://example.com/jane.png",
-				auth_provider: "gc-sso",
-				auth_subject: "subject-123",
-				role_uuid: "role-uuid-4",
-				tier_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401",
-				tier_name: "free",
-				tier_created_at: "2026-03-17T00:00:00Z",
+					uuid: userUuid,
+					username: "jdoe",
+					name: "Jane Doe",
+					email: "jane@example.com",
+					profileImageUrl: "https://example.com/jane.png",
+					authProvider: "gc-sso",
+					authSubject: "subject-123",
+					roleUuid: "role-uuid-4",
+					tierUuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401",
+				tierName: "free",
+				tierCreatedAt: "2026-03-17T00:00:00Z",
 			}),
 			ok: true,
 		} as Response) as typeof fetch;
@@ -42,6 +42,6 @@ describe("access-api", () => {
 				method: "GET",
 			}),
 		);
-		expect(response?.tier_name).toBe("free");
+		expect(response?.tierName).toBe("free");
 	});
 });

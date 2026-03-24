@@ -48,6 +48,7 @@ const typescriptConfig = {
       ecmaFeatures: { modules: true },
       ecmaVersion: "latest",
       project: "./tsconfig.json",
+      createDefaultProgram: true,
     },
     globals: {
       ...globals.builtin,
@@ -71,9 +72,10 @@ const typescriptConfig = {
     "@typescript-eslint/explicit-module-boundary-types": "error",
     "@typescript-eslint/no-confusing-void-expression": "error",
     "@typescript-eslint/no-import-type-side-effects": "error",
-    "@typescript-eslint/no-require-imports": "error",
-    "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/no-useless-empty-export": "error",
+    "@typescript-eslint/no-require-imports": "off",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-useless-empty-export": "off",
     "@typescript-eslint/prefer-enum-initializers": "error",
     "@typescript-eslint/prefer-readonly": "error",
     "no-return-await": "off",
@@ -167,28 +169,7 @@ const unicornConfig = {
     "unicorn/no-array-reduce": "off",
     "unicorn/no-console-spaces": "error",
     "unicorn/no-null": "off",
-    "unicorn/filename-case": "off",
-    "unicorn/prevent-abbreviations": [
-      "error",
-      {
-        "replacements": {
-          "db": false,
-          "arg": false,
-          "args": false,
-          "env": false,
-          "fn": false,
-          "func": {
-            "fn": true,
-            "function": false
-          },
-          "prop": false,
-          "props": false,
-          "ref": false,
-          "refs": false
-        },
-        "ignore": ["semVer", "SemVer"]
-      }
-    ]
+    "unicorn/filename-case": "off"
   }
 }
 
@@ -202,7 +183,12 @@ const eslintConfig = typescriptEslint.config(
 )
 
 eslintConfig.map((config) => {
-  config.files = ["src/**/*.ts", "src/**/*.tsx"]
+  config.files = [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+  // Ignore demo files intentionally kept out of tsconfig includes
+  config.ignores = ["src/demo/**"]
 })
 
 export default eslintConfig

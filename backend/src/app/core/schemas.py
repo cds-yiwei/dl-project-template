@@ -2,7 +2,10 @@ import uuid as uuid_pkg
 from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer, ConfigDict
+from pydantic.alias_generators import to_camel
+
+from typing import Callable
 from uuid6 import uuid7
 
 
@@ -29,8 +32,10 @@ class UUIDSchema(BaseModel):
 
 
 class TimestampSchema(BaseModel):
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
-    updated_at: datetime | None = Field(default=None)
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None), alias="createdAt")
+    updated_at: datetime | None = Field(default=None, alias="updatedAt")
 
     @field_serializer("created_at")
     def serialize_dt(self, created_at: datetime | None, _info: Any) -> str | None:
@@ -48,8 +53,10 @@ class TimestampSchema(BaseModel):
 
 
 class PersistentDeletion(BaseModel):
-    deleted_at: datetime | None = Field(default=None)
-    is_deleted: bool = False
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    
+    deleted_at: datetime | None = Field(default=None, alias="deletedAt")
+    is_deleted: bool = Field(default=False, alias="isDeleted")
 
     @field_serializer("deleted_at")
     def serialize_dates(self, deleted_at: datetime | None, _info: Any) -> str | None:

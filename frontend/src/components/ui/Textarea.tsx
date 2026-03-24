@@ -5,7 +5,7 @@ interface TextareaProps {
   hint?: string;
   label: string;
   name: string;
-  onInput?: (e: any) => void;
+  onInput?: React.FormEventHandler<Element>;
   textareaId: string;
   value?: string;
   validateOn?: "blur" | "submit" | "other";
@@ -26,15 +26,15 @@ const Textarea: React.FC<TextareaProps> = React.memo(
     className,
   }) => (
     <GcdsTextarea
-      textareaId={textareaId}
-      label={label}
-      hint={hint}
-      name={name}
-      value={value}
-      validateOn={validateOn}
-      onInput={onInput}
-      required={required}
       className={className}
+      hint={hint}
+      label={label}
+      name={name}
+      required={required}
+      textareaId={textareaId}
+      validateOn={validateOn}
+      value={value}
+      onInput={onInput}
     ></GcdsTextarea>
   ),
 );

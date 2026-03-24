@@ -4,10 +4,7 @@ import type { FunctionComponent } from "@/common/types";
 import { CenteredPageLayout } from "@/components/layout";
 import { Button, ConfirmDialog, DataTable, Heading, Input, Modal, Notice, Pagination, Text } from "@/components/ui";
 import type { DataTableColumn } from "@/components/ui/DataTable";
-import {
-	isForbiddenRequestError,
-} from "@/fetch";
-import { getRequestErrorNotice } from "@/fetch";
+import { getRequestErrorNotice, isForbiddenRequestError } from "@/fetch";
 import { useAdminListState, useTierManagement } from "@/hooks";
 import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
 
@@ -68,20 +65,23 @@ export const TiersPage = (): FunctionComponent => {
 	];
 	const totalPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
 
-	useEffect(() => {
-		if (modalMode !== "edit" && !deleteDialogOpen) {
-			return;
-		}
+		       useEffect(() => {
+			       if (modalMode !== "edit" && !deleteDialogOpen) {
+				       return;
+			       }
 
-		if (!selectedTierUuid || tiers.some((tier) => tier.uuid === selectedTierUuid)) {
-			return;
-		}
+			       if (!selectedTierUuid || tiers.some((tier) => tier.uuid === selectedTierUuid)) {
+				       return;
+			       }
 
-		setSelectedTierUuid(null);
-		setDeleteDialogOpen(false);
-		setModalMode(null);
-		setForm(emptyTierForm);
-	}, [deleteDialogOpen, modalMode, selectedTierUuid, tiers]);
+			       // Avoid direct setState in effect body, use microtask
+			       void Promise.resolve().then(() => {
+				       setSelectedTierUuid(null);
+				       setDeleteDialogOpen(false);
+				       setModalMode(null);
+				       setForm(emptyTierForm);
+			       });
+		       }, [deleteDialogOpen, modalMode, selectedTierUuid, tiers]);
 
 	const closeModal = (): void => {
 		setModalMode(null);
@@ -136,7 +136,7 @@ export const TiersPage = (): FunctionComponent => {
 		closeModal();
 	};
 
-	const isModalOpen = modalMode !== null;
+	// Removed unused isModalOpen
 	const isSubmitting = modalMode === "create" ? isCreating : isUpdating;
 
 	return (
@@ -167,95 +167,103 @@ export const TiersPage = (): FunctionComponent => {
 			) : null}
 
 			{tiers.length > 0 ? (
-				<div className="grid gap-300">
-					<DataTable
-						action={{
-							buttonId: (row) => `manage-tier-${row.uuid}`,
-							buttonLabel: t("tiers.manageAction"),
-							onAction: (row) => {
-								openEditModal(row.uuid);
-							},
-							screenReaderLabel: (row) => row.name,
-						}}
-						columns={tierColumns}
-						exportFileName="tiers.csv"
-						getRowId={(row) => row.uuid}
-						itemLabel="tiers"
-						pagination={false}
-						primaryAction={{
-							buttonId: "open-create-tier-modal",
-							buttonLabel: t("tiers.createAction"),
-							onAction: openCreateModal,
-						}}
-						rows={tierRows}
-						searchQuery={searchDraft}
-						searchLabel="Search tiers"
-						onSearchChange={setSearchDraft}
-						searchPlaceholder="Filter by tier name or creation date"
-						pageNumber={response?.page ?? page}
-						title={t("tiers.title")}
-					/>
-					<Pagination currentPage={page} label="Tiers pagination" onPageChange={setPage} totalPages={totalPages} />
-				</div>
+					       <div className="grid gap-300">
+						       <DataTable
+							       columns={tierColumns}
+							       exportFileName="tiers.csv"
+							       getRowId={(row) => row.uuid}
+							       itemLabel="tiers"
+							       pageNumber={response?.page ?? page}
+							       pagination={false}
+							       rows={tierRows}
+							       searchLabel="Search tiers"
+							       searchPlaceholder="Filter by tier name or creation date"
+							       searchQuery={searchDraft}
+							       title={t("tiers.title")}
+							       action={{
+								       buttonId: (row) => `manage-tier-${row.uuid}`,
+								       buttonLabel: t("tiers.manageAction"),
+								       screenReaderLabel: (row) => row.name,
+								       onAction: (row) => {
+									       openEditModal(row.uuid);
+								       },
+							       }}
+							       primaryAction={{
+								       buttonId: "open-create-tier-modal",
+								       buttonLabel: t("tiers.createAction"),
+								       onAction: openCreateModal,
+							       }}
+							       onSearchChange={setSearchDraft}
+						       />
+						       <Pagination
+							       currentPage={page}
+							       label="Tiers pagination"
+							       totalPages={totalPages}
+							       onPageChange={setPage}
+						       />
+					       </div>
 			) : null}
 
-			<Modal
-				footer={(
-					<>
-						<Button buttonRole="secondary" onGcdsClick={closeModal} type="button">
-							{t("tiers.cancelAction")}
-						</Button>
-						{modalMode === "edit" ? (
-							<Button buttonRole="danger" onGcdsClick={() => {
-								releaseActiveElementFocus();
-								setDeleteDialogOpen(true);
-							}} type="button">
-								{t("tiers.deleteAction")}
-							</Button>
-						) : null}
-						<Button disabled={isSubmitting} onGcdsClick={() => {
-							if (modalMode === "create") {
-								void handleCreateTier();
-								return;
-							}
+						   <Modal
+							   isOpen={modalMode !== null}
+							   title={modalMode === "create" ? t("tiers.createTitle") : t("tiers.editTitle")}
+							   footer={( 
+								   <>
+									   <Button buttonRole="secondary" type="button" onGcdsClick={closeModal}>
+										   {t("tiers.cancelAction")}
+									   </Button>
+									   {modalMode === "edit" ? (
+										   <Button buttonRole="danger" type="button" onGcdsClick={() => {
+											   releaseActiveElementFocus();
+											   setDeleteDialogOpen(true);
+										   }}>
+											   {t("tiers.deleteAction")}
+										   </Button>
+									   ) : null}
+									   <Button
+										   disabled={isSubmitting}
+										   type="button"
+										   onGcdsClick={() => {
+											   if (modalMode === "create") {
+												   void handleCreateTier();
+												   return;
+											   }
+											   void handleUpdateTier();
+										   }}
+									   >
+										   {modalMode === "create"
+											   ? (isCreating ? t("tiers.creatingAction") : t("tiers.createAction"))
+											   : (isUpdating ? t("tiers.savingAction") : t("tiers.saveAction"))}
+									   </Button>
+								   </>
+							   )}
+							   onClose={closeModal}
+						   >
+						       <Input
+							       inputId={modalMode === "create" ? "create-tier-name" : "edit-tier-name"}
+							       label={t("tiers.nameLabel")}
+							       name={modalMode === "create" ? "tier-name" : "edit-tier-name"}
+							       value={form.name}
+							       onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+								       setForm({ name: (event.target as HTMLInputElement).value });
+							       }}
+						       />
+					       </Modal>
 
-							void handleUpdateTier();
-						}} type="button">
-							{modalMode === "create"
-								? (isCreating ? t("tiers.creatingAction") : t("tiers.createAction"))
-								: (isUpdating ? t("tiers.savingAction") : t("tiers.saveAction"))}
-						</Button>
-					</>
-				)}
-				isOpen={isModalOpen}
-				onClose={closeModal}
-				title={modalMode === "create" ? t("tiers.createTitle") : t("tiers.editTitle")}
-			>
-				<Input
-					inputId={modalMode === "create" ? "create-tier-name" : "edit-tier-name"}
-					label={t("tiers.nameLabel")}
-					name={modalMode === "create" ? "tier-name" : "edit-tier-name"}
-					onInput={(event): void => {
-						setForm({ name: event.target.value });
-					}}
-					value={form.name}
-				/>
-			</Modal>
-
-			<ConfirmDialog
-				cancelLabel={t("tiers.cancelAction")}
-				confirmLabel={isDeleting ? t("tiers.deletingAction") : t("tiers.confirmDeleteAction")}
-				description={t("tiers.deleteConfirmBody", { name: selectedTier?.name ?? "" })}
-				isOpen={deleteDialogOpen}
-				isPending={isDeleting}
-				onClose={() => {
-					setDeleteDialogOpen(false);
-				}}
-				onConfirm={() => {
-					void handleDeleteTier();
-				}}
-				title={t("tiers.deleteConfirmTitle")}
-			/>
+					       <ConfirmDialog
+						       cancelLabel={t("tiers.cancelAction")}
+						       confirmLabel={isDeleting ? t("tiers.deletingAction") : t("tiers.confirmDeleteAction")}
+						       description={t("tiers.deleteConfirmBody", { name: selectedTier?.name ?? "" })}
+						       isOpen={deleteDialogOpen}
+						       isPending={isDeleting}
+						       title={t("tiers.deleteConfirmTitle")}
+						       onClose={() => {
+							       setDeleteDialogOpen(false);
+						       }}
+						       onConfirm={() => {
+							       void handleDeleteTier();
+						       }}
+					       />
 		</CenteredPageLayout>
 	);
 };

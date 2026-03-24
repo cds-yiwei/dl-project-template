@@ -1,4 +1,4 @@
-export const provinces: any = {
+export const provinces: Record<string, string> = {
   AB: "Alberta",
   BC: "British Columbia",
   MB: "Manitoba",
@@ -26,7 +26,7 @@ export type holidayObject = {
   date: string;
   nameEn: string;
   nameFr: string;
-  provinces: Provinces[];
+  provinces: Array<Provinces>;
   federal: number;
 };
 

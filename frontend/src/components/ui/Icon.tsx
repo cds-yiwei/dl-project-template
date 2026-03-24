@@ -1,6 +1,6 @@
 import React from "react";
 import { GcdsIcon } from "@gcds-core/components-react";
-import { SpacingValues } from "../../utils/constants";
+import type { SpacingValues } from "../../utils/constants";
 
 interface IconProps {
   name:
@@ -37,10 +37,10 @@ const Icon: React.FC<IconProps> = React.memo(
   ({ name, label, marginLeft, marginRight, size = "inherit" }) => {
     return (
       <GcdsIcon
-        name={name}
         label={label}
         marginLeft={marginLeft}
         marginRight={marginRight}
+        name={name}
         size={size}
       />
     );

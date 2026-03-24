@@ -18,7 +18,15 @@ const parseResponseData = async (response: Response): Promise<unknown> => {
 	const responseContentType = response.headers?.get?.("content-type");
 
 	if (responseContentType && responseContentType.includes("application/json")) {
-		return response.json();
+		try {
+			// `Response.json()` is typed as `any` by lib.dom; cast to `unknown`
+			// so callers must explicitly narrow before use.
+			 
+			const raw = (await response.json());
+			return raw;
+		} catch {
+			return null;
+		}
 	}
 
 	if (typeof response.json !== "function") {
@@ -26,7 +34,11 @@ const parseResponseData = async (response: Response): Promise<unknown> => {
 	}
 
 	try {
-		return await response.json();
+		// `Response.json()` is typed as `any` by lib.dom; cast to `unknown`
+		// so callers must explicitly narrow before use.
+		 
+		const raw = (await response.json());
+		return raw;
 	} catch {
 		return null;
 	}
@@ -37,7 +49,7 @@ const getErrorDetail = (responseData: unknown): string | undefined => {
 		return undefined;
 	}
 
-	const detail = Reflect.get(responseData, "detail");
+	const detail = (responseData as Record<string, unknown>)['detail'];
 
 	return typeof detail === "string" && detail.trim().length > 0 ? detail : undefined;
 };
@@ -99,7 +111,10 @@ export const requestJson = async <ResponseType>(
 		return null;
 	}
 
-	const responseData = await parseResponseData(response);
+	// parseResponseData may call Response.json() which is typed as `any` by lib.dom;
+	// narrow to `unknown` here intentionally before further checks.
+	 
+	const responseData: unknown = await parseResponseData(response);
 
 	if (!response.ok) {
 		const requestError = toRequestError(response.status, responseData);

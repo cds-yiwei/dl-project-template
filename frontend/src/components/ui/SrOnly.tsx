@@ -3,7 +3,7 @@ import { GcdsSrOnly } from "@gcds-core/components-react";
 
 interface ContainerProps {
   children: React.ReactNode;
-  tag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "h5" | "h6" | "span" | "p";
+  tag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6"     | "span" | "p";
 }
 
 const SrOnly: React.FC<ContainerProps> = React.memo(({ children, tag }) => (

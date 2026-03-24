@@ -14,9 +14,9 @@ const Pagination: React.FC<PaginationProps> = React.memo(
 
     return (
       <GcdsPagination
+        currentPage={currentPage}
         display="list"
         label={label}
-        currentPage={currentPage}
         totalPages={totalPages}
         onGcdsClick={(e) => {
           const { page } = e.detail as { page: number; href: string };

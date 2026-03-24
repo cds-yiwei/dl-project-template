@@ -2,14 +2,16 @@ import uuid as uuid_pkg
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field, BaseModel
 
 from ..core.schemas import PersistentDeletion, TimestampSchema
+from pydantic.alias_generators import to_camel
+
 
 
 class RoleBase(BaseModel):
-    name: Annotated[str, Field(min_length=2, max_length=64, examples=["admin"])]
-    description: Annotated[str | None, Field(max_length=255, default=None, examples=["Administrator role"])]
+    name: str = Field(..., min_length=2, max_length=64, examples=["admin"])
+    description: str | None = Field(None, max_length=255, examples=["Administrator role"])
 
 
 class Role(TimestampSchema, RoleBase, PersistentDeletion):
@@ -17,24 +19,26 @@ class Role(TimestampSchema, RoleBase, PersistentDeletion):
 
 
 class RoleRead(RoleBase):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    
     id: int
     uuid: uuid_pkg.UUID
-    created_at: datetime
+    created_at: datetime = Field(alias="createdAt")
 
 
 class RoleCreate(RoleBase):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
 
 class RoleCreateInternal(RoleCreate):
     pass
 
 
-class RoleUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class RoleUpdate(RoleBase):
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
-    name: Annotated[str | None, Field(min_length=2, max_length=64, default=None)]
-    description: Annotated[str | None, Field(max_length=255, default=None)]
+    name: str | None = Field(None, min_length=2, max_length=64)
+    description: str | None = Field(None, max_length=255)
 
 
 class RoleUpdateInternal(RoleUpdate):

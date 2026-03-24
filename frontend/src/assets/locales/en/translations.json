@@ -191,6 +191,7 @@
         "passwordLabel": "Password",
         "profileLink": "Open profile",
         "provider": "Auth provider: {{value}}",
+        "providerLabel": "Auth provider",
         "role": "Role: {{value}}",
         "roleLabel": "Role",
         "roleSaveAction": "Save role",

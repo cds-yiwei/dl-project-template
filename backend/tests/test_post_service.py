@@ -30,7 +30,7 @@ class TestPostService:
                         db=AsyncMock(),
                         user_uuid=user_uuid,
                         current_user=current_user,
-                        post=PostCreate(title="Hello", text="World"),
+                        post=PostCreate(title="Hello", text="World", mediaUrl=None),
                     )
 
         assert result == created_post
@@ -42,7 +42,7 @@ class TestPostService:
         user_uuid = "019cfc22-bff2-7168-ae43-387a301d8fcb"
         post_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f1"
         db_user = {"id": 7, "uuid": user_uuid, "username": "author"}
-        db_post = {"id": 11, "uuid": post_uuid, "created_by_user_id": 7, "title": "Hello", "text": "World"}
+        db_post = {"id": 11, "uuid": post_uuid, "created_by_user_id": 7, "title": "Hello", "text": "World", "media_url": None}
 
         with patch("src.app.services.post_service.crud_users") as mock_users:
             with patch("src.app.services.post_service.crud_posts") as mock_posts:
@@ -130,7 +130,7 @@ class TestPostService:
                             "current_user": current_user,
                         }
                         if method_name == "update_post":
-                            kwargs["values"] = PostUpdate(title="Updated title")
+                            kwargs["values"] = PostUpdate(title="Updated title", text="Updated content", mediaUrl=None)
 
                         result = await getattr(service, method_name)(**kwargs)
 
@@ -161,7 +161,7 @@ class TestPostService:
                         user_uuid=user_uuid,
                         post_uuid="018f6f83-0f2b-7b0f-b2fb-96c4d8a4b0f1",
                         current_user=current_user,
-                        values=PostUpdate(title="Updated title"),
+                        values=PostUpdate(title="Updated title", text="Updated content", mediaUrl=None),
                     )
 
     @pytest.mark.asyncio

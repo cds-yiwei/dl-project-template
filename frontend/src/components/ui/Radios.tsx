@@ -13,12 +13,12 @@ interface RadiosProps {
   hint?: string;
   legend: string;
   name: string;
-  onInput?: (e: any) => void;
+  onInput?: React.FormEventHandler<Element>;
   value?: string;
   validateOn?: "blur" | "submit" | "other";
   required?: boolean;
   className?: string;
-  options: string | RadioObject[];
+  options: string | Array<RadioObject>;
 }
 
 const Radios: React.FC<RadiosProps> = React.memo(
@@ -34,15 +34,15 @@ const Radios: React.FC<RadiosProps> = React.memo(
     options,
   }) => (
     <GcdsRadios
-      legend={legend}
+      className={className}
       hint={hint}
+      legend={legend}
       name={name}
       options={options}
-      value={value}
-      validateOn={validateOn}
-      onInput={onInput}
       required={required}
-      className={className}
+      validateOn={validateOn}
+      value={value}
+      onInput={onInput}
     ></GcdsRadios>
   ),
 );

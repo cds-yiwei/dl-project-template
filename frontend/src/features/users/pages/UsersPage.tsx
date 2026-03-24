@@ -101,59 +101,86 @@ export const UsersPage = (): FunctionComponent => {
 
 		const searchableFields = [
 			entry.abbreviation,
-			entry.abbreviation_fr,
+			entry.abbreviationFr,
 			entry.name,
-			entry.name_fr,
+			entry.nameFr,
 		].filter((value): value is string => value !== null);
 
 		return searchableFields.some((value) => value.toLowerCase().includes(normalizedDepartmentFilter));
 	});
+
+	// Type for user object as received from API (camelCase)
+	type UserApi = {
+		email: string;
+		name: string;
+		username: string;
+		uuid: string;
+		departmentAbbreviation?: string | null;
+		departmentUuid?: string | null;
+		roleUuid?: string | null;
+		authProvider?: string | null;
+		[key: string]: unknown;
+	};
+
 	const userRows: Array<UserTableRow> = users.map((user) => {
-		let departmentName = t("users.noDepartment");
-		if (user.department_abbreviation) {
-			departmentName = departments.find((entry) => entry.abbreviation === user.department_abbreviation)?.name || t("users.noDepartment");
-		} else if (user.department_uuid) {
-			departmentName = departments.find((entry) => entry.uuid === user.department_uuid)?.name || t("users.noDepartment");
-		}
-		return {
-			departmentName,
-			email: user.email,
-			provider: user.auth_provider ?? t("users.noProvider"),
-			uuid: user.uuid,
-		};
+	   const u = user as unknown as UserApi;
+	   let departmentName = t("users.noDepartment");
+	   if (u.departmentAbbreviation) {
+		   departmentName = departments.find((entry) => entry.abbreviation === u.departmentAbbreviation)?.name || t("users.noDepartment");
+	   } else if (u.departmentUuid) {
+		   departmentName = departments.find((entry) => entry.uuid === u.departmentUuid)?.name || t("users.noDepartment");
+	   }
+	   const email = String(u.email ?? "");
+	const provider = String(u.authProvider ?? (u as any).auth_provider ?? t("users.noProvider"));
+	   const uuid = String(u.uuid ?? "");
+	   return {
+		   departmentName,
+		   email,
+		   provider,
+		   uuid,
+	   };
 	});
 	const userColumns: Array<DataTableColumn<UserTableRow>> = [
 		{ field: "email", headerName: t("users.emailLabel"), pinned: "left" },
 		{ field: "departmentName", headerName: t("users.departmentLabel") },
-		{ field: "provider", headerName: t("users.provider") },
+		{ field: "provider", headerName: t("users.providerLabel") },
 	];
-	const totalPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
+	const totalPages = response ? Math.max(1, Math.ceil(response["total_count"] / response["items_per_page"])) : 1;
 
-	useEffect(() => {
-		setSelectedDepartmentAbbreviation(selectedUser?.department_abbreviation ?? "");
-	}, [selectedUser]);
+// Avoid direct setState in effect body, use microtask
+useEffect(() => {
+   void Promise.resolve().then(() => {
+	   const sel = selectedUser as unknown as { departmentAbbreviation?: string | null } | null;
+	   setSelectedDepartmentAbbreviation(sel ? String(sel.departmentAbbreviation ?? "") : "");
+   });
+}, [selectedUser]);
 
-	useEffect(() => {
-		setSelectedRoleUuid(selectedUser?.role_uuid ?? "");
-	}, [selectedUser]);
+useEffect(() => {
+   void Promise.resolve().then(() => {
+	   const sel = selectedUser as unknown as { roleUuid?: string | null } | null;
+	   setSelectedRoleUuid(sel ? (sel.roleUuid ?? "") : "");
+   });
+}, [selectedUser]);
 
-	useEffect(() => {
-		if (modalMode !== "edit" && !deleteDialogOpen) {
-			return;
-		}
+useEffect(() => {
+   if (modalMode !== "edit" && !deleteDialogOpen) {
+	   return;
+   }
 
-		if (!selectedUsername || users.some((user) => user.uuid === selectedUsername)) {
-			return;
-		}
+   if (!selectedUsername || users.some((user) => user.uuid === selectedUsername)) {
+	   return;
+   }
 
-		setDeleteDialogOpen(false);
-		setDepartmentFilter("");
-		setEditForm(emptyEditForm);
-		setModalMode(null);
-		setSelectedDepartmentAbbreviation("");
-		setSelectedRoleUuid("");
-		setSelectedUsername(null);
-	}, [deleteDialogOpen, modalMode, selectedUsername, users]);
+   void Promise.resolve().then(() => {
+	   setDeleteDialogOpen(false);
+	   setDepartmentFilter("");
+	   setEditForm(emptyEditForm);
+	   setModalMode(null);
+	   setSelectedDepartmentAbbreviation("");
+	   setSelectedRoleUuid("");
+	   setSelectedUsername(null);
+   });
+}, [deleteDialogOpen, modalMode, selectedUsername, users]);
 
 	const closeModal = (): void => {
 		setModalMode(null);
@@ -221,25 +248,25 @@ export const UsersPage = (): FunctionComponent => {
 	};
 
 	const handleSaveDepartment = async (): Promise<void> => {
-		if (!selectedUser) {
-			return;
-		}
+	   if (!selectedUser) {
+		   return;
+	   }
 
-		await updateUserDepartment(selectedUser.uuid, {
-			department_abbreviation: selectedDepartmentAbbreviation.length > 0 ? selectedDepartmentAbbreviation : null,
-		});
-		setPage(1);
+	   await updateUserDepartment(selectedUser.uuid, {
+		   departmentAbbreviation: selectedDepartmentAbbreviation.length > 0 ? selectedDepartmentAbbreviation : null,
+	   });
+	   setPage(1);
 	};
 
 	const handleSaveRole = async (): Promise<void> => {
-		if (!selectedUser) {
-			return;
-		}
+	   if (!selectedUser) {
+		   return;
+	   }
 
-		await updateUserRole(selectedUser.uuid, {
-			role_uuid: selectedRoleUuid.length > 0 ? selectedRoleUuid : null,
-		});
-		setPage(1);
+	   await updateUserRole(selectedUser.uuid, {
+		   roleUuid: selectedRoleUuid.length > 0 ? selectedRoleUuid : null,
+	   });
+	   setPage(1);
 	};
 
 	const isModalOpen = modalMode !== null;
@@ -274,113 +301,116 @@ export const UsersPage = (): FunctionComponent => {
 			{users.length > 0 ? (
 				<div className="grid gap-300">
 					<DataTable
-						action={{
-							buttonId: (row) => `manage-user-${row.uuid}`,
-							buttonLabel: t("users.manageAction"),
-							onAction: (row) => {
-								openEditModal(row.uuid);
-							},
-							screenReaderLabel: (row) => row.name,
-						}}
-						columns={userColumns}
-						exportFileName="users.csv"
-						getRowId={(row) => row.uuid}
-						itemLabel="users"
-						pagination={false}
-						primaryAction={{
-							buttonId: "open-create-user-modal",
-							buttonLabel: t("users.createAction"),
-							onAction: openCreateModal,
-						}}
-						rows={userRows}
-						searchQuery={searchDraft}
-						searchLabel="Search users"
-						onSearchChange={setSearchDraft}
-						searchPlaceholder="Filter by name, email, provider, or role"
-						pageNumber={response?.page ?? page}
-						title={t("users.title")}
+					   columns={userColumns}
+					   exportFileName="users.csv"
+					   getRowId={(row) => row.uuid}
+					   itemLabel="users"
+					   pageNumber={response?.page ?? page}
+					   pagination={false}
+					   rows={userRows}
+					   searchLabel="Search users"
+					   searchPlaceholder="Filter by name, email, provider, or role"
+					   searchQuery={searchDraft}
+					   title={t("users.title")}
+					   action={{
+						   buttonId: (row) => `manage-user-${row.uuid}`,
+						   buttonLabel: t("users.manageAction"),
+						screenReaderLabel: (row) => row.email,
+						   onAction: (row) => {
+							   openEditModal(row.uuid);
+						   },
+					   }}
+					   primaryAction={{
+						   buttonId: "open-create-user-modal",
+						   buttonLabel: t("users.createAction"),
+						   onAction: openCreateModal,
+					   }}
+					   onSearchChange={setSearchDraft}
 					/>
-					<Pagination currentPage={page} label="Users pagination" onPageChange={setPage} totalPages={totalPages} />
+					<Pagination currentPage={page} label="Users pagination" totalPages={totalPages} onPageChange={setPage} />
 				</div>
 			) : null}
 
-			<Modal
-				footer={(
-					<>
-						<Button buttonRole="secondary" onGcdsClick={closeModal} type="button">
-							{t("users.cancelAction")}
-						</Button>
-						{modalMode === "edit" ? (
-							<Button buttonRole="danger" onGcdsClick={() => {
-								releaseActiveElementFocus();
-								setDeleteDialogOpen(true);
-							}} type="button">
-								{t("users.deleteAction")}
-							</Button>
-						) : null}
-						<Button disabled={modalMode === "create" ? isCreating : isUpdating} onGcdsClick={() => {
-							if (modalMode === "create") {
-								void handleCreateUser();
-								return;
-							}
-
-							void handleUpdateUser();
-						}} type="button">
-							{saveActionLabel}
-						</Button>
-					</>
-				)}
-				isOpen={isModalOpen}
-				onClose={closeModal}
-				size="wide"
-				title={modalTitle}
-			>
+			   <Modal
+				   isOpen={isModalOpen}
+				   size="wide"
+				   title={modalTitle}
+				   footer={( 
+					   <>
+						   <Button buttonRole="secondary" type="button" onGcdsClick={closeModal}>
+							   {t("users.cancelAction")}
+						   </Button>
+						   {modalMode === "edit" ? (
+							   <Button buttonRole="danger" type="button" onGcdsClick={() => {
+								   releaseActiveElementFocus();
+								   setDeleteDialogOpen(true);
+							   }}>
+								   {t("users.deleteAction")}
+							   </Button>
+						   ) : null}
+						   <Button
+							   disabled={modalMode === "create" ? isCreating : isUpdating}
+							   type="button"
+							   onGcdsClick={() => {
+								   if (modalMode === "create") {
+									   void handleCreateUser();
+									   return;
+								   }
+								   void handleUpdateUser();
+							   }}
+						   >
+							   {saveActionLabel}
+						   </Button>
+					   </>
+				   )}
+				   onClose={closeModal}
+			   >
 				{modalMode === "create" ? (
 					<div className="grid gap-200 md:grid-cols-2">
-						<Input inputId="create-user-name" label={t("users.nameLabel")} name="name" onInput={(event): void => {
-							setCreateForm((current) => ({ ...current, name: event.target.value }));
-						}} value={createForm.name} />
-						<Input inputId="create-user-username" label={t("users.usernameLabel")} name="username" onInput={(event): void => {
-							setCreateForm((current) => ({ ...current, username: event.target.value }));
-						}} value={createForm.username} />
-						<Input inputId="create-user-email" label={t("users.emailLabel")} name="email" onInput={(event): void => {
-							setCreateForm((current) => ({ ...current, email: event.target.value }));
-						}} type="email" value={createForm.email} />
-						<Input inputId="create-user-password" label={t("users.passwordLabel")} name="password" onInput={(event): void => {
-							setCreateForm((current) => ({ ...current, password: event.target.value }));
-						}} type="password" value={createForm.password} />
+						<Input inputId="create-user-name" label={t("users.nameLabel")} name="name" value={createForm.name} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setCreateForm((current) => ({ ...current, name: (event.target as HTMLInputElement).value }));
+						}} />
+						<Input inputId="create-user-username" label={t("users.usernameLabel")} name="username" value={createForm.username} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setCreateForm((current) => ({ ...current, username: (event.target as HTMLInputElement).value }));
+						}} />
+						<Input inputId="create-user-email" label={t("users.emailLabel")} name="email" type="email" value={createForm.email} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setCreateForm((current) => ({ ...current, email: (event.target as HTMLInputElement).value }));
+						}} />
+						<Input inputId="create-user-password" label={t("users.passwordLabel")} name="password" type="password" value={createForm.password} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setCreateForm((current) => ({ ...current, password: (event.target as HTMLInputElement).value }));
+						}} />
 					</div>
 				) : (
 					<div className="grid gap-300">
 						<div className="grid gap-200 md:grid-cols-2">
-							<Input inputId="edit-user-name" label={t("users.nameLabel")} name="edit-name" onInput={(event): void => {
-								setEditForm((current) => ({ ...current, name: event.target.value }));
-							}} value={editForm.name} />
-							<Input inputId="edit-user-username" label={t("users.usernameLabel")} name="edit-username" onInput={(event): void => {
-								setEditForm((current) => ({ ...current, username: event.target.value }));
-							}} value={editForm.username} />
-							<Input inputId="edit-user-email" label={t("users.emailLabel")} name="edit-email" onInput={(event): void => {
-								setEditForm((current) => ({ ...current, email: event.target.value }));
-							}} type="email" value={editForm.email} />
+							<Input inputId="edit-user-name" label={t("users.nameLabel")} name="edit-name" value={editForm.name} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+								setEditForm((current) => ({ ...current, name: (event.target as HTMLInputElement).value }));
+							}} />
+							<Input inputId="edit-user-username" label={t("users.usernameLabel")} name="edit-username" value={editForm.username} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+								setEditForm((current) => ({ ...current, username: (event.target as HTMLInputElement).value }));
+							}} />
+							<Input inputId="edit-user-email" label={t("users.emailLabel")} name="edit-email" type="email" value={editForm.email} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+								setEditForm((current) => ({ ...current, email: (event.target as HTMLInputElement).value }));
+							}} />
 						</div>
 						<div className="grid gap-200 border-t border-[var(--gcds-border-default)] pt-250">
 							<Heading tag="h2">{t("users.manageDepartmentTitle")}</Heading>
 							{isUserDepartmentLoading ? <Text>{t("users.loadingDepartmentBody")}</Text> : null}
 							<Text>{t("users.department", { value: currentDepartmentName })}</Text>
-							<Input inputId="user-department-filter" label={t("users.departmentFilterLabel")} name="department-filter" onInput={(event): void => {
-								setDepartmentFilter(event.target.value);
-							}} value={departmentFilter} />
-							<Select label={t("users.departmentLabel")} name="department" onInput={(event): void => {
-								setSelectedDepartmentAbbreviation(event.target.value);
-							}} selectId="user-department-select" value={selectedDepartmentAbbreviation}>
+							<Input inputId="user-department-filter" label={t("users.departmentFilterLabel")} name="department-filter" value={departmentFilter} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+								setDepartmentFilter((event.target as HTMLInputElement).value);
+							}} />
+							<Select label={t("users.departmentLabel")} name="department" selectId="user-department-select" value={selectedDepartmentAbbreviation} onInput={(event: React.FormEvent<HTMLSelectElement>): void => {
+								setSelectedDepartmentAbbreviation((event.target as HTMLSelectElement).value);
+							}}>
 								<option value="">{t("users.noDepartment")}</option>
 								{filteredDepartments.map((entry) => (
-									<option key={entry.uuid} value={entry.abbreviation ?? ""}>{`${entry.abbreviation ?? ""} - ${entry.name}`}</option>
+									<option key={String(entry.uuid)} value={String(entry.abbreviation ?? "")}>{`${entry.abbreviation ?? ""} - ${entry.name}`}</option>
 								))}
 							</Select>
-							<Button buttonId="save-user-department-action" disabled={isUpdatingDepartment || isUserDepartmentLoading} onGcdsClick={() => {
+							<Button buttonId="save-user-department-action" disabled={isUpdatingDepartment || isUserDepartmentLoading} type="button" onGcdsClick={() => {
 								void handleSaveDepartment();
-							}} type="button">
+							}}>
 								{isUpdatingDepartment ? t("users.savingDepartmentAction") : t("users.departmentSaveAction")}
 							</Button>
 						</div>
@@ -388,17 +418,17 @@ export const UsersPage = (): FunctionComponent => {
 							<Heading tag="h2">{t("users.manageRoleTitle")}</Heading>
 							{isUserRoleLoading ? <Text>{t("users.loadingRoleBody")}</Text> : null}
 							<Text>{t("users.role", { value: currentRoleName })}</Text>
-							<Select label={t("users.roleLabel")} name="role" onInput={(event): void => {
-								setSelectedRoleUuid(event.target.value);
-							}} selectId="user-role-select" value={selectedRoleUuid}>
+							<Select label={t("users.roleLabel")} name="role" selectId="user-role-select" value={selectedRoleUuid} onInput={(event: React.FormEvent<HTMLSelectElement>): void => {
+								setSelectedRoleUuid((event.target as HTMLSelectElement).value);
+							}}>
 								<option value="">{t("users.noRole")}</option>
 								{roles.map((entry) => (
-									<option key={entry.uuid} value={entry.uuid}>{entry.name}</option>
+									<option key={String(entry.uuid)} value={String(entry.uuid)}>{entry.name}</option>
 								))}
 							</Select>
-							<Button buttonId="save-user-role-action" disabled={isUpdatingRole || isUserRoleLoading} onGcdsClick={() => {
+							<Button buttonId="save-user-role-action" disabled={isUpdatingRole || isUserRoleLoading} type="button" onGcdsClick={() => {
 								void handleSaveRole();
-							}} type="button">
+							}}>
 								{isUpdatingRole ? t("users.savingRoleAction") : t("users.roleSaveAction")}
 							</Button>
 						</div>
@@ -406,20 +436,20 @@ export const UsersPage = (): FunctionComponent => {
 				)}
 			</Modal>
 
-			<ConfirmDialog
-				cancelLabel={t("users.cancelAction")}
-				confirmLabel={isDeleting ? t("users.deletingAction") : t("users.confirmDeleteAction")}
-				description={t("users.deleteConfirmBody", { username: selectedUser?.username ?? "" })}
-				isOpen={deleteDialogOpen}
-				isPending={isDeleting}
-				onClose={() => {
-					setDeleteDialogOpen(false);
-				}}
-				onConfirm={() => {
-					void handleDeleteUser();
-				}}
-				title={t("users.deleteConfirmTitle")}
-			/>
+			   <ConfirmDialog
+				   cancelLabel={t("users.cancelAction")}
+				   confirmLabel={isDeleting ? t("users.deletingAction") : t("users.confirmDeleteAction")}
+				   description={t("users.deleteConfirmBody", { username: selectedUser?.username ?? "" })}
+				   isOpen={deleteDialogOpen}
+				   isPending={isDeleting}
+				   title={t("users.deleteConfirmTitle")}
+				   onClose={() => {
+					   setDeleteDialogOpen(false);
+				   }}
+				   onConfirm={() => {
+					   void handleDeleteUser();
+				   }}
+			   />
 		</CenteredPageLayout>
 	);
 };

@@ -22,11 +22,7 @@ type PostFormErrors = {
 	title: string | null;
 };
 
-type ValueInputEvent = {
-	target: {
-		value: string;
-	};
-};
+// Use the generic React FormEvent for input handlers and read value via target
 
 type AuthorPostRow = {
 	mediaUrl: string;
@@ -61,7 +57,7 @@ const canSubmitForReview = (status: PostRead["status"]): boolean =>
 const canEditPost = (status: PostRead["status"]): boolean =>
 	status === "draft" || status === "rejected";
 
-const getEventValue = (event: ValueInputEvent): string => event.target.value;
+// Read form event values inline via strongly-typed event.target in handlers.
 
 const isValidMediaUrl = (value: string): boolean => {
 	try {
@@ -115,12 +111,12 @@ export const PostManagementPage = (): FunctionComponent => {
 	});
 	const canReviewPosts = !(pendingReviewError instanceof ForbiddenRequestError);
 	const isModalOpen = modalMode !== null;
-	const totalAuthorPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
+	const totalAuthorPages = response ? Math.max(1, Math.ceil(response["total_count"] / response["items_per_page"])) : 1;
 	const totalReviewPages = pendingReviewResponse
-		? Math.max(1, Math.ceil(pendingReviewResponse.total_count / pendingReviewResponse.items_per_page))
+		? Math.max(1, Math.ceil(pendingReviewResponse["total_count"] / pendingReviewResponse["items_per_page"]))
 		: 1;
 	const authorRows: Array<AuthorPostRow> = posts.map((post) => ({
-		mediaUrl: post.media_url ?? "",
+		mediaUrl: post.mediaUrl ?? "",
 		status: post.status,
 		text: post.text,
 		title: post.title,
@@ -155,7 +151,7 @@ export const PostManagementPage = (): FunctionComponent => {
 		releaseActiveElementFocus();
 		setSelectedPostUuid(post.uuid);
 		setFormState({
-			mediaUrl: post.media_url ?? "",
+			mediaUrl: post.mediaUrl ?? "",
 			text: post.text,
 			title: post.title,
 		});
@@ -199,7 +195,7 @@ export const PostManagementPage = (): FunctionComponent => {
 		const payload = {
 			text: formState.text.trim(),
 			title: formState.title.trim(),
-			...(trimmedMediaUrl.length > 0 ? { "media_url": trimmedMediaUrl } : {}),
+			...(trimmedMediaUrl.length > 0 ? { mediaUrl: trimmedMediaUrl } : {}),
 		};
 
 		if (modalMode === "create") {
@@ -436,27 +432,27 @@ export const PostManagementPage = (): FunctionComponent => {
 						<Text>{t("posts.status", { value: selectedReviewPost.status })}</Text>
 						<Text>{selectedReviewPost.title}</Text>
 						<Text>{selectedReviewPost.text}</Text>
-						<Textarea label={t("posts.commentLabel")} name="review-comment" textareaId="review-comment" value={selectedReviewComment} onInput={(event: ValueInputEvent): void => {
+						<Textarea label={t("posts.commentLabel")} name="review-comment" textareaId="review-comment" value={selectedReviewComment} onInput={(event: React.FormEvent<HTMLTextAreaElement>): void => {
 							if (!selectedPostUuid) {
 								return;
 							}
 
 							setReviewComments((current) => ({
 								...current,
-								[selectedPostUuid]: getEventValue(event),
+								[selectedPostUuid]: (event.target as HTMLTextAreaElement).value,
 							}));
 						}} />
 					</div>
 				) : (
 					<div className="grid gap-200">
-						<Input inputId="post-title" label={t("posts.titleLabel")} name="title" value={formState.title} onInput={(event: ValueInputEvent): void => {
-							setFormState((current) => ({ ...current, title: getEventValue(event) }));
+						<Input inputId="post-title" label={t("posts.titleLabel")} name="title" value={formState.title} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setFormState((current) => ({ ...current, title: (event.target as HTMLInputElement).value }));
 						}} />
-						<Input inputId="post-media-url" label={t("posts.mediaUrlLabel")} name="media-url" value={formState.mediaUrl} onInput={(event: ValueInputEvent): void => {
-							setFormState((current) => ({ ...current, mediaUrl: getEventValue(event) }));
+						<Input inputId="post-media-url" label={t("posts.mediaUrlLabel")} name="media-url" value={formState.mediaUrl} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setFormState((current) => ({ ...current, mediaUrl: (event.target as HTMLInputElement).value }));
 						}} />
-						<Textarea label={t("posts.textLabel")} name="text" textareaId="post-text" value={formState.text} onInput={(event: ValueInputEvent): void => {
-							setFormState((current) => ({ ...current, text: getEventValue(event) }));
+						<Textarea label={t("posts.textLabel")} name="text" textareaId="post-text" value={formState.text} onInput={(event: React.FormEvent<HTMLTextAreaElement>): void => {
+							setFormState((current) => ({ ...current, text: (event.target as HTMLTextAreaElement).value }));
 						}} />
 					</div>
 				)}

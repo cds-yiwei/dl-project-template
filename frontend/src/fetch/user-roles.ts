@@ -3,7 +3,7 @@ import type { ApiMessageResponse } from "./api-types";
 import type { RoleRead } from "./roles";
 
 export type UserRoleUpdate = {
-	role_uuid: string | null;
+	roleUuid: string | null;
 };
 
 export const getUserRole = async (userUuid: string): Promise<RoleRead | null> =>

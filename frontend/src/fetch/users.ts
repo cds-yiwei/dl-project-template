@@ -10,11 +10,11 @@ export type UserCreate = {
 };
 
 export type UserUpdate = {
-	auth_provider?: string | null;
-	auth_subject?: string | null;
+	authProvider?: string | null;
+	authSubject?: string | null;
 	email?: string | null;
 	name?: string | null;
-	profile_image_url?: string | null;
+	profileImageUrl?: string | null;
 	username?: string | null;
 };
 

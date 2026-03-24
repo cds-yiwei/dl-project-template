@@ -70,10 +70,12 @@ export const RolesPage = (): FunctionComponent => {
 			return;
 		}
 
-		setSelectedRoleUuid(null);
-		setDeleteDialogOpen(false);
-		setModalMode(null);
-		setForm(emptyRoleForm);
+		void Promise.resolve().then(() => {
+			setSelectedRoleUuid(null);
+			setDeleteDialogOpen(false);
+			setModalMode(null);
+			setForm(emptyRoleForm);
+		});
 	}, [deleteDialogOpen, modalMode, roles, selectedRoleUuid]);
 
 	const closeModal = (): void => {
@@ -161,6 +163,17 @@ export const RolesPage = (): FunctionComponent => {
 			{roles.length > 0 ? (
 				<div className="grid gap-300">
 					<DataTable
+						columns={roleColumns}
+						exportFileName="roles.csv"
+						getRowId={(row) => row.uuid}
+						itemLabel="roles"
+						pageNumber={response?.page ?? page}
+						pagination={false}
+						rows={roleRows}
+						searchLabel="Search roles"
+						searchPlaceholder="Filter by role name or description"
+						searchQuery={searchDraft}
+						title={t("roles.title")}
 						action={{
 							buttonId: (row) => `manage-role-${row.uuid}`,
 							buttonLabel: t("roles.manageAction"),
@@ -169,77 +182,66 @@ export const RolesPage = (): FunctionComponent => {
 							},
 							screenReaderLabel: (row) => row.name,
 						}}
-						columns={roleColumns}
-						exportFileName="roles.csv"
-						getRowId={(row) => row.uuid}
-						itemLabel="roles"
-						pagination={false}
 						primaryAction={{
 							buttonId: "open-create-role-modal",
 							buttonLabel: t("roles.createAction"),
 							onAction: openCreateModal,
 						}}
-						rows={roleRows}
-						searchQuery={searchDraft}
-						searchLabel="Search roles"
 						onSearchChange={setSearchDraft}
-						searchPlaceholder="Filter by role name or description"
-						pageNumber={response?.page ?? page}
-						title={t("roles.title")}
 					/>
-					<Pagination currentPage={page} label="Roles pagination" onPageChange={setPage} totalPages={totalPages} />
+					<Pagination currentPage={page} label="Roles pagination" totalPages={totalPages} onPageChange={setPage} />
 				</div>
 			) : null}
 
 			<Modal
+				isOpen={isModalOpen}
+				title={modalMode === "create" ? t("roles.createTitle") : t("roles.editTitle")}
 				footer={(
 					<>
-						<Button buttonRole="secondary" onGcdsClick={closeModal} type="button">
+						<Button buttonRole="secondary" type="button" onGcdsClick={closeModal}>
 							{t("roles.cancelAction")}
 						</Button>
 						{modalMode === "edit" ? (
-							<Button buttonRole="danger" onGcdsClick={() => {
+							<Button buttonRole="danger" type="button" onGcdsClick={() => {
 								releaseActiveElementFocus();
 								setDeleteDialogOpen(true);
-							}} type="button">
+							}}>
 								{t("roles.deleteAction")}
 							</Button>
 						) : null}
-						<Button disabled={isSubmitting} onGcdsClick={() => {
+						<Button disabled={isSubmitting} type="button" onGcdsClick={() => {
 							if (modalMode === "create") {
 								void handleCreateRole();
 								return;
 							}
 
 							void handleUpdateRole();
-						}} type="button">
+						}}>
 							{modalMode === "create"
 								? (isCreating ? t("roles.creatingAction") : t("roles.createAction"))
 								: (isUpdating ? t("roles.savingAction") : t("roles.saveAction"))}
 						</Button>
 					</>
 				)}
-				isOpen={isModalOpen}
 				onClose={closeModal}
-				title={modalMode === "create" ? t("roles.createTitle") : t("roles.editTitle")}
 			>
 				<Input
 					inputId={modalMode === "create" ? "create-role-name" : "edit-role-name"}
 					label={t("roles.nameLabel")}
 					name={modalMode === "create" ? "role-name" : "edit-role-name"}
-					onInput={(event): void => {
-						setForm((current) => ({ ...current, name: event.target.value }));
-					}}
 					value={form.name}
+					onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+						setForm((current) => ({ ...current, name: (event.target as HTMLInputElement).value }));
+					}}
 				/>
 				<Input
 					inputId={modalMode === "create" ? "create-role-description" : "edit-role-description"}
 					label={t("roles.descriptionLabel")}
 					name={modalMode === "create" ? "role-description" : "edit-role-description"}
-					onInput={(event): void => {
-						setForm((current) => ({ ...current, description: event.target.value }));
-					}}
 					value={form.description}
+					onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+						setForm((current) => ({ ...current, description: (event.target as HTMLInputElement).value }));
+					}}
 				/>
 			</Modal>
 
@@ -249,13 +251,13 @@ export const RolesPage = (): FunctionComponent => {
 				description={t("roles.deleteConfirmBody", { name: selectedRole?.name ?? "" })}
 				isOpen={deleteDialogOpen}
 				isPending={isDeleting}
+				title={t("roles.deleteConfirmTitle")}
 				onClose={() => {
 					setDeleteDialogOpen(false);
 				}}
 				onConfirm={() => {
 					void handleDeleteRole();
 				}}
-				title={t("roles.deleteConfirmTitle")}
 			/>
 		</CenteredPageLayout>
 	);

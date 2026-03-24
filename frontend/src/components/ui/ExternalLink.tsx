@@ -12,7 +12,7 @@ const ExternalLink: React.FC<LinkProps> = React.memo(
     // Check if the component should render an external link
     if (external && href) {
       return (
-        <GcdsLink href={href} external={external}>
+        <GcdsLink external={external} href={href}>
           {children}
         </GcdsLink>
       );

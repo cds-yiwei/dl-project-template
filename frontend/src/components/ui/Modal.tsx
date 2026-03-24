@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from "react";
+import type { PropsWithChildren, ReactNode, ReactElement } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import "./Modal.css";
 
@@ -11,13 +11,13 @@ export type ModalProps = PropsWithChildren<{
 	title: string;
 }>;
 
-const Modal = ({ children, description, footer, isOpen, onClose, size = "regular", title }: ModalProps) => {
+const Modal = ({ children, description, footer, isOpen, onClose, size = "regular", title }: ModalProps): ReactElement | null => {
 	if (!isOpen) {
 		return null;
 	}
 
 	return (
-		<Dialog className="government-modal" onClose={onClose} open={isOpen}>
+		<Dialog className="government-modal" open={isOpen} onClose={onClose}>
 			<div aria-hidden="true" className="government-modal__backdrop government-modal__backdrop--visible" />
 			<DialogPanel className={`government-modal__panel government-modal__panel--${size} government-modal__panel--animated`}>
 				<div className="government-modal__header">
@@ -27,7 +27,7 @@ const Modal = ({ children, description, footer, isOpen, onClose, size = "regular
 						</DialogTitle>
 						{description ? <p className="government-modal__description">{description}</p> : null}
 					</div>
-					<button aria-label="Close" className="government-modal__close" onClick={onClose} type="button">
+					<button aria-label="Close" className="government-modal__close" type="button" onClick={onClose}>
 						Close
 					</button>
 				</div>

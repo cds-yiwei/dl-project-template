@@ -34,10 +34,10 @@ const adminListStore = createStore<AdminListStoreState>()(
 	persist(
 		(set) => ({
 			lists: createInitialLists(),
-			resetAllListState: () => {
+			resetAllListState: (): void => {
 				set({ lists: createInitialLists() });
 			},
-			resetListState: (key) => {
+			resetListState: (key: AdminListKey): void => {
 				set((state) => ({
 					lists: {
 						...state.lists,
@@ -45,7 +45,7 @@ const adminListStore = createStore<AdminListStoreState>()(
 					},
 				}));
 			},
-			setPage: (key, page) => {
+			setPage: (key: AdminListKey, page: number): void => {
 				set((state) => ({
 					lists: {
 						...state.lists,
@@ -56,7 +56,7 @@ const adminListStore = createStore<AdminListStoreState>()(
 					},
 				}));
 			},
-			setSearchDraft: (key, searchDraft) => {
+			setSearchDraft: (key: AdminListKey, searchDraft: string): void => {
 				set((state) => ({
 					lists: {
 						...state.lists,
@@ -88,13 +88,13 @@ const useAdminListState = (key: AdminListKey): AdminListViewState & {
 
 	return {
 		...listState,
-		reset: () => {
+		reset: (): void => {
 			resetListState(key);
 		},
-		setPage: (page) => {
+		setPage: (page: number): void => {
 			setPage(key, page);
 		},
-		setSearchDraft: (searchDraft) => {
+		setSearchDraft: (searchDraft: string): void => {
 			setSearchDraft(key, searchDraft);
 		},
 	};

@@ -46,7 +46,7 @@ describe("posts-api", () => {
 				method: "GET",
 			}),
 		);
-		expect(response.total_count).toBe(1);
+		expect(response["total_count"]).toBe(1);
 		expect(response.data[0]).toMatchObject({
 			status: "draft",
 			title: "Draft post",
@@ -169,7 +169,7 @@ describe("posts-api", () => {
 			status: 201,
 		} as Response);
 
-		await createPost(userUuid, { media_url: "", text: "Body", title: "New post" });
+		await createPost(userUuid, { mediaUrl: "", text: "Body", title: "New post" });
 
 		expect(fetchMock).toHaveBeenCalledWith(
 			`http://localhost:8000/api/v1/user/${userUuid}/post`,

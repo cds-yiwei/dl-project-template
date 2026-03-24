@@ -3,7 +3,7 @@ import type { ApiMessageResponse } from "./api-types";
 import type { DepartmentRead } from "./departments";
 
 export type UserDepartmentUpdate = {
-	department_abbreviation: string | null;
+	departmentAbbreviation: string | null;
 };
 
 export const getUserDepartment = async (userUuid: string): Promise<DepartmentRead | null> =>

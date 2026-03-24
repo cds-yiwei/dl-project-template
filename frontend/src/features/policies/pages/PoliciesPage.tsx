@@ -75,10 +75,12 @@ export const PoliciesPage = (): FunctionComponent => {
 			return;
 		}
 
-		setSelectedPolicyUuid(null);
-		setDeleteDialogOpen(false);
-		setModalMode(null);
-		setForm(emptyPolicyForm);
+		void Promise.resolve().then(() => {
+			setSelectedPolicyUuid(null);
+			setDeleteDialogOpen(false);
+			setModalMode(null);
+			setForm(emptyPolicyForm);
+		});
 	}, [deleteDialogOpen, modalMode, policies, selectedPolicyUuid]);
 
 	const closeModal = (): void => {
@@ -167,6 +169,17 @@ export const PoliciesPage = (): FunctionComponent => {
 			{policies.length > 0 ? (
 				<div className="grid gap-300">
 					<DataTable
+						columns={policyColumns}
+						exportFileName="policies.csv"
+						getRowId={(row) => row.uuid}
+						itemLabel="policies"
+						pageNumber={response?.page ?? page}
+						pagination={false}
+						rows={policyRows}
+						searchLabel="Search policies"
+						searchPlaceholder="Filter by subject, resource, or action"
+						searchQuery={searchDraft}
+						title={t("policies.title")}
 						action={{
 							buttonId: (row) => `manage-policy-${row.uuid}`,
 							buttonLabel: t("policies.manageAction"),
@@ -175,91 +188,98 @@ export const PoliciesPage = (): FunctionComponent => {
 							},
 							screenReaderLabel: (row) => `${row.subject} ${row.resource}`,
 						}}
-						columns={policyColumns}
-						exportFileName="policies.csv"
-						getRowId={(row) => row.uuid}
-						itemLabel="policies"
-						pagination={false}
 						primaryAction={{
 							buttonId: "open-create-policy-modal",
 							buttonLabel: t("policies.createAction"),
 							onAction: openCreateModal,
 						}}
-						rows={policyRows}
-						searchQuery={searchDraft}
-						searchLabel="Search policies"
 						onSearchChange={setSearchDraft}
-						searchPlaceholder="Filter by subject, resource, or action"
-						pageNumber={response?.page ?? page}
-						title={t("policies.title")}
 					/>
-					<Pagination currentPage={page} label="Policies pagination" onPageChange={setPage} totalPages={totalPages} />
+					<Pagination currentPage={page} label="Policies pagination" totalPages={totalPages} onPageChange={setPage} />
 				</div>
 			) : null}
 
 			<Modal
+				isOpen={isModalOpen}
+				size="wide"
+				title={modalMode === "create" ? t("policies.createTitle") : t("policies.editTitle")}
 				footer={(
 					<>
-						<Button buttonRole="secondary" onGcdsClick={closeModal} type="button">
+						<Button buttonRole="secondary" type="button" onGcdsClick={closeModal}>
 							{t("policies.cancelAction")}
 						</Button>
 						{modalMode === "edit" ? (
-							<Button buttonRole="danger" onGcdsClick={() => {
+							<Button buttonRole="danger" type="button" onGcdsClick={() => {
 								releaseActiveElementFocus();
 								setDeleteDialogOpen(true);
-							}} type="button">
+							}}>
 								{t("policies.deleteAction")}
 							</Button>
 						) : null}
-						<Button disabled={isSubmitting} onGcdsClick={() => {
+						<Button disabled={isSubmitting} type="button" onGcdsClick={() => {
 							if (modalMode === "create") {
 								void handleCreatePolicy();
 								return;
 							}
 
 							void handleUpdatePolicy();
-						}} type="button">
+						}}>
 							{modalMode === "create"
 								? (isCreating ? t("policies.creatingAction") : t("policies.createAction"))
 								: (isUpdating ? t("policies.savingAction") : t("policies.saveAction"))}
 						</Button>
 					</>
 				)}
-				isOpen={isModalOpen}
 				onClose={closeModal}
-				size="wide"
-				title={modalMode === "create" ? t("policies.createTitle") : t("policies.editTitle")}
 			>
 				<div className="grid gap-200 md:grid-cols-3">
-					<Input inputId={modalMode === "create" ? "create-policy-subject" : "edit-policy-subject"} label={t("policies.subjectLabel")} name={modalMode === "create" ? "subject" : "edit-subject"} onInput={(event): void => {
-						setForm((current) => ({ ...current, subject: event.target.value }));
-					}} value={form.subject} />
-					<Input inputId={modalMode === "create" ? "create-policy-resource" : "edit-policy-resource"} label={t("policies.resourceLabel")} name={modalMode === "create" ? "resource" : "edit-resource"} onInput={(event): void => {
-						setForm((current) => ({ ...current, resource: event.target.value }));
-					}} value={form.resource} />
-					<Input inputId={modalMode === "create" ? "create-policy-action" : "edit-policy-action"} label={t("policies.actionLabel")} name={modalMode === "create" ? "action" : "edit-action"} onInput={(event): void => {
-						setForm((current) => ({ ...current, action: event.target.value }));
-					}} value={form.action} />
+					<Input
+						inputId={modalMode === "create" ? "create-policy-subject" : "edit-policy-subject"}
+						label={t("policies.subjectLabel")}
+						name={modalMode === "create" ? "subject" : "edit-subject"}
+						value={form.subject}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setForm((current) => ({ ...current, subject: (event.target as HTMLInputElement).value }));
+						}}
+					/>
+					<Input
+						inputId={modalMode === "create" ? "create-policy-resource" : "edit-policy-resource"}
+						label={t("policies.resourceLabel")}
+						name={modalMode === "create" ? "resource" : "edit-resource"}
+						value={form.resource}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setForm((current) => ({ ...current, resource: (event.target as HTMLInputElement).value }));
+						}}
+					/>
+					<Input
+						inputId={modalMode === "create" ? "create-policy-action" : "edit-policy-action"}
+						label={t("policies.actionLabel")}
+						name={modalMode === "create" ? "action" : "edit-action"}
+						value={form.action}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							setForm((current) => ({ ...current, action: (event.target as HTMLInputElement).value }));
+						}}
+					/>
 				</div>
 			</Modal>
 
 			<ConfirmDialog
 				cancelLabel={t("policies.cancelAction")}
 				confirmLabel={isDeleting ? t("policies.deletingAction") : t("policies.confirmDeleteAction")}
+				isOpen={deleteDialogOpen}
+				isPending={isDeleting}
+				title={t("policies.deleteConfirmTitle")}
 				description={t("policies.deleteConfirmBody", {
 					action: selectedPolicy?.action ?? "",
 					resource: selectedPolicy?.resource ?? "",
 					subject: selectedPolicy?.subject ?? "",
 				})}
-				isOpen={deleteDialogOpen}
-				isPending={isDeleting}
 				onClose={() => {
 					setDeleteDialogOpen(false);
 				}}
 				onConfirm={() => {
 					void handleDeletePolicy();
 				}}
-				title={t("policies.deleteConfirmTitle")}
 			/>
 		</CenteredPageLayout>
 	);

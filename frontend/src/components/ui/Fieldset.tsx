@@ -12,10 +12,10 @@ interface InputProps {
 const Fieldset: React.FC<InputProps> = React.memo(
   ({ hint, legend, legendSize, className, children }) => (
     <GcdsFieldset
+      className={className}
+      hint={hint}
       legend={legend}
       legendSize={legendSize}
-      hint={hint}
-      className={className}
     >
       {children}
     </GcdsFieldset>

@@ -5,7 +5,7 @@ interface InputProps {
   hint?: string;
   label: string;
   name: string;
-  onInput?: (e: any) => void;
+  onInput?: React.FormEventHandler<Element>;
   inputId: string;
   value?: string;
   validateOn?: "blur" | "submit" | "other";
@@ -30,17 +30,17 @@ const Input: React.FC<InputProps> = React.memo(
     type,
   }) => (
     <GcdsInput
+      className={className}
+      hint={hint}
       inputId={inputId}
       label={label}
-      hint={hint}
       name={name}
-      value={value}
-      validateOn={validateOn}
-      onInput={onInput}
       required={required}
       size={size}
-      className={className}
       type={type}
+      validateOn={validateOn}
+      value={value}
+      onInput={onInput}
     ></GcdsInput>
   ),
 );

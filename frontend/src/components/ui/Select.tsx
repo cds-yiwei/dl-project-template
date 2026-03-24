@@ -7,7 +7,7 @@ interface SelectProps {
   label: string;
   hideLabel?: boolean;
   name: string;
-  onInput?: (e: any) => void;
+  onInput?: React.FormEventHandler<Element>;
   selectId: string;
   value?: string;
   defaultValue?: string;
@@ -30,16 +30,16 @@ const Select: React.FC<SelectProps> = React.memo(
     value,
   }) => (
     <GcdsSelect
-      selectId={selectId}
-      label={label}
+      defaultValue={defaultValue}
       hideLabel={hideLabel}
       hint={hint}
+      label={label}
       name={name}
-      value={value}
-      defaultValue={defaultValue}
-      validateOn={validateOn}
-      onInput={onInput}
       required={required}
+      selectId={selectId}
+      validateOn={validateOn}
+      value={value}
+      onInput={onInput}
     >
       {children}
     </GcdsSelect>

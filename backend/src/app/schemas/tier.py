@@ -1,14 +1,14 @@
 import uuid as uuid_pkg
 from datetime import datetime
-from typing import Annotated
+from pydantic import Field, BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
-from pydantic import BaseModel, Field
 
 from ..core.schemas import TimestampSchema
 
 
 class TierBase(BaseModel):
-    name: Annotated[str, Field(examples=["free"])]
+    name: str = Field(..., examples=["free"])
 
 
 class Tier(TimestampSchema, TierBase):
@@ -16,9 +16,11 @@ class Tier(TimestampSchema, TierBase):
 
 
 class TierRead(TierBase):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    
     id: int
     uuid: uuid_pkg.UUID
-    created_at: datetime
+    created_at: datetime = Field(alias="createdAt")
 
 
 class TierCreate(TierBase):
@@ -29,7 +31,7 @@ class TierCreateInternal(TierCreate):
     pass
 
 
-class TierUpdate(BaseModel):
+class TierUpdate(TierBase):
     name: str | None = None
 
 

@@ -9,13 +9,13 @@ describe("users-api", () => {
 
 	it("requests the backend users list with pagination parameters", async () => {
 		const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
-			json: () => Promise.resolve({
-				data: [{ role_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301", tier_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101", username: "jdoe" }],
-				"has_more": false,
-				"items_per_page": 20,
-				page: 2,
-				"total_count": 1,
-			}),
+				json: () => Promise.resolve({
+					data: [{ roleUuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301", tierUuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101", username: "jdoe" }],
+					"has_more": false,
+					"items_per_page": 20,
+					page: 2,
+					"total_count": 1,
+				}),
 			ok: true,
 		} as Response);
 
@@ -29,7 +29,7 @@ describe("users-api", () => {
 			}),
 		);
 		expect(response).toMatchObject({
-			data: [{ role_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301", tier_uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101", username: "jdoe" }],
+			data: [{ roleUuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301", tierUuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401", uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b101", username: "jdoe" }],
 			"has_more": false,
 			"items_per_page": 20,
 			page: 2,
@@ -52,9 +52,9 @@ describe("users-api", () => {
 			json: () => Promise.resolve({
 				email: "jane@example.com",
 				name: "Jane Doe",
-				profile_image_url: "",
-				role_uuid: null,
-				tier_uuid: null,
+				profileImageUrl: "",
+				roleUuid: null,
+				tierUuid: null,
 				uuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b102",
 				username: "jdoe",
 			}),

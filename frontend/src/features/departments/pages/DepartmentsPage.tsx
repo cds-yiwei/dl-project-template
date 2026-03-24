@@ -11,22 +11,22 @@ import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
 
 type DepartmentFormState = {
 	abbreviation: string;
-	abbreviation_fr: string;
-	gc_org_id: string;
-	lead_department_name: string;
-	lead_department_name_fr: string;
+	abbreviationFr: string;
+	gcOrgId: string;
+	leadDepartmentName: string;
+	leadDepartmentNameFr: string;
 	name: string;
-	name_fr: string;
+	nameFr: string;
 };
 
 const createEmptyDepartmentForm = (): DepartmentFormState => ({
 	abbreviation: "",
-	abbreviation_fr: "",
-	gc_org_id: "",
-	lead_department_name: "",
-	lead_department_name_fr: "",
+	abbreviationFr: "",
+	gcOrgId: "",
+	leadDepartmentName: "",
+	leadDepartmentNameFr: "",
 	name: "",
-	name_fr: "",
+	nameFr: "",
 });
 
 const toOptionalString = (value: string): string | null => {
@@ -49,22 +49,23 @@ const toOptionalInteger = (value: string): number | null => {
 
 const toDepartmentFormState = (department: DepartmentRead): DepartmentFormState => ({
 	abbreviation: department.abbreviation ?? "",
-	abbreviation_fr: department.abbreviation_fr ?? "",
-	gc_org_id: department.gc_org_id === null ? "" : String(department.gc_org_id),
-	lead_department_name: department.lead_department_name ?? "",
-	lead_department_name_fr: department.lead_department_name_fr ?? "",
+	abbreviationFr: department.abbreviationFr ?? "",
+	gcOrgId: department.gcOrgId === null ? "" : String(department.gcOrgId),
+	leadDepartmentName: department.leadDepartmentName ?? "",
+	leadDepartmentNameFr: department.leadDepartmentNameFr ?? "",
 	name: department.name,
-	name_fr: department.name_fr ?? "",
+	nameFr: department.nameFr ?? "",
 });
 
+// Read form event values inline via strongly-typed event.target in handlers.
 const toDepartmentPayload = (form: DepartmentFormState): DepartmentCreate => ({
 	abbreviation: toOptionalString(form.abbreviation),
-	abbreviation_fr: toOptionalString(form.abbreviation_fr),
-	gc_org_id: toOptionalInteger(form.gc_org_id),
-	lead_department_name: toOptionalString(form.lead_department_name),
-	lead_department_name_fr: toOptionalString(form.lead_department_name_fr),
+	abbreviationFr: toOptionalString(form.abbreviationFr),
+	gcOrgId: toOptionalInteger(form.gcOrgId),
+	leadDepartmentName: toOptionalString(form.leadDepartmentName),
+	leadDepartmentNameFr: toOptionalString(form.leadDepartmentNameFr),
 	name: form.name.trim(),
-	name_fr: toOptionalString(form.name_fr),
+	nameFr: toOptionalString(form.nameFr),
 });
 
 type DepartmentTableRow = {
@@ -102,7 +103,7 @@ export const DepartmentsPage = (): FunctionComponent => {
 	const selectedDepartment = departments.find((department) => department.uuid === selectedDepartmentUuid) ?? null;
 	const departmentRows: Array<DepartmentTableRow> = departments.map((department) => ({
 		abbreviation: department.abbreviation ?? "",
-		createdAt: department.created_at,
+		createdAt: department.createdAt,
 		name: department.name,
 		uuid: department.uuid,
 	}));
@@ -110,7 +111,7 @@ export const DepartmentsPage = (): FunctionComponent => {
 		{ field: "abbreviation", headerName: t("departments.abbreviationLabel"), pinned: "left" },
 		{ field: "name", headerName: t("departments.nameLabel") },
 	];
-	const totalPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
+	const totalPages = response ? Math.max(1, Math.ceil(response["total_count"] / response["items_per_page"])) : 1;
 
 	useEffect(() => {
 		if (modalMode !== "edit" && !deleteDialogOpen) {
@@ -121,10 +122,12 @@ export const DepartmentsPage = (): FunctionComponent => {
 			return;
 		}
 
-		setSelectedDepartmentUuid(null);
-		setDeleteDialogOpen(false);
-		setModalMode(null);
-		setForm(createEmptyDepartmentForm());
+		void Promise.resolve().then(() => {
+			setSelectedDepartmentUuid(null);
+			setDeleteDialogOpen(false);
+			setModalMode(null);
+			setForm(createEmptyDepartmentForm());
+		});
 	}, [deleteDialogOpen, departments, modalMode, selectedDepartmentUuid]);
 
 	const closeModal = (): void => {
@@ -213,6 +216,17 @@ export const DepartmentsPage = (): FunctionComponent => {
 			{departments.length > 0 ? (
 				<div className="grid gap-300">
 					<DataTable
+						columns={departmentColumns}
+						exportFileName="departments.csv"
+						getRowId={(row) => row.uuid}
+						itemLabel="departments"
+						pageNumber={response?.page ?? page}
+						pagination={false}
+						rows={departmentRows}
+						searchLabel="Search departments"
+						searchPlaceholder="Filter by abbreviation or department name"
+						searchQuery={searchDraft}
+						title={t("departments.title")}
 						action={{
 							buttonId: (row) => `manage-department-${row.uuid}`,
 							buttonLabel: t("departments.manageAction"),
@@ -221,124 +235,113 @@ export const DepartmentsPage = (): FunctionComponent => {
 							},
 							screenReaderLabel: (row) => row.name,
 						}}
-						columns={departmentColumns}
-						exportFileName="departments.csv"
-						getRowId={(row) => row.uuid}
-						itemLabel="departments"
-						pagination={false}
 						primaryAction={{
 							buttonId: "open-create-department-modal",
 							buttonLabel: t("departments.createAction"),
 							onAction: openCreateModal,
 						}}
-						rows={departmentRows}
-						searchQuery={searchDraft}
-						searchLabel="Search departments"
 						onSearchChange={setSearchDraft}
-						searchPlaceholder="Filter by abbreviation or department name"
-						pageNumber={response?.page ?? page}
-						title={t("departments.title")}
 					/>
-					<Pagination currentPage={page} label="Departments pagination" onPageChange={setPage} totalPages={totalPages} />
+					<Pagination currentPage={page} label="Departments pagination" totalPages={totalPages} onPageChange={setPage} />
 				</div>
 			) : null}
 
 			<Modal
+				isOpen={isModalOpen}
+				title={modalMode === "create" ? t("departments.createTitle") : t("departments.editTitle")}
 				footer={(
 					<>
-						<Button buttonRole="secondary" onGcdsClick={closeModal} type="button">
+						<Button buttonRole="secondary" type="button" onGcdsClick={closeModal}>
 							{t("departments.cancelAction")}
 						</Button>
 						{modalMode === "edit" ? (
-							<Button buttonRole="danger" onGcdsClick={() => {
+							<Button buttonRole="danger" type="button" onGcdsClick={() => {
 								releaseActiveElementFocus();
 								setDeleteDialogOpen(true);
-							}} type="button">
+							}}>
 								{t("departments.deleteAction")}
 							</Button>
 						) : null}
-						<Button disabled={isSubmitting} onGcdsClick={() => {
+						<Button disabled={isSubmitting} type="button" onGcdsClick={() => {
 							if (modalMode === "create") {
 								void handleCreateDepartment();
 								return;
 							}
 
 							void handleUpdateDepartment();
-						}} type="button">
+						}}>
 							{modalMode === "create"
 								? (isCreating ? t("departments.creatingAction") : t("departments.createAction"))
 								: (isUpdating ? t("departments.savingAction") : t("departments.saveAction"))}
 						</Button>
 					</>
 				)}
-				isOpen={isModalOpen}
 				onClose={closeModal}
-				title={modalMode === "create" ? t("departments.createTitle") : t("departments.editTitle")}
 			>
 				<div className="grid gap-300 md:grid-cols-2">
 					<Input
 						inputId={modalMode === "create" ? "create-department-name" : "edit-department-name"}
 						label={t("departments.nameLabel")}
 						name={modalMode === "create" ? "department-name" : "edit-department-name"}
-						onInput={(event): void => {
-							updateFormField("name", event.target.value);
-						}}
 						value={form.name}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							updateFormField("name", (event.target as HTMLInputElement).value);
+						}}
 					/>
 					<Input
 						inputId={modalMode === "create" ? "create-department-name-fr" : "edit-department-name-fr"}
 						label={t("departments.nameFrLabel")}
 						name={modalMode === "create" ? "department-name-fr" : "edit-department-name-fr"}
-						onInput={(event): void => {
-							updateFormField("name_fr", event.target.value);
+						value={form.nameFr}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							updateFormField("nameFr", (event.target as HTMLInputElement).value);
 						}}
-						value={form.name_fr}
 					/>
 					<Input
 						inputId={modalMode === "create" ? "create-department-abbreviation" : "edit-department-abbreviation"}
 						label={t("departments.abbreviationLabel")}
 						name={modalMode === "create" ? "department-abbreviation" : "edit-department-abbreviation"}
-						onInput={(event): void => {
-							updateFormField("abbreviation", event.target.value);
-						}}
 						value={form.abbreviation}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							updateFormField("abbreviation", (event.target as HTMLInputElement).value);
+						}}
 					/>
 					<Input
 						inputId={modalMode === "create" ? "create-department-abbreviation-fr" : "edit-department-abbreviation-fr"}
 						label={t("departments.abbreviationFrLabel")}
 						name={modalMode === "create" ? "department-abbreviation-fr" : "edit-department-abbreviation-fr"}
-						onInput={(event): void => {
-							updateFormField("abbreviation_fr", event.target.value);
+						value={form.abbreviationFr}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							updateFormField("abbreviationFr", (event.target as HTMLInputElement).value);
 						}}
-						value={form.abbreviation_fr}
 					/>
 					<Input
 						inputId={modalMode === "create" ? "create-department-gc-org-id" : "edit-department-gc-org-id"}
 						label={t("departments.gcOrgIdLabel")}
 						name={modalMode === "create" ? "department-gc-org-id" : "edit-department-gc-org-id"}
-						onInput={(event): void => {
-							updateFormField("gc_org_id", event.target.value);
-						}}
 						type="number"
-						value={form.gc_org_id}
+						value={form.gcOrgId}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							updateFormField("gcOrgId", (event.target as HTMLInputElement).value);
+						}}
 					/>
 					<Input
 						inputId={modalMode === "create" ? "create-department-lead-name" : "edit-department-lead-name"}
 						label={t("departments.leadDepartmentNameLabel")}
 						name={modalMode === "create" ? "department-lead-name" : "edit-department-lead-name"}
-						onInput={(event): void => {
-							updateFormField("lead_department_name", event.target.value);
+						value={form.leadDepartmentName}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							updateFormField("leadDepartmentName", (event.target as HTMLInputElement).value);
 						}}
-						value={form.lead_department_name}
 					/>
 					<Input
 						inputId={modalMode === "create" ? "create-department-lead-name-fr" : "edit-department-lead-name-fr"}
 						label={t("departments.leadDepartmentNameFrLabel")}
 						name={modalMode === "create" ? "department-lead-name-fr" : "edit-department-lead-name-fr"}
-						onInput={(event): void => {
-							updateFormField("lead_department_name_fr", event.target.value);
+						value={form.leadDepartmentNameFr}
+						onInput={(event: React.FormEvent<HTMLInputElement>): void => {
+							updateFormField("leadDepartmentNameFr", (event.target as HTMLInputElement).value);
 						}}
-						value={form.lead_department_name_fr}
 					/>
 				</div>
 			</Modal>
@@ -349,13 +352,13 @@ export const DepartmentsPage = (): FunctionComponent => {
 				description={t("departments.deleteConfirmBody", { name: selectedDepartment?.name ?? "" })}
 				isOpen={deleteDialogOpen}
 				isPending={isDeleting}
+				title={t("departments.deleteConfirmTitle")}
 				onClose={() => {
 					setDeleteDialogOpen(false);
 				}}
 				onConfirm={() => {
 					void handleDeleteDepartment();
 				}}
-				title={t("departments.deleteConfirmTitle")}
 			/>
 		</CenteredPageLayout>
 	);

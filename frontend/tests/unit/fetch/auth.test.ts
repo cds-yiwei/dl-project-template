@@ -7,11 +7,11 @@ const createUserFixture = (): Record<string, string | number> => ({
 	name: "Jane Doe",
 	username: "jdoe",
 	email: "jane@example.com",
-	"profile_image_url": "https://example.com/avatar.png",
-	"auth_provider": "gc-sso",
-	"auth_subject": "subject-123",
-	"role_uuid": "role-uuid-1",
-	"tier_uuid": "tier-uuid-2",
+	"profileImageUrl": "https://example.com/avatar.png",
+	"authProvider": "gc-sso",
+	"authSubject": "subject-123",
+	"roleUuid": "role-uuid-1",
+	"tierUuid": "tier-uuid-2",
 });
 
 describe("fetch auth", () => {

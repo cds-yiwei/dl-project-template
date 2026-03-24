@@ -3,33 +3,33 @@ import type { ApiMessageResponse } from "./api-types";
 
 export type DepartmentCreate = {
 	abbreviation?: string | null;
-	abbreviation_fr?: string | null;
-	gc_org_id?: number | null;
-	lead_department_name?: string | null;
-	lead_department_name_fr?: string | null;
+	abbreviationFr?: string | null;
+	gcOrgId?: number | null;
+	leadDepartmentName?: string | null;
+	leadDepartmentNameFr?: string | null;
 	name: string;
-	name_fr?: string | null;
+	nameFr?: string | null;
 };
 
 export type DepartmentUpdate = {
 	abbreviation?: string | null;
-	abbreviation_fr?: string | null;
-	gc_org_id?: number | null;
-	lead_department_name?: string | null;
-	lead_department_name_fr?: string | null;
+	abbreviationFr?: string | null;
+	gcOrgId?: number | null;
+	leadDepartmentName?: string | null;
+	leadDepartmentNameFr?: string | null;
 	name?: string;
-	name_fr?: string | null;
+	nameFr?: string | null;
 };
 
 export type DepartmentRead = {
 	abbreviation: string | null;
-	abbreviation_fr: string | null;
+	abbreviationFr: string | null;
 	name: string;
-	gc_org_id: number | null;
-	lead_department_name: string | null;
-	lead_department_name_fr: string | null;
-	name_fr: string | null;
-	created_at: string;
+	gcOrgId: number | null;
+	leadDepartmentName: string | null;
+	leadDepartmentNameFr: string | null;
+	nameFr: string | null;
+	createdAt: string;
 	uuid: string;
 };
 
