@@ -8,9 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...api.dependencies import get_current_user, get_user_service
 from ...core.access_control import casbin_guard
 from ...core.db.database import async_get_db
+from ...schemas.department import DepartmentRead
 from ...core.security import oauth2_scheme
 from ...schemas.role import RoleRead
-from ...schemas.user import UserCreate, UserRateLimitsRead, UserRead, UserRoleUpdate, UserTierRead, UserTierUpdate, UserUpdate
+from ...schemas.user import UserCreate, UserDepartmentRead, UserDepartmentUpdate, UserRateLimitsRead, UserRead, UserRoleUpdate, UserTierRead, UserTierUpdate, UserUpdate
 from ...services.user_service import UserService
 
 router = APIRouter(tags=["users"])
@@ -122,6 +123,17 @@ async def read_user_role(
     return await service.get_user_role(db=db, user_uuid=user_uuid)
 
 
+@router.get("/user/{user_uuid}/department", response_model=UserDepartmentRead | None)
+@casbin_guard.require_permission("users_admin", "read")
+async def read_user_department(
+    request: Request,
+    user_uuid: uuid_pkg.UUID,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    service: Annotated[UserService, Depends(get_user_service)],
+) -> dict | None:
+    return await service.get_user_department(db=db, user_uuid=user_uuid)
+
+
 @router.patch("/user/{user_uuid}/role")
 @casbin_guard.require_permission("users_admin", "write")
 async def patch_user_role(
@@ -144,3 +156,15 @@ async def patch_user_tier(
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict[str, str]:
     return await service.update_user_tier(db=db, user_uuid=user_uuid, values=values)
+
+
+@router.patch("/user/{user_uuid}/department")
+@casbin_guard.require_permission("users_admin", "write")
+async def patch_user_department(
+    request: Request,
+    user_uuid: uuid_pkg.UUID,
+    values: UserDepartmentUpdate,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    service: Annotated[UserService, Depends(get_user_service)],
+) -> dict[str, str]:
+    return await service.update_user_department(db=db, user_uuid=user_uuid, values=values)

@@ -7,9 +7,11 @@ import pytest
 from src.app.api.v1.users import (
     erase_db_user,
     erase_user,
+    patch_user_department,
     patch_user,
     patch_user_role,
     patch_user_tier,
+    read_user_department,
     read_user,
     read_user_rate_limits,
     read_user_role,
@@ -17,7 +19,7 @@ from src.app.api.v1.users import (
     read_users,
     write_user,
 )
-from src.app.schemas.user import UserCreate, UserRead, UserRoleUpdate, UserTierUpdate, UserUpdate
+from src.app.schemas.user import UserCreate, UserDepartmentUpdate, UserRead, UserRoleUpdate, UserTierUpdate, UserUpdate
 
 
 def unwrap_endpoint(endpoint):
@@ -156,6 +158,31 @@ class TestUserRoleEndpoints:
 
         assert result == {"message": "User role updated"}
         mock_service.update_user_role.assert_awaited_once_with(db=mock_db, user_uuid=user_uuid, values=role_update)
+
+
+class TestUserDepartmentEndpoints:
+    @pytest.mark.asyncio
+    async def test_read_user_department_returns_none_when_user_has_no_department(self, mock_db, sample_user_read):
+        user_uuid = str(sample_user_read.uuid)
+        mock_service = Mock()
+        mock_service.get_user_department = AsyncMock(return_value=None)
+
+        result = await unwrap_endpoint(read_user_department)(Mock(), user_uuid, mock_db, mock_service)
+
+        assert result is None
+        mock_service.get_user_department.assert_awaited_once_with(db=mock_db, user_uuid=user_uuid)
+
+    @pytest.mark.asyncio
+    async def test_patch_user_department_assigns_department(self, mock_db, sample_user_read):
+        user_uuid = str(sample_user_read.uuid)
+        department_update = UserDepartmentUpdate(department_abbreviation="AAFC")
+        mock_service = Mock()
+        mock_service.update_user_department = AsyncMock(return_value={"message": "User department updated"})
+
+        result = await unwrap_endpoint(patch_user_department)(Mock(), user_uuid, department_update, mock_db, mock_service)
+
+        assert result == {"message": "User department updated"}
+        mock_service.update_user_department.assert_awaited_once_with(db=mock_db, user_uuid=user_uuid, values=department_update)
 
 
 class TestUserNestedEndpoints:

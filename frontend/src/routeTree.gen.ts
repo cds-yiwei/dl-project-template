@@ -20,6 +20,7 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as FederalAndProvincialHolidaysRouteImport } from './routes/federal-and-provincial-holidays'
+import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthCompleteRouteImport } from './routes/auth-complete'
 import { Route as AccessRouteImport } from './routes/access'
@@ -82,6 +83,11 @@ const FederalAndProvincialHolidaysRoute =
     path: '/federal-and-provincial-holidays',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DepartmentsRoute = DepartmentsRouteImport.update({
+  id: '/departments',
+  path: '/departments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/access': typeof AccessRoute
   '/auth-complete': typeof AuthCompleteRoute
   '/dashboard': typeof DashboardRoute
+  '/departments': typeof DepartmentsRoute
   '/federal-and-provincial-holidays': typeof FederalAndProvincialHolidaysRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/access': typeof AccessRoute
   '/auth-complete': typeof AuthCompleteRoute
   '/dashboard': typeof DashboardRoute
+  '/departments': typeof DepartmentsRoute
   '/federal-and-provincial-holidays': typeof FederalAndProvincialHolidaysRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/access': typeof AccessRoute
   '/auth-complete': typeof AuthCompleteRoute
   '/dashboard': typeof DashboardRoute
+  '/departments': typeof DepartmentsRoute
   '/federal-and-provincial-holidays': typeof FederalAndProvincialHolidaysRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/access'
     | '/auth-complete'
     | '/dashboard'
+    | '/departments'
     | '/federal-and-provincial-holidays'
     | '/health'
     | '/login'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/access'
     | '/auth-complete'
     | '/dashboard'
+    | '/departments'
     | '/federal-and-provincial-holidays'
     | '/health'
     | '/login'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/access'
     | '/auth-complete'
     | '/dashboard'
+    | '/departments'
     | '/federal-and-provincial-holidays'
     | '/health'
     | '/login'
@@ -226,6 +238,7 @@ export interface RootRouteChildren {
   AccessRoute: typeof AccessRoute
   AuthCompleteRoute: typeof AuthCompleteRoute
   DashboardRoute: typeof DashboardRoute
+  DepartmentsRoute: typeof DepartmentsRoute
   FederalAndProvincialHolidaysRoute: typeof FederalAndProvincialHolidaysRoute
   HealthRoute: typeof HealthRoute
   LoginRoute: typeof LoginRoute
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FederalAndProvincialHolidaysRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/departments': {
+      id: '/departments'
+      path: '/departments'
+      fullPath: '/departments'
+      preLoaderRoute: typeof DepartmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -362,6 +382,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccessRoute: AccessRoute,
   AuthCompleteRoute: AuthCompleteRoute,
   DashboardRoute: DashboardRoute,
+  DepartmentsRoute: DepartmentsRoute,
   FederalAndProvincialHolidaysRoute: FederalAndProvincialHolidaysRoute,
   HealthRoute: HealthRoute,
   LoginRoute: LoginRoute,

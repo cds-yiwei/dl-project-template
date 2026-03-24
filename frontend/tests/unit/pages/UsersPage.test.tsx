@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { UnauthorizedRequestError } from "@/fetch";
 import { UsersPage } from "@/features/users/pages/UsersPage";
-import { useRoles, useUserManagement, useUserRole } from "@/hooks";
+import { useDepartments, useRoles, useUserDepartment, useUserManagement, useUserRole } from "@/hooks";
 
 const navigate = vi.fn((options: { replace?: boolean; search?: Record<string, string>; to: string }): Promise<void> => {
 	void options;
@@ -15,13 +15,20 @@ vi.mock("react-i18next", () => ({
 	useTranslation: (): { t: (key: string, options?: Record<string, string>) => string } => ({
 		t: (key: string, options?: Record<string, string>): string => {
 			const translations: Record<string, string> = {
+					"users.department": `Department: ${options?.["value"] ?? ""}`,
+					"users.departmentFilterLabel": "Filter departments",
+					"users.departmentLabel": "Department",
+					"users.departmentSaveAction": "Save department",
 				"users.createAction": "Create user",
 				"users.createTitle": "Create user",
+					"users.loadingDepartmentBody": "Loading department assignment.",
 				"users.editTitle": "Edit user",
 				"users.email": `Email: ${options?.["value"] ?? ""}`,
 				"users.loadingRoleBody": "Loading role assignment.",
+					"users.manageDepartmentTitle": "Assigned department",
 				"users.manageAction": "Manage user",
 				"users.manageRoleTitle": "Assigned role",
+					"users.noDepartment": "No department assigned",
 				"users.profileLink": "Open profile",
 				"users.provider": `Provider: ${options?.["value"] ?? ""}`,
 				"users.role": `Role: ${options?.["value"] ?? ""}`,
@@ -99,7 +106,9 @@ vi.mock("@/hooks", () => ({
 		setSearchDraft: vi.fn(),
 	})),
 	useRoles: vi.fn(),
+	useDepartments: vi.fn(),
 	useUserManagement: vi.fn(),
+	useUserDepartment: vi.fn(),
 	useUserRole: vi.fn(),
 }));
 
@@ -120,9 +129,11 @@ describe("UsersPage", () => {
 					{
 						"auth_provider": "gc-sso",
 						"auth_subject": "subject-123",
+						"department_abbreviation": "AAFC",
 						email: "jane@example.com",
 						name: "Jane Doe",
 						"profile_image_url": "https://example.com/jane.png",
+						"department_uuid": "department-uuid-1",
 						"role_uuid": "role-uuid-3",
 						"tier_uuid": "tier-uuid-3",
 						uuid: "user-uuid-7",
@@ -138,9 +149,11 @@ describe("UsersPage", () => {
 				{
 					"auth_provider": "gc-sso",
 					"auth_subject": "subject-123",
+					"department_abbreviation": "AAFC",
 					email: "jane@example.com",
 					name: "Jane Doe",
 					"profile_image_url": "https://example.com/jane.png",
+					"department_uuid": "department-uuid-1",
 					"role_uuid": "role-uuid-3",
 					"tier_uuid": "tier-uuid-3",
 					uuid: "user-uuid-7",
@@ -164,6 +177,50 @@ describe("UsersPage", () => {
 			},
 			roles: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" }],
 		});
+		const department = {
+			abbreviation: "AAFC",
+			abbreviation_fr: "AAC",
+			created_at: "2026-03-23T00:00:00Z",
+			gc_org_id: 42,
+			lead_department_name: "Agriculture and Agri-Food Canada",
+			lead_department_name_fr: "Agriculture et Agroalimentaire Canada",
+			name: "Engineering",
+			name_fr: "Ingenierie",
+			uuid: "department-uuid-1",
+		};
+		const secondDepartment = {
+			abbreviation: "FIN",
+			abbreviation_fr: "FIN",
+			created_at: "2026-03-23T00:00:00Z",
+			gc_org_id: 108,
+			lead_department_name: "Department of Finance Canada",
+			lead_department_name_fr: "Ministere des Finances Canada",
+			name: "Finance",
+			name_fr: "Finances",
+			uuid: "department-uuid-2",
+		};
+		vi.mocked(useDepartments).mockReturnValue({
+			error: null,
+			isLoading: false,
+			itemsPerPage: 200,
+			page: 1,
+			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
+			response: {
+				data: [department, secondDepartment],
+				"has_more": false,
+				"items_per_page": 200,
+				page: 1,
+				"total_count": 2,
+			},
+			departments: [department, secondDepartment],
+		});
+		vi.mocked(useUserDepartment).mockReturnValue({
+			department,
+			error: null,
+			isLoading: false,
+			isUpdating: false,
+			updateUserDepartment: vi.fn((): Promise<void> => Promise.resolve()),
+		});
 		vi.mocked(useUserRole).mockReturnValue({
 			error: null,
 			isLoading: false,
@@ -182,12 +239,24 @@ describe("UsersPage", () => {
 		expect(screen.getByRole("heading", { name: /create user/i })).toBeTruthy();
 
 		fireEvent.click(screen.getByRole("button", { name: /manage user/i }));
+		expect(useDepartments).toHaveBeenCalledWith(1, 200);
 		expect(screen.getByRole("heading", { name: /edit user/i })).toBeTruthy();
 		expect(screen.getByRole("heading", { name: /assigned role/i })).toBeTruthy();
+		expect(screen.getByRole("heading", { name: /assigned department/i })).toBeTruthy();
+		expect(screen.getByLabelText(/filter departments/i)).toBeTruthy();
+		expect(screen.getByRole("option", { name: /engineering/i })).toBeTruthy();
+		expect(screen.getByRole("option", { name: /finance/i })).toBeTruthy();
+		fireEvent.input(screen.getByLabelText(/filter departments/i), { target: { value: "fin" } });
+		expect(screen.queryByRole("option", { name: /engineering/i })).toBeNull();
+		expect(screen.getByRole("option", { name: /finance/i })).toBeTruthy();
 		expect(screen.getByRole("button", { name: /save role/i })).toBeTruthy();
+		expect(screen.getByRole("button", { name: /save department/i })).toBeTruthy();
 		fireEvent.input(screen.getByLabelText(/users.roleLabel/i), { target: { value: "role-uuid-3" } });
 		fireEvent.click(screen.getByRole("button", { name: /save role/i }));
+		fireEvent.input(screen.getByLabelText(/^department$/i), { target: { value: "FIN" } });
+		fireEvent.click(screen.getByRole("button", { name: /save department/i }));
 		expect(vi.mocked(useUserRole).mock.results[0]?.value.updateUserRole).toHaveBeenCalledWith("user-uuid-7", { role_uuid: "role-uuid-3" });
+		expect(vi.mocked(useUserDepartment).mock.results[0]?.value.updateUserDepartment).toHaveBeenCalledWith("user-uuid-7", { department_abbreviation: "FIN" });
 	});
 
 	it("does not render a generic error notice for unauthorized hook errors", () => {
@@ -213,6 +282,22 @@ describe("UsersPage", () => {
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: null,
 			roles: [],
+		});
+		vi.mocked(useDepartments).mockReturnValue({
+			error: null,
+			isLoading: false,
+			itemsPerPage: 10,
+			page: 1,
+			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
+			response: null,
+			departments: [],
+		});
+		vi.mocked(useUserDepartment).mockReturnValue({
+			department: null,
+			error: null,
+			isLoading: false,
+			isUpdating: false,
+			updateUserDepartment: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 		vi.mocked(useUserRole).mockReturnValue({
 			error: null,

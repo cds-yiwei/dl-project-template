@@ -6,6 +6,8 @@ import { requestJson } from "./request-json";
 export type UserRead = {
 	auth_provider: string | null;
 	auth_subject: string | null;
+	department_abbreviation?: string | null;
+	department_uuid?: string | null;
 	email: string;
 	name: string;
 	profile_image_url: string | null;

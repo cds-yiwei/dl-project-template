@@ -5,7 +5,7 @@ import { CenteredPageLayout } from "@/components/layout";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { Button, ConfirmDialog, DataTable, Heading, Input, Modal, Notice, Pagination, Select, Text } from "@/components/ui";
 import { getRequestErrorNotice } from "@/fetch";
-import { useAdminListState, useRoles, useUserManagement, useUserRole } from "@/hooks";
+import { useAdminListState, useDepartments, useRoles, useUserDepartment, useUserManagement, useUserRole } from "@/hooks";
 import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
 
 type CreateUserFormState = {
@@ -34,13 +34,13 @@ const emptyEditForm: EditUserFormState = {
 	username: "",
 };
 
+const departmentPickerItemsPerPage = 200;
+
 type UserTableRow = {
+	departmentName: string;
 	email: string;
-	name: string;
 	provider: string;
-	roleName: string;
 	uuid: string;
-	username: string;
 };
 
 export const UsersPage = (): FunctionComponent => {
@@ -59,13 +59,23 @@ export const UsersPage = (): FunctionComponent => {
 		updateUser,
 		users,
 	} = useUserManagement(page, itemsPerPage);
+	const { departments, error: departmentsError, isLoading: isDepartmentsLoading } = useDepartments(1, departmentPickerItemsPerPage);
 	const { error: rolesError, isLoading: isRolesLoading, roles } = useRoles();
 	const [createForm, setCreateForm] = useState<CreateUserFormState>(emptyCreateForm);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [departmentFilter, setDepartmentFilter] = useState("");
 	const [editForm, setEditForm] = useState<EditUserFormState>(emptyEditForm);
+	const [selectedDepartmentAbbreviation, setSelectedDepartmentAbbreviation] = useState<string>("");
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
 	const [selectedRoleUuid, setSelectedRoleUuid] = useState<string>("");
 	const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
+	const {
+		department,
+		error: userDepartmentError,
+		isLoading: isUserDepartmentLoading,
+		isUpdating: isUpdatingDepartment,
+		updateUserDepartment,
+	} = useUserDepartment(modalMode === "edit" ? selectedUsername : null);
 	const {
 		error: userRoleError,
 		isLoading: isUserRoleLoading,
@@ -74,29 +84,54 @@ export const UsersPage = (): FunctionComponent => {
 		updateUserRole,
 	} = useUserRole(modalMode === "edit" ? selectedUsername : null);
 	const selectedUser = users.find((user) => user.uuid === selectedUsername) ?? null;
+	const currentDepartmentName = department?.name ?? t("users.noDepartment");
 	const currentRoleName = role?.name ?? t("users.noRole");
-	const combinedError = error ?? rolesError ?? userRoleError;
+	const combinedError = error ?? departmentsError ?? rolesError ?? userDepartmentError ?? userRoleError;
 	const errorNotice = getRequestErrorNotice(combinedError, {
 		bodyKey: "users.errorBody",
 		titleKey: "users.errorTitle",
 	});
-	const isBusy = isLoading || isRolesLoading;
-	const userRows: Array<UserTableRow> = users.map((user) => ({
-		email: user.email,
-		name: user.name,
-		provider: user.auth_provider ?? t("users.noProvider"),
-		roleName: roles.find((entry) => entry.uuid === user.role_uuid)?.name ?? (user.role_uuid == null ? t("users.noRole") : t("users.manageRoleTitle")),
-		uuid: user.uuid,
-		username: user.username,
-	}));
+	const isBusy = isLoading || isDepartmentsLoading || isRolesLoading;
+	const normalizedDepartmentFilter = departmentFilter.trim().toLowerCase();
+	const assignableDepartments = departments.filter((entry) => entry.abbreviation);
+	const filteredDepartments = assignableDepartments.filter((entry) => {
+		if (normalizedDepartmentFilter.length === 0) {
+			return true;
+		}
+
+		const searchableFields = [
+			entry.abbreviation,
+			entry.abbreviation_fr,
+			entry.name,
+			entry.name_fr,
+		].filter((value): value is string => value !== null);
+
+		return searchableFields.some((value) => value.toLowerCase().includes(normalizedDepartmentFilter));
+	});
+	const userRows: Array<UserTableRow> = users.map((user) => {
+		let departmentName = t("users.noDepartment");
+		if (user.department_abbreviation) {
+			departmentName = departments.find((entry) => entry.abbreviation === user.department_abbreviation)?.name || t("users.noDepartment");
+		} else if (user.department_uuid) {
+			departmentName = departments.find((entry) => entry.uuid === user.department_uuid)?.name || t("users.noDepartment");
+		}
+		return {
+			departmentName,
+			email: user.email,
+			provider: user.auth_provider ?? t("users.noProvider"),
+			uuid: user.uuid,
+		};
+	});
 	const userColumns: Array<DataTableColumn<UserTableRow>> = [
-		{ field: "name", headerName: t("users.nameLabel"), pinned: "left" },
-		{ field: "username", headerName: t("users.usernameLabel") },
-		{ field: "email", headerName: t("users.emailLabel") },
-		{ field: "provider", headerName: "Provider" },
-		{ field: "roleName", headerName: t("users.roleLabel") },
+		{ field: "email", headerName: t("users.emailLabel"), pinned: "left" },
+		{ field: "departmentName", headerName: t("users.departmentLabel") },
+		{ field: "provider", headerName: t("users.provider") },
 	];
 	const totalPages = response ? Math.max(1, Math.ceil(response.total_count / response.items_per_page)) : 1;
+
+	useEffect(() => {
+		setSelectedDepartmentAbbreviation(selectedUser?.department_abbreviation ?? "");
+	}, [selectedUser]);
 
 	useEffect(() => {
 		setSelectedRoleUuid(selectedUser?.role_uuid ?? "");
@@ -112,8 +147,10 @@ export const UsersPage = (): FunctionComponent => {
 		}
 
 		setDeleteDialogOpen(false);
+		setDepartmentFilter("");
 		setEditForm(emptyEditForm);
 		setModalMode(null);
+		setSelectedDepartmentAbbreviation("");
 		setSelectedRoleUuid("");
 		setSelectedUsername(null);
 	}, [deleteDialogOpen, modalMode, selectedUsername, users]);
@@ -121,8 +158,10 @@ export const UsersPage = (): FunctionComponent => {
 	const closeModal = (): void => {
 		setModalMode(null);
 		setCreateForm(emptyCreateForm);
+		setDepartmentFilter("");
 		setDeleteDialogOpen(false);
 		setEditForm(emptyEditForm);
+		setSelectedDepartmentAbbreviation("");
 		setSelectedRoleUuid("");
 		setSelectedUsername(null);
 	};
@@ -131,6 +170,8 @@ export const UsersPage = (): FunctionComponent => {
 		releaseActiveElementFocus();
 		setCreateForm(emptyCreateForm);
 		setSelectedUsername(null);
+		setSelectedDepartmentAbbreviation("");
+		setDepartmentFilter("");
 		setSelectedRoleUuid("");
 		setModalMode("create");
 	};
@@ -148,6 +189,7 @@ export const UsersPage = (): FunctionComponent => {
 			name: user.name,
 			username: user.username,
 		});
+		setDepartmentFilter("");
 		setSelectedUsername(user.uuid);
 		setModalMode("edit");
 	};
@@ -176,6 +218,17 @@ export const UsersPage = (): FunctionComponent => {
 		await deleteUser(selectedUser.uuid);
 		setPage(1);
 		closeModal();
+	};
+
+	const handleSaveDepartment = async (): Promise<void> => {
+		if (!selectedUser) {
+			return;
+		}
+
+		await updateUserDepartment(selectedUser.uuid, {
+			department_abbreviation: selectedDepartmentAbbreviation.length > 0 ? selectedDepartmentAbbreviation : null,
+		});
+		setPage(1);
 	};
 
 	const handleSaveRole = async (): Promise<void> => {
@@ -309,6 +362,27 @@ export const UsersPage = (): FunctionComponent => {
 							<Input inputId="edit-user-email" label={t("users.emailLabel")} name="edit-email" onInput={(event): void => {
 								setEditForm((current) => ({ ...current, email: event.target.value }));
 							}} type="email" value={editForm.email} />
+						</div>
+						<div className="grid gap-200 border-t border-[var(--gcds-border-default)] pt-250">
+							<Heading tag="h2">{t("users.manageDepartmentTitle")}</Heading>
+							{isUserDepartmentLoading ? <Text>{t("users.loadingDepartmentBody")}</Text> : null}
+							<Text>{t("users.department", { value: currentDepartmentName })}</Text>
+							<Input inputId="user-department-filter" label={t("users.departmentFilterLabel")} name="department-filter" onInput={(event): void => {
+								setDepartmentFilter(event.target.value);
+							}} value={departmentFilter} />
+							<Select label={t("users.departmentLabel")} name="department" onInput={(event): void => {
+								setSelectedDepartmentAbbreviation(event.target.value);
+							}} selectId="user-department-select" value={selectedDepartmentAbbreviation}>
+								<option value="">{t("users.noDepartment")}</option>
+								{filteredDepartments.map((entry) => (
+									<option key={entry.uuid} value={entry.abbreviation ?? ""}>{`${entry.abbreviation ?? ""} - ${entry.name}`}</option>
+								))}
+							</Select>
+							<Button buttonId="save-user-department-action" disabled={isUpdatingDepartment || isUserDepartmentLoading} onGcdsClick={() => {
+								void handleSaveDepartment();
+							}} type="button">
+								{isUpdatingDepartment ? t("users.savingDepartmentAction") : t("users.departmentSaveAction")}
+							</Button>
 						</div>
 						<div className="grid gap-200 border-t border-[var(--gcds-border-default)] pt-250">
 							<Heading tag="h2">{t("users.manageRoleTitle")}</Heading>

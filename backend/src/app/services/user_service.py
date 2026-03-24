@@ -6,15 +6,17 @@ from fastcrud import compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions.http_exceptions import DuplicateValueException, ForbiddenException, NotFoundException
+from ..crud.crud_departments import crud_departments
 from ..core.security import blacklist_token, get_password_hash
 from ..crud.crud_roles import crud_roles
 from ..crud.crud_rate_limit import crud_rate_limits
 from ..crud.crud_tier import crud_tiers
 from ..crud.crud_users import crud_users
+from ..schemas.department import DepartmentRead
 from ..schemas.rate_limit import RateLimitRead
 from ..schemas.role import RoleRead
 from ..schemas.tier import TierRead
-from ..schemas.user import UserCreate, UserCreateInternal, UserRead, UserReadInternal, UserRoleUpdate, UserTierUpdate, UserUpdate
+from ..schemas.user import UserCreate, UserCreateInternal, UserDepartmentUpdate, UserRead, UserReadInternal, UserRoleUpdate, UserTierUpdate, UserUpdate
 
 
 class UserService:
@@ -134,6 +136,28 @@ class UserService:
             raise NotFoundException("Role not found")
         return dict(db_role)
 
+    async def get_user_department(self, db: AsyncSession, user_uuid: uuid_pkg.UUID | str) -> dict[str, Any] | None:
+        db_user = await self._get_user(db=db, user_uuid=user_uuid, include_deleted=False)
+        if db_user.get("department_id") is None:
+            return None
+
+        db_department = await crud_departments.get(
+            db=db,
+            id=db_user["department_id"],
+            is_deleted=False,
+            schema_to_select=DepartmentRead,
+        )
+        if db_department is None:
+            raise NotFoundException("Department not found")
+
+        user_dict = await self._build_public_user(db=db, user=dict(db_user))
+        user_dict["department_abbreviation"] = db_department["abbreviation"]
+        user_dict["department_abbreviation_fr"] = db_department["abbreviation_fr"]
+        user_dict["department_uuid"] = db_department["uuid"]
+        user_dict["department_name"] = db_department["name"]
+        user_dict["department_created_at"] = db_department["created_at"]
+        return user_dict
+
     async def update_user_role(self, db: AsyncSession, user_uuid: uuid_pkg.UUID | str, values: UserRoleUpdate) -> dict[str, str]:
         await self._get_user(db=db, user_uuid=user_uuid, include_deleted=False)
         role_id: int | None = None
@@ -155,6 +179,23 @@ class UserService:
         await crud_users.update(db=db, object={"tier_id": db_tier["id"]}, uuid=user_uuid)
         return {"message": f"User {db_user['name']} Tier updated"}
 
+    async def update_user_department(self, db: AsyncSession, user_uuid: uuid_pkg.UUID | str, values: UserDepartmentUpdate) -> dict[str, str]:
+        db_user = await self._get_user(db=db, user_uuid=user_uuid, include_deleted=False)
+        department_id: int | None = None
+        if values.department_abbreviation is not None:
+            db_department = await crud_departments.get(
+                db=db,
+                abbreviation=values.department_abbreviation,
+                is_deleted=False,
+                schema_to_select=DepartmentRead,
+            )
+            if db_department is None:
+                raise NotFoundException("Department not found")
+            department_id = db_department["id"]
+
+        await crud_users.update(db=db, object={"department_id": department_id}, uuid=user_uuid)
+        return {"message": f"User {db_user['name']} department updated"}
+
     async def _get_user(self, db: AsyncSession, user_uuid: uuid_pkg.UUID | str, include_deleted: bool) -> Mapping[str, Any]:
         query: dict[str, Any] = {"db": db, "uuid": user_uuid, "schema_to_select": UserReadInternal}
         if not include_deleted:
@@ -169,6 +210,8 @@ class UserService:
         public_user = {
             "auth_provider": user.get("auth_provider"),
             "auth_subject": user.get("auth_subject"),
+            "department_abbreviation": None,
+            "department_uuid": None,
             "email": user["email"],
             "name": user["name"],
             "profile_image_url": user["profile_image_url"],
@@ -177,8 +220,22 @@ class UserService:
             "uuid": user["uuid"],
             "username": user["username"],
         }
+        department_id = user.get("department_id")
         role_id = user.get("role_id")
         tier_id = user.get("tier_id")
+
+        if department_id is None:
+            public_user["department_abbreviation"] = None
+            public_user["department_uuid"] = None
+        else:
+            db_department = await crud_departments.get(
+                db=db,
+                id=department_id,
+                is_deleted=False,
+                schema_to_select=DepartmentRead,
+            )
+            public_user["department_abbreviation"] = None if db_department is None else db_department["abbreviation"]
+            public_user["department_uuid"] = None if db_department is None else db_department["uuid"]
 
         if role_id is None:
             public_user["role_uuid"] = None

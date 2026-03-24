@@ -12,6 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DEFAULT_POLICIES = [
+    ("admin", "departments", "read"),
+    ("admin", "departments", "write"),
     ("admin", "tiers", "read"),
     ("admin", "tiers", "write"),
     ("admin", "rate_limits", "read"),

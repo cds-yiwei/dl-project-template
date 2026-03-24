@@ -18,6 +18,7 @@ export const Home = (): FunctionComponent => {
 		{ href: "/posts", label: t("home.postsPageLink") },
 		{ href: "/access", label: t("home.accessPageLink") },
 		{ href: "/users", label: t("home.usersPageLink") },
+		{ href: "/departments", label: t("home.departmentsPageLink") },
 		{ href: "/policies", label: t("home.policiesPageLink") },
 		{ href: "/roles", label: t("home.rolesPageLink") },
 		{ href: "/tiers", label: t("home.tiersPageLink") },

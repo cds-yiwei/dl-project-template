@@ -5,6 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from ..schemas.department import DepartmentRead
 from ..schemas.rate_limit import RateLimitRead
 
 
@@ -20,12 +21,15 @@ class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
     auth_provider: str | None = None
     auth_subject: str | None = None
     is_superuser: bool = False
+    department_id: int | None = None
     role_id: int | None = None
     tier_id: int | None = None
 
 
 class UserRead(BaseModel):
     uuid: uuid_pkg.UUID
+    department_abbreviation: str | None = None
+    department_uuid: uuid_pkg.UUID | None = None
     role_uuid: uuid_pkg.UUID | None = None
     tier_uuid: uuid_pkg.UUID | None = None
 
@@ -39,6 +43,7 @@ class UserRead(BaseModel):
 
 class UserReadInternal(UserRead):
     id: int
+    department_id: int | None = None
     role_id: int | None = None
     tier_id: int | None = None
 
@@ -46,6 +51,12 @@ class UserReadInternal(UserRead):
 class UserTierRead(UserRead):
     tier_name: str
     tier_created_at: datetime
+
+
+class UserDepartmentRead(UserRead):
+    department_abbreviation_fr: str | None = None
+    department_name: str
+    department_created_at: datetime
 
 
 class UserRateLimitsRead(UserRead):
@@ -96,6 +107,12 @@ class UserTierUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     tier_uuid: uuid_pkg.UUID
+
+
+class UserDepartmentUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    department_abbreviation: Annotated[str | None, Field(default=None, min_length=2, max_length=16)]
 
 
 class UserDelete(BaseModel):

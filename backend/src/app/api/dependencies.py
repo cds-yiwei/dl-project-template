@@ -12,9 +12,11 @@ from ..core.utils.rate_limit import rate_limiter
 from ..crud.crud_rate_limit import crud_rate_limits
 from ..crud.crud_tier import crud_tiers
 from ..crud.crud_users import crud_users
+from ..crud.crud_departments import crud_departments
 from ..schemas.rate_limit import sanitize_path
 from ..services import (
     AuthService,
+    DepartmentService,
     HealthService,
     OidcService,
     PolicyService,
@@ -42,6 +44,10 @@ def get_user_service() -> UserService:
 
 def get_role_service() -> RoleService:
     return RoleService()
+
+
+def get_department_service() -> DepartmentService:
+	return DepartmentService()
 
 
 def get_tier_service() -> TierService:

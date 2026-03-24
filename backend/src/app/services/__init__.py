@@ -1,4 +1,5 @@
 from .auth_service import AuthService
+from .department_service import DepartmentService
 from .health_service import HealthService
 from .oidc_service import OidcService
 from .post_service import PostService

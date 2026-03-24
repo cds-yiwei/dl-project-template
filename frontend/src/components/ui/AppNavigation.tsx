@@ -42,6 +42,7 @@ const AppNavigation = (): FunctionComponent => {
 		{ href: "/posts", label: t("nav.posts") },
 		{ href: "/access", label: t("nav.access") },
 		{ href: "/users", label: t("nav.users") },
+		{ href: "/departments", label: t("nav.departments") },
 		{ href: "/policies", label: t("nav.policies") },
 		{ href: "/roles", label: t("nav.roles") },
 		{ href: "/tiers", label: t("nav.tiers") },
