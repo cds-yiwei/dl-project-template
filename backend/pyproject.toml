@@ -107,6 +107,7 @@ convention = "numpy"
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::PendingDeprecationWarning:starlette.formparsers",
+    "ignore::pydantic.warnings.UnsupportedFieldAttributeWarning",
 ]
 
 [dependency-groups]
