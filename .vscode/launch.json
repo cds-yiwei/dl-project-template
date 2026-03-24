@@ -17,7 +17,7 @@
             ],
             "envFile": "${workspaceFolder}/backend/src/.env",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}/backend"
+                "PYTHONPATH": "${workspaceFolder}/.venv/bin"
             },
             "justMyCode": true
         }

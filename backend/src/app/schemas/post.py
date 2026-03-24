@@ -34,16 +34,16 @@ class PostRead(PostBase):
     uuid: uuid_pkg.UUID
     title: str = Field(..., min_length=2, max_length=30, examples=["This is my post"])
     text: str = Field(..., min_length=1, max_length=63206, examples=["This is the content of my post."])
-    media_url: str | None = Field(None, examples=["https://www.postimageurl.com"], alias="mediaUrl")
-    created_by_user_id: int = Field(alias="createdByUserId")
+    media_url: str | None = Field(None, examples=["https://www.postimageurl.com"], )
+    created_by_user_id: int = Field()
     status: PostStatus = PostStatus.DRAFT
-    created_at: datetime = Field(alias="createdAt")
+    created_at: datetime = Field()
 
 
 class PostCreate(PostBase):
     model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
-    media_url: str | None = Field(None, pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], alias="mediaUrl")
+    media_url: str | None = Field(None, pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], )
 
 
 class PostCreateInternal(PostCreate):
@@ -71,7 +71,7 @@ class PostUpdate(PostBase):
 
     title: str | None = Field(None, min_length=2, max_length=30, examples=["This is my updated post"])
     text: str | None = Field(None, min_length=1, max_length=63206, examples=["This is the updated content of my post."])
-    media_url: str | None = Field(None, pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], alias="mediaUrl")
+    media_url: str | None = Field(None, pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.postimageurl.com"], )
 
 
 class PostUpdateInternal(PostUpdate):
