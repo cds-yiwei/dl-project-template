@@ -24,7 +24,7 @@ class RateLimitBase(BaseModel):
 
 
 class RateLimit(TimestampSchema, RateLimitBase):
-    tier_id: int = Field()
+    tier_id: int = Field(alias="tierId")
     name: str | None = Field(None, examples=["users:5:60"])
 
 

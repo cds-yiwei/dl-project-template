@@ -12,8 +12,8 @@ class PostApprovalCreateInternal(BaseModel):
     model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
     post_id: int
-    submitted_by_user_id: int = Field()
-    reviewed_by_user_id: int | None = Field(None, )
+    submitted_by_user_id: int = Field(alias="submittedByUserId")
+    reviewed_by_user_id: int | None = Field(None, alias="reviewedByUserId")
     from_status: str = Field(..., max_length=32)
     to_status: str = Field(..., max_length=32)
     decision: str = Field(..., max_length=32)
@@ -24,8 +24,8 @@ class PostApprovalRead(TimestampSchema, UUIDSchema, PersistentDeletion):
     model_config = ConfigDict(from_attributes=True, validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
 
     post_id: int
-    submitted_by_user_id: int = Field()
-    reviewed_by_user_id: int | None = Field(None, )
+    submitted_by_user_id: int = Field(alias="submittedByUserId")
+    reviewed_by_user_id: int | None = Field(None, alias="reviewedByUserId")
     from_status: str
     to_status: str
     decision: str

@@ -20,7 +20,7 @@ class TierRead(TierBase):
     
     id: int
     uuid: uuid_pkg.UUID
-    created_at: datetime = Field()
+    created_at: datetime = Field(alias="createdAt")
 
 
 class TierCreate(TierBase):
