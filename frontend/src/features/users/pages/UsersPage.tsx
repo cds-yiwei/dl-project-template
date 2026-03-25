@@ -131,7 +131,7 @@ export const UsersPage = (): FunctionComponent => {
 		   departmentName = departments.find((entry) => entry.uuid === u.departmentUuid)?.name || t("users.noDepartment");
 	   }
 	   const email = String(u.email ?? "");
-	const provider = String(u.authProvider ?? (u as any).auth_provider ?? t("users.noProvider"));
+	   const provider = String(u.authProvider ?? t("users.noProvider"));
 	   const uuid = String(u.uuid ?? "");
 	   return {
 		   departmentName,

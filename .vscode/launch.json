@@ -15,7 +15,7 @@
                 "8000",
                 "--reload"
             ],
-            "envFile": "${workspaceFolder}/backend/src/.env",
+            "envFile": "${workspaceFolder}/backend/.env",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/backend"
             },
