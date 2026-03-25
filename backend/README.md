@@ -1,22 +1,8 @@
-<h1 align="center"> Benav Labs FastAPI boilerplate</h1>
+<h1 align="center">FastAPI boilerplate</h1>
 <p align="center" markdown=1>
   <i><b>Batteries-included FastAPI starter</b> with production-ready defaults, optional modules, and clear docs.</i>
 </p>
 
-<p align="center">
-  <a href="https://fastapi.tiangolo.com">
-      <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI">
-  </a>
-  <a href="https://www.postgresql.org">
-      <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  </a>
-  <a href="https://redis.io">
-      <img src="https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=fff&style=for-the-badge" alt="Redis">
-  </a>
-  <a href="https://deepwiki.com/benavlabs/FastAPI-boilerplate">
-      <img src="https://img.shields.io/badge/DeepWiki-1F2937?style=for-the-badge&logoColor=white" alt="DeepWiki">
-  </a>
-</p>
 
 ## Features
 
@@ -27,7 +13,6 @@
 * 🛂 Casbin authorization with `casbin-fastapi-decorator`
 * 👮 Rate limiter + tiers (free/pro/etc.)
 * 🧰 FastCRUD for efficient CRUD & pagination
-* 🧑‍💼 Admin panel removed — CRUDAdmin is no longer included. FastCRUD remains as the data access layer for efficient CRUD & pagination.
 * 🚦 ARQ background jobs (Redis)
 * 🧊 Redis caching (server + client-side headers)
 * 🌐 Configurable CORS middleware for frontend integration

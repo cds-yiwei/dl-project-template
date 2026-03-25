@@ -1,8 +1,4 @@
-# Benav Labs FastAPI Boilerplate
-
-<p align="center">
-  <img src="assets/FastAPI-boilerplate.png" alt="Purple Rocket with FastAPI Logo as its window." width="35%" height="auto">
-</p>
+# FastAPI Boilerplate
 
 <p align="center">
   <i>A production-ready FastAPI boilerplate to speed up your development.</i>
@@ -13,23 +9,6 @@
     
     Better documentation, examples, and guides are actively being developed. Contributions and feedback are greatly appreciated!
 
-<p align="center">
-  <a href="https://fastapi.tiangolo.com">
-      <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI">
-  </a>
-  <a href="https://docs.pydantic.dev/2.4/">
-      <img src="https://img.shields.io/badge/Pydantic-E92063?logo=pydantic&logoColor=fff&style=for-the-badge" alt="Pydantic">
-  </a>
-  <a href="https://www.postgresql.org">
-      <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  </a>
-  <a href="https://redis.io">
-      <img src="https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=fff&style=for-the-badge" alt="Redis">
-  </a>
-  <a href="https://docs.docker.com/compose/">
-      <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff&style=for-the-badge" alt="Docker">
-  </a>
-</p>
 
 ## What is FastAPI Boilerplate?
 
@@ -114,13 +93,3 @@ That's it! Your API will be available at `http://localhost:8000/docs`
 - **Microservices** - Create microservice architectures
 - **SaaS Applications** - Multi-tenant applications with user tiers
 - **Data APIs** - APIs for data processing and analytics
-
-## Community & Support
-
-- **[Discord Community](community.md)** - Join our Discord server to connect with other developers
-- **[GitHub Issues](https://github.com/benavlabs/fastapi-boilerplate/issues)** - Bug reports and feature requests
-
-<hr>
-<a href="https://benav.io">
-  <img src="https://github.com/benavlabs/fastcrud/raw/main/docs/assets/benav_labs_banner.png" alt="Powered by Benav Labs - benav.io"/>
-</a>
