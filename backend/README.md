@@ -27,7 +27,7 @@
 * 🛂 Casbin authorization with `casbin-fastapi-decorator`
 * 👮 Rate limiter + tiers (free/pro/etc.)
 * 🧰 FastCRUD for efficient CRUD & pagination
-* 🧑‍💼 **CRUDAdmin**: minimal admin panel (optional)
+* 🧑‍💼 Admin panel removed — CRUDAdmin is no longer included. FastCRUD remains as the data access layer for efficient CRUD & pagination.
 * 🚦 ARQ background jobs (Redis)
 * 🧊 Redis caching (server + client-side headers)
 * 🌐 Configurable CORS middleware for frontend integration
