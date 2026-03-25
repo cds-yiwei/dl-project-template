@@ -32,10 +32,10 @@ class UUIDSchema(BaseModel):
 
 
 class TimestampSchema(BaseModel):
-    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
     
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None), alias="createdAt")
-    updated_at: datetime | None = Field(default=None, alias="updatedAt")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at: datetime | None = Field(default=None)
 
     @field_serializer("created_at")
     def serialize_dt(self, created_at: datetime | None, _info: Any) -> str | None:
@@ -53,10 +53,10 @@ class TimestampSchema(BaseModel):
 
 
 class PersistentDeletion(BaseModel):
-    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
     
-    deleted_at: datetime | None = Field(default=None, alias="deletedAt")
-    is_deleted: bool = Field(default=False, alias="isDeleted")
+    deleted_at: datetime | None = Field(default=None)
+    is_deleted: bool = Field(default=False)
 
     @field_serializer("deleted_at")
     def serialize_dates(self, deleted_at: datetime | None, _info: Any) -> str | None:

@@ -24,19 +24,19 @@ class RateLimitBase(BaseModel):
 
 
 class RateLimit(TimestampSchema, RateLimitBase):
-    tier_id: int = Field(alias="tierId")
+    tier_id: int
     name: str | None = Field(None, examples=["users:5:60"])
 
 
 class RateLimitRead(RateLimitBase):
-    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
     id: int
     uuid: uuid_pkg.UUID
     name: str
 
 
 class RateLimitCreate(RateLimitBase):
-    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
 
     name: str | None = Field(None, examples=["api_v1_users:5:60"])
 

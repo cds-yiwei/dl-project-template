@@ -22,4 +22,4 @@ class AccessPolicyOut(BaseModel):
     resource: str
     action: str
 
-    model_config = ConfigDict(from_attributes=True, validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)

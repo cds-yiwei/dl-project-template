@@ -16,11 +16,11 @@ class Tier(TimestampSchema, TierBase):
 
 
 class TierRead(TierBase):
-    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
     
     id: int
     uuid: uuid_pkg.UUID
-    created_at: datetime = Field(alias="createdAt")
+    created_at: datetime
 
 
 class TierCreate(TierBase):

@@ -9,11 +9,11 @@ from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 
 
 class PostApprovalCreateInternal(BaseModel):
-    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
 
     post_id: int
-    submitted_by_user_id: int = Field(alias="submittedByUserId")
-    reviewed_by_user_id: int | None = Field(None, alias="reviewedByUserId")
+    submitted_by_user_id: int
+    reviewed_by_user_id: int | None = None
     from_status: str = Field(..., max_length=32)
     to_status: str = Field(..., max_length=32)
     decision: str = Field(..., max_length=32)
@@ -21,11 +21,11 @@ class PostApprovalCreateInternal(BaseModel):
 
 
 class PostApprovalRead(TimestampSchema, UUIDSchema, PersistentDeletion):
-    model_config = ConfigDict(from_attributes=True, validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(from_attributes=True, validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
 
     post_id: int
-    submitted_by_user_id: int = Field(alias="submittedByUserId")
-    reviewed_by_user_id: int | None = Field(None, alias="reviewedByUserId")
+    submitted_by_user_id: int
+    reviewed_by_user_id: int | None = None
     from_status: str
     to_status: str
     decision: str
@@ -33,7 +33,7 @@ class PostApprovalRead(TimestampSchema, UUIDSchema, PersistentDeletion):
 
 
 class PostApprovalUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
 
     reviewed_by_user_id: int | None = None
     to_status: str | None = Field(None, max_length=32)
@@ -46,7 +46,7 @@ class PostApprovalUpdateInternal(PostApprovalUpdate):
 
 
 class PostApprovalDelete(BaseModel):
-    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel)
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
 
     is_deleted: bool
     deleted_at: datetime
