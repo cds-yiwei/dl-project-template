@@ -177,27 +177,6 @@ class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_PERIOD: int = 3600
 
 
-class CRUDAdminSettings(BaseSettings):
-    CRUD_ADMIN_ENABLED: bool = True
-    CRUD_ADMIN_MOUNT_PATH: str = "/admin"
-
-    CRUD_ADMIN_ALLOWED_IPS_LIST: list[str] | None = None
-    CRUD_ADMIN_ALLOWED_NETWORKS_LIST: list[str] | None = None
-    CRUD_ADMIN_MAX_SESSIONS: int = 10
-    CRUD_ADMIN_SESSION_TIMEOUT: int = 1440
-    SESSION_SECURE_COOKIES: bool = True
-
-    CRUD_ADMIN_TRACK_EVENTS: bool = True
-    CRUD_ADMIN_TRACK_SESSIONS: bool = True
-
-    CRUD_ADMIN_REDIS_ENABLED: bool = False
-    CRUD_ADMIN_REDIS_HOST: str = "localhost"
-    CRUD_ADMIN_REDIS_PORT: int = 6379
-    CRUD_ADMIN_REDIS_DB: int = 0
-    CRUD_ADMIN_REDIS_PASSWORD: str | None = "None"
-    CRUD_ADMIN_REDIS_SSL: bool = False
-
-
 class EnvironmentOption(str, Enum):
     LOCAL = "local"
     STAGING = "staging"
@@ -229,7 +208,6 @@ class Settings(
     RedisQueueSettings,
     RedisRateLimiterSettings,
     DefaultRateLimitSettings,
-    CRUDAdminSettings,
     EnvironmentSettings,
     CORSSettings,
     FileLoggerSettings,

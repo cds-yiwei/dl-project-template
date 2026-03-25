@@ -32,7 +32,6 @@ def build_test_client() -> TestClient:
         patch("src.app.core.setup.close_redis_queue_pool", new=AsyncMock()),
         patch("src.app.core.setup.close_redis_rate_limit_pool", new=AsyncMock()),
         patch("src.app.core.setup.create_tables", new=AsyncMock()),
-        patch("src.app.main.admin", None),
     ]
 
     for ctx in stack:
