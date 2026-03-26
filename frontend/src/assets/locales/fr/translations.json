@@ -165,6 +165,7 @@
 		"departmentFilterLabel": "Filtrer les departements",
 		"departmentLabel": "Departement",
 		"departmentSaveAction": "Enregistrer le departement",
+		"departmentSavedSuccess": "Departement enregistre avec succes",
 		"email": "Courriel : {{value}}",
 		"emailLabel": "Courriel",
 		"emptyBody": "Le backend a renvoyé une page vide pour la requête actuelle des utilisateurs.",
@@ -174,7 +175,7 @@
 		"loadingDepartmentBody": "Chargement de l'attribution actuelle du departement.",
 		"loadingBody": "Chargement de la liste protégée des utilisateurs depuis le backend.",
 		"loadingTitle": "Chargement des utilisateurs",
-		"manageAction": "Gerer l'utilisateur",
+		"manageAction": "Gerer",
 		"manageDepartmentTitle": "Departement attribue",
 		"manageRoleTitle": "Roles attribues",
 		"manageUserTitle": "Utilisateur selectionne",
@@ -203,7 +204,14 @@
 		"addRoleAction": "Ajouter le role",
 		"addingRoleAction": "Ajout du role...",
 		"currentRoles": "Roles actuels",
-		"removeRole": "Supprimer"
+		"removeRole": "Supprimer",
+		"manageRolesAction": "Roles",
+		"manageRolesTitle": "Gerer les roles de {{username}}",
+		"saveRolesAction": "Enregistrer les roles",
+		"savingRolesAction": "Enregistrement des roles...",
+		"removeRoleConfirmTitle": "Supprimer le role?",
+		"removeRoleConfirmBody": "Cela supprimera le role \"{{roleName}}\" de cet utilisateur.",
+		"removingRoleAction": "Suppression..."
 	},
 	"departments": {
 		"abbreviationFrLabel": "Abreviation francaise",

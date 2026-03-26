@@ -59,7 +59,7 @@ export type DataTableToolbarAction = {
 };
 
 export type DataTableProps<Row extends Record<string, unknown>> = {
-	action?: DataTableAction<Row>;
+	action?: DataTableAction<Row> | Array<DataTableAction<Row>>;
 	columns: Array<DataTableColumn<Row>>;
 	emptyMessage?: string;
 	exportFileName?: string;
@@ -131,37 +131,48 @@ const DataTable = <Row extends Record<string, unknown>,>({
 			return baseColumns;
 		}
 
+		const actions = Array.isArray(action) ? action : [action];
+
 		return [
 			...baseColumns,
 			{
 				filter: false,
 				headerName: "Actions",
-				maxWidth: 180,
+				maxWidth: 200,
 				minWidth: 150,
 				sortable: false,
 				cellRenderer: (parameters: ICellRendererParams<Row>): ReactNode => {
-					if (!parameters.data) {
+					const rowData = parameters.data;
+
+					if (!rowData) {
 						return null;
 					}
 
-					if (action.isVisible && !action.isVisible(parameters.data)) {
+					const visibleActions = actions.filter((a) => !a.isVisible || a.isVisible(rowData));
+
+					if (visibleActions.length === 0) {
 						return null;
 					}
 
 					return (
-						<button
-							className={`government-data-table__action${action.variant === "link" ? " government-data-table__action--link" : ""}`}
-							id={action.buttonId?.(parameters.data)}
-							type="button"
-							onClick={(): void => {
-								action.onAction(parameters.data as Row);
-							}}
-						>
-							{action.buttonLabel}
-							{action.screenReaderLabel ? (
-								<span className="visibility-sr-only"> {action.screenReaderLabel(parameters.data)}</span>
-							) : null}
-						</button>
+						<div className="flex gap-100">
+							{visibleActions.map((a, index) => (
+								<button
+									key={index}
+									className={`government-data-table__action${a.variant === "link" ? " government-data-table__action--link" : ""}`}
+									id={a.buttonId?.(rowData)}
+									type="button"
+									onClick={(): void => {
+										a.onAction(rowData);
+									}}
+								>
+									{a.buttonLabel}
+									{a.screenReaderLabel ? (
+										<span className="visibility-sr-only"> {a.screenReaderLabel(rowData)}</span>
+									) : null}
+								</button>
+							))}
+						</div>
 					);
 				},
 			},

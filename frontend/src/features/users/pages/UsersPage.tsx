@@ -71,6 +71,8 @@ export const UsersPage = (): FunctionComponent => {
 	const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
 	const [selectedRoleUuid, setSelectedRoleUuid] = useState<string>("");
 	const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
+	const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
+	const [roleToRemove, setRoleToRemove] = useState<{ uuid: string; name: string } | null>(null);
 	const {
 		department,
 		error: userDepartmentError,
@@ -265,7 +267,9 @@ useEffect(() => {
 	   await updateUserDepartment(selectedUser.uuid, {
 		   departmentAbbreviation: selectedDepartmentAbbreviation.length > 0 ? selectedDepartmentAbbreviation : null,
 	   });
+	   success(t("users.departmentSavedSuccess"));
 	   setPage(1);
+	   closeModal();
 	};
 
 	const handleAddRole = async (): Promise<void> => {
@@ -277,18 +281,19 @@ useEffect(() => {
 	   success(t("users.roleAddedSuccess"));
 	   setSelectedRoleUuid("");
 	   setPage(1);
-	   closeModal();
+	   setIsRolesModalOpen(false);
 	};
 
-	const handleRemoveRole = async (roleUuid: string): Promise<void> => {
-		if (!selectedUser) {
+	const handleRemoveRole = async (): Promise<void> => {
+		if (!selectedUser || !roleToRemove) {
 			return;
 		}
 
-		await removeRole(selectedUser.uuid, roleUuid);
+		await removeRole(selectedUser.uuid, roleToRemove.uuid);
 		success(t("users.roleRemovedSuccess"));
 		setPage(1);
-		closeModal();
+		setRoleToRemove(null);
+		setIsRolesModalOpen(false);
 	};
 
 	const isModalOpen = modalMode !== null;
@@ -334,14 +339,25 @@ useEffect(() => {
 					   searchPlaceholder="Filter by name, email, provider, or role"
 					   searchQuery={searchDraft}
 					   title={t("users.title")}
-					   action={{
-						   buttonId: (row) => `manage-user-${row.uuid}`,
-						   buttonLabel: t("users.manageAction"),
-						screenReaderLabel: (row) => row.email,
-						   onAction: (row) => {
-							   openEditModal(row.uuid);
+					   action={[
+						   {
+							   buttonId: (row) => `manage-user-${row.uuid}`,
+							   buttonLabel: t("users.manageAction"),
+							   screenReaderLabel: (row) => row.email,
+							   onAction: (row): void => {
+								   openEditModal(row.uuid);
+							   },
 						   },
-					   }}
+						   {
+							   buttonId: (row) => `manage-roles-${row.uuid}`,
+							   buttonLabel: t("users.manageRolesAction"),
+							   screenReaderLabel: (row) => `Manage roles for ${row.email}`,
+							   onAction: (row): void => {
+								   setSelectedUsername(row.uuid);
+								   setIsRolesModalOpen(true);
+							   },
+						   },
+					   ]}
 					   primaryAction={{
 						   buttonId: "open-create-user-modal",
 						   buttonLabel: t("users.createAction"),
@@ -355,7 +371,7 @@ useEffect(() => {
 
 			   <Modal
 				   isOpen={isModalOpen}
-				   size="wide"
+				   size="full-width"
 				   title={modalTitle}
 				   footer={( 
 					   <>
@@ -436,40 +452,80 @@ useEffect(() => {
 								{isUpdatingDepartment ? t("users.savingDepartmentAction") : t("users.departmentSaveAction")}
 							</Button>
 						</div>
-						<div className="grid gap-200 border-t border-[var(--gcds-border-default)] pt-250">
-							<Heading tag="h2">{t("users.manageRoleTitle")}</Heading>
-							{isUserRoleLoading ? <Text>{t("users.loadingRoleBody")}</Text> : null}
-							
-							{/* Current roles list */}
-							{selectedUserRoles.length > 0 ? (
-								<div className="grid gap-100">
-									<Text>{t("users.currentRoles")}:</Text>
-									{selectedUserRoles.map((role) => (
-										<div key={role.uuid} className="flex items-center gap-100">
-											<Text>{role.name}</Text>
-											<Button
-												buttonId={`remove-role-${role.uuid}`}
-												buttonRole="danger"
-												disabled={isRemoving}
-												size="small"
-												type="button"
-												onGcdsClick={() => {
-													void handleRemoveRole(role.uuid);
-												}}
-											>
-												{t("users.removeRole")}
-											</Button>
-										</div>
-									))}
-								</div>
-							) : (
-								<Text>{t("users.noRole")}</Text>
-							)}
+					</div>
+				)}
+			</Modal>
 
-							{/* Add new role */}
-							{availableRoles.length > 0 ? (
-								<div className="grid gap-200 pt-150">
-									<Text>{t("users.addRole")}:</Text>
+			<ConfirmDialog
+				cancelLabel={t("users.cancelAction")}
+				confirmLabel={isDeleting ? t("users.deletingAction") : t("users.confirmDeleteAction")}
+				description={t("users.deleteConfirmBody", { username: selectedUser?.username ?? "" })}
+				isOpen={deleteDialogOpen}
+				isPending={isDeleting}
+				title={t("users.deleteConfirmTitle")}
+				onClose={() => {
+					setDeleteDialogOpen(false);
+				}}
+				onConfirm={() => {
+					void handleDeleteUser();
+				}}
+			/>
+
+			{/* Roles Modal */}
+			<Modal
+				isOpen={isRolesModalOpen}
+				size="wide"
+				title={selectedUser ? t("users.manageRolesTitle", { username: selectedUser.username }) : t("users.manageRolesAction")}
+				footer={(
+					<>
+						<Button buttonRole="secondary" type="button" onGcdsClick={() => {
+							setIsRolesModalOpen(false);
+						}}>
+							{t("users.cancelAction")}
+						</Button>
+					</>
+				)}
+				onClose={() => {
+					setIsRolesModalOpen(false);
+				}}
+			>
+				<div className="grid gap-300">
+					{isUserRoleLoading ? <Text>{t("users.loadingRoleBody")}</Text> : null}
+
+					{/* Current roles list */}
+					<div className="border-b border-[var(--gcds-border-default)] pb-250">
+						<Heading marginBottom="150" tag="h3">{t("users.currentRoles")}</Heading>
+						{selectedUserRoles.length > 0 ? (
+							<div className="grid gap-150">
+								{selectedUserRoles.map((role) => (
+									<div key={role.uuid} className="flex items-center justify-between gap-200 py-100 px-150 bg-[var(--gcds-color-neutral-100)] rounded">
+										<Text marginBottom="0" textRole="primary">{role.name}</Text>
+										<Button
+											buttonId={`remove-role-${role.uuid}`}
+											buttonRole="danger"
+											disabled={isRemoving}
+											size="small"
+											type="button"
+											onGcdsClick={() => {
+												setRoleToRemove({ uuid: role.uuid, name: role.name });
+											}}
+										>
+											{t("users.removeRole")}
+										</Button>
+									</div>
+								))}
+							</div>
+						) : (
+							<Text marginBottom="0" textRole="secondary">{t("users.noRole")}</Text>
+						)}
+					</div>
+
+					{/* Add new role */}
+					{availableRoles.length > 0 ? (
+						<div>
+							<Heading marginBottom="150" tag="h3">{t("users.addRole")}</Heading>
+							<div className="flex items-end gap-150">
+								<div className="flex-1">
 									<Select label={t("users.roleLabel")} name="role" selectId="user-role-select" value={selectedRoleUuid} onInput={(event: React.FormEvent<HTMLSelectElement>): void => {
 										setSelectedRoleUuid((event.target as HTMLSelectElement).value);
 									}}>
@@ -478,32 +534,33 @@ useEffect(() => {
 											<option key={String(entry.uuid)} value={String(entry.uuid)}>{entry.name}</option>
 										))}
 									</Select>
-									<Button buttonId="add-user-role-action" disabled={!selectedRoleUuid || isAdding} type="button" onGcdsClick={() => {
-										void handleAddRole();
-									}}>
-										{isAdding ? t("users.addingRoleAction") : t("users.addRoleAction")}
-									</Button>
 								</div>
-							) : null}
+								<Button buttonId="add-user-role-action" disabled={!selectedRoleUuid || isAdding} type="button" onGcdsClick={() => {
+									void handleAddRole();
+								}}>
+									{isAdding ? t("users.addingRoleAction") : t("users.addRoleAction")}
+								</Button>
+							</div>
 						</div>
-					</div>
-				)}
+					) : null}
+				</div>
 			</Modal>
 
-			   <ConfirmDialog
-				   cancelLabel={t("users.cancelAction")}
-				   confirmLabel={isDeleting ? t("users.deletingAction") : t("users.confirmDeleteAction")}
-				   description={t("users.deleteConfirmBody", { username: selectedUser?.username ?? "" })}
-				   isOpen={deleteDialogOpen}
-				   isPending={isDeleting}
-				   title={t("users.deleteConfirmTitle")}
-				   onClose={() => {
-					   setDeleteDialogOpen(false);
-				   }}
-				   onConfirm={() => {
-					   void handleDeleteUser();
-				   }}
-			   />
+			{/* Remove Role Confirmation Dialog */}
+			<ConfirmDialog
+				cancelLabel={t("users.cancelAction")}
+				confirmLabel={isRemoving ? t("users.removingRoleAction") : t("users.removeRole")}
+				description={roleToRemove ? t("users.removeRoleConfirmBody", { roleName: roleToRemove.name }) : ""}
+				isOpen={roleToRemove !== null}
+				isPending={isRemoving}
+				title={t("users.removeRoleConfirmTitle")}
+				onClose={() => {
+					setRoleToRemove(null);
+				}}
+				onConfirm={() => {
+					void handleRemoveRole();
+				}}
+			/>
 		</CenteredPageLayout>
 	);
 };

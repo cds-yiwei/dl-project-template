@@ -29,18 +29,18 @@ export const useUserRole = (userUuid: string | null | undefined): UserRoleState 
 	const addMutation = useMutation({
 		mutationFn: ({ roleUuid, userUuid: nextUserUuid }: { roleUuid: string; userUuid: string }) =>
 			addRoleToUser(nextUserUuid, roleUuid),
-		onSuccess: async () => {
+		onSuccess: async (_data, { userUuid: mutatedUserUuid }) => {
 			await queryClient.invalidateQueries({ queryKey: ["users"] });
-			await query.refetch();
+			await queryClient.invalidateQueries({ queryKey: userRoleQueryKey(mutatedUserUuid) });
 		},
 	});
 
 	const removeMutation = useMutation({
 		mutationFn: ({ roleUuid, userUuid: nextUserUuid }: { roleUuid: string; userUuid: string }) =>
 			removeRoleFromUser(nextUserUuid, roleUuid),
-		onSuccess: async () => {
+		onSuccess: async (_data, { userUuid: mutatedUserUuid }) => {
 			await queryClient.invalidateQueries({ queryKey: ["users"] });
-			await query.refetch();
+			await queryClient.invalidateQueries({ queryKey: userRoleQueryKey(mutatedUserUuid) });
 		},
 	});
 

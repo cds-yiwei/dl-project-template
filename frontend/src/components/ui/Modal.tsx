@@ -7,7 +7,7 @@ export type ModalProps = PropsWithChildren<{
 	footer?: ReactNode;
 	isOpen: boolean;
 	onClose: () => void;
-	size?: "narrow" | "regular" | "wide";
+	size?: "narrow" | "regular" | "wide" | "full-width";
 	title: string;
 }>;
 

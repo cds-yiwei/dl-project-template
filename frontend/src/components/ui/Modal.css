@@ -9,7 +9,7 @@
 }
 
 .government-modal__backdrop {
-	background: color-mix(in srgb, var(--gcds-color-grayscale-1000) 55%, transparent);
+	background: rgb(0 0 0 / 60%);
 	position: fixed;
 	inset: 0;
 }
@@ -44,6 +44,10 @@
 
 .government-modal__panel--wide {
 	width: min(100%, 52rem);
+}
+
+.government-modal__panel--full-width {
+	width: min(100%, 70rem);
 }
 
 .government-modal__header {
@@ -99,7 +103,8 @@
 
 	.government-modal__panel,
 	.government-modal__panel--narrow,
-	.government-modal__panel--wide {
+	.government-modal__panel--wide,
+	.government-modal__panel--full-width {
 		max-height: min(92vh, 52rem);
 		width: 100%;
 	}

@@ -170,6 +170,7 @@
         "departmentFilterLabel": "Filter departments",
         "departmentLabel": "Department",
         "departmentSaveAction": "Save department",
+        "departmentSavedSuccess": "Department saved successfully",
         "editTitle": "Edit user",
         "email": "Email: {{value}}",
         "emailLabel": "Email",
@@ -181,7 +182,7 @@
         "loadingBody": "Loading the protected users list from the backend.",
         "loadingRoleBody": "Loading the current role assignment.",
         "loadingTitle": "Loading users",
-        "manageAction": "Manage user",
+        "manageAction": "Manage",
         "manageDepartmentTitle": "Assigned department",
         "manageRoleTitle": "Assigned roles",
         "manageUserTitle": "Selected user",
@@ -213,7 +214,14 @@
         "currentRoles": "Current roles",
         "removeRole": "Remove",
         "roleAddedSuccess": "Role added successfully",
-        "roleRemovedSuccess": "Role removed successfully"
+        "roleRemovedSuccess": "Role removed successfully",
+        "manageRolesAction": "Roles",
+        "manageRolesTitle": "Manage roles for {{username}}",
+        "saveRolesAction": "Save roles",
+        "savingRolesAction": "Saving roles...",
+        "removeRoleConfirmTitle": "Remove role?",
+        "removeRoleConfirmBody": "This will remove the role \"{{roleName}}\" from this user.",
+        "removingRoleAction": "Removing..."
     },
     "departments": {
         "abbreviationFrLabel": "French abbreviation",
