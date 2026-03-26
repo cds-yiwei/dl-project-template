@@ -7,6 +7,7 @@ import { Button, ConfirmDialog, DataTable, Heading, Input, Modal, Notice, Pagina
 import { getRequestErrorNotice } from "@/fetch";
 import { useAdminListState, useDepartments, useRoles, useUserDepartment, useUserManagement, useUserRole } from "@/hooks";
 import { releaseActiveElementFocus } from "@/lib/release-active-element-focus";
+import { useToast } from "@/components/ui/Toast";
 
 type CreateUserFormState = {
 	email: string;
@@ -45,6 +46,7 @@ type UserTableRow = {
 
 export const UsersPage = (): FunctionComponent => {
 	const { t } = useTranslation();
+	const { success } = useToast();
 	const { page, searchDraft, setPage, setSearchDraft } = useAdminListState("users");
 	const itemsPerPage = 10;
 	const {
@@ -77,15 +79,15 @@ export const UsersPage = (): FunctionComponent => {
 		updateUserDepartment,
 	} = useUserDepartment(modalMode === "edit" ? selectedUsername : null);
 	const {
+		addRole,
 		error: userRoleError,
+		isAdding,
 		isLoading: isUserRoleLoading,
-		isUpdating: isUpdatingRole,
-		role,
-		updateUserRole,
+		isRemoving,
+		removeRole,
 	} = useUserRole(modalMode === "edit" ? selectedUsername : null);
 	const selectedUser = users.find((user) => user.uuid === selectedUsername) ?? null;
 	const currentDepartmentName = department?.name ?? t("users.noDepartment");
-	const currentRoleName = role?.name ?? t("users.noRole");
 	const combinedError = error ?? departmentsError ?? rolesError ?? userDepartmentError ?? userRoleError;
 	const errorNotice = getRequestErrorNotice(combinedError, {
 		bodyKey: "users.errorBody",
@@ -117,7 +119,7 @@ export const UsersPage = (): FunctionComponent => {
 		uuid: string;
 		departmentAbbreviation?: string | null;
 		departmentUuid?: string | null;
-		roleUuid?: string | null;
+		roleUuids?: Array<string> | null;
 		authProvider?: string | null;
 		[key: string]: unknown;
 	};
@@ -147,6 +149,15 @@ export const UsersPage = (): FunctionComponent => {
 	];
 	const totalPages = response ? Math.max(1, Math.ceil(response["total_count"] / response["items_per_page"])) : 1;
 
+	// Get role UUIDs from selected user
+	const selectedUserRoleUuids = (selectedUser as unknown as UserApi | null)?.roleUuids ?? [];
+	const selectedUserRoles = selectedUserRoleUuids
+		.map((roleUuid) => roles.find((role) => role.uuid === roleUuid))
+		.filter((role): role is NonNullable<typeof role> => role !== undefined);
+
+	// Get available roles (not already assigned to user)
+	const availableRoles = roles.filter((role) => !selectedUserRoleUuids.includes(role.uuid));
+
 // Avoid direct setState in effect body, use microtask
 useEffect(() => {
    void Promise.resolve().then(() => {
@@ -157,8 +168,7 @@ useEffect(() => {
 
 useEffect(() => {
    void Promise.resolve().then(() => {
-	   const sel = selectedUser as unknown as { roleUuid?: string | null } | null;
-	   setSelectedRoleUuid(sel ? (sel.roleUuid ?? "") : "");
+	   setSelectedRoleUuid("");
    });
 }, [selectedUser]);
 
@@ -258,15 +268,27 @@ useEffect(() => {
 	   setPage(1);
 	};
 
-	const handleSaveRole = async (): Promise<void> => {
-	   if (!selectedUser) {
+	const handleAddRole = async (): Promise<void> => {
+	   if (!selectedUser || !selectedRoleUuid) {
 		   return;
 	   }
 
-	   await updateUserRole(selectedUser.uuid, {
-		   roleUuid: selectedRoleUuid.length > 0 ? selectedRoleUuid : null,
-	   });
+	   await addRole(selectedUser.uuid, selectedRoleUuid);
+	   success(t("users.roleAddedSuccess"));
+	   setSelectedRoleUuid("");
 	   setPage(1);
+	   closeModal();
+	};
+
+	const handleRemoveRole = async (roleUuid: string): Promise<void> => {
+		if (!selectedUser) {
+			return;
+		}
+
+		await removeRole(selectedUser.uuid, roleUuid);
+		success(t("users.roleRemovedSuccess"));
+		setPage(1);
+		closeModal();
 	};
 
 	const isModalOpen = modalMode !== null;
@@ -364,7 +386,7 @@ useEffect(() => {
 					   </>
 				   )}
 				   onClose={closeModal}
-			   >
+				>
 				{modalMode === "create" ? (
 					<div className="grid gap-200 md:grid-cols-2">
 						<Input inputId="create-user-name" label={t("users.nameLabel")} name="name" value={createForm.name} onInput={(event: React.FormEvent<HTMLInputElement>): void => {
@@ -417,20 +439,52 @@ useEffect(() => {
 						<div className="grid gap-200 border-t border-[var(--gcds-border-default)] pt-250">
 							<Heading tag="h2">{t("users.manageRoleTitle")}</Heading>
 							{isUserRoleLoading ? <Text>{t("users.loadingRoleBody")}</Text> : null}
-							<Text>{t("users.role", { value: currentRoleName })}</Text>
-							<Select label={t("users.roleLabel")} name="role" selectId="user-role-select" value={selectedRoleUuid} onInput={(event: React.FormEvent<HTMLSelectElement>): void => {
-								setSelectedRoleUuid((event.target as HTMLSelectElement).value);
-							}}>
-								<option value="">{t("users.noRole")}</option>
-								{roles.map((entry) => (
-									<option key={String(entry.uuid)} value={String(entry.uuid)}>{entry.name}</option>
-								))}
-							</Select>
-							<Button buttonId="save-user-role-action" disabled={isUpdatingRole || isUserRoleLoading} type="button" onGcdsClick={() => {
-								void handleSaveRole();
-							}}>
-								{isUpdatingRole ? t("users.savingRoleAction") : t("users.roleSaveAction")}
-							</Button>
+							
+							{/* Current roles list */}
+							{selectedUserRoles.length > 0 ? (
+								<div className="grid gap-100">
+									<Text>{t("users.currentRoles")}:</Text>
+									{selectedUserRoles.map((role) => (
+										<div key={role.uuid} className="flex items-center gap-100">
+											<Text>{role.name}</Text>
+											<Button
+												buttonId={`remove-role-${role.uuid}`}
+												buttonRole="danger"
+												disabled={isRemoving}
+												size="small"
+												type="button"
+												onGcdsClick={() => {
+													void handleRemoveRole(role.uuid);
+												}}
+											>
+												{t("users.removeRole")}
+											</Button>
+										</div>
+									))}
+								</div>
+							) : (
+								<Text>{t("users.noRole")}</Text>
+							)}
+
+							{/* Add new role */}
+							{availableRoles.length > 0 ? (
+								<div className="grid gap-200 pt-150">
+									<Text>{t("users.addRole")}:</Text>
+									<Select label={t("users.roleLabel")} name="role" selectId="user-role-select" value={selectedRoleUuid} onInput={(event: React.FormEvent<HTMLSelectElement>): void => {
+										setSelectedRoleUuid((event.target as HTMLSelectElement).value);
+									}}>
+										<option value="">{t("users.selectRole")}</option>
+										{availableRoles.map((entry) => (
+											<option key={String(entry.uuid)} value={String(entry.uuid)}>{entry.name}</option>
+										))}
+									</Select>
+									<Button buttonId="add-user-role-action" disabled={!selectedRoleUuid || isAdding} type="button" onGcdsClick={() => {
+										void handleAddRole();
+									}}>
+										{isAdding ? t("users.addingRoleAction") : t("users.addRoleAction")}
+									</Button>
+								</div>
+							) : null}
 						</div>
 					</div>
 				)}

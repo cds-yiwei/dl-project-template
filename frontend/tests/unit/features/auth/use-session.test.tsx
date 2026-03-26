@@ -48,7 +48,7 @@ describe("useSession", () => {
 			profileImageUrl: string;
 			authProvider: string | null;
 			authSubject: string | null;
-			roleUuid: string | null;
+			roleUuids: string[] | null;
 			tierUuid: string | null;
 			uuid: string;
 		}>();
@@ -76,7 +76,7 @@ describe("useSession", () => {
 			email: "jane@example.com",
 			name: "Jane Doe",
 			profileImageUrl: "https://example.com/jane.png",
-			roleUuid: "role-uuid-2",
+			roleUuids: ["role-uuid-2"],
 			tierUuid: "tier-uuid-3",
 			uuid: "user-uuid-7",
 			username: "jdoe",

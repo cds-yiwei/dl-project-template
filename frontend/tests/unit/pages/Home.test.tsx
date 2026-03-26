@@ -110,7 +110,7 @@ describe("Home", () => {
 				"profileImageUrl": "https://example.com/avatar.png",
 				"authProvider": "gc-sso",
 				"authSubject": "subject-123",
-				"roleUuid": "role-uuid-2",
+				"roleUuids": ["role-uuid-2"],
 				"tierUuid": "tier-uuid-3",
 				uuid: "user-uuid-7",
 			},

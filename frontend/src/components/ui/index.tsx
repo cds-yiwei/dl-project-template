@@ -29,3 +29,4 @@ export { default as SideNav } from "./SideNav";
 export { default as Stepper } from "./Stepper";
 export { default as Text } from "./Text";
 export { default as SrOnly } from "./SrOnly";
+export { default as Toast, ToastProvider, ToastHook } from "./Toast";

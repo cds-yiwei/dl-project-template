@@ -55,7 +55,7 @@ describe("AppNavigation", () => {
 				profileImageUrl: "https://example.com/jane.png",
 				authProvider: "gc-sso",
 				authSubject: "subject-123",
-				roleUuid: "role-uuid-3",
+				roleUuids: ["role-uuid-3"],
 				tierUuid: "tier-uuid-2",
 				uuid: "user-uuid-7",
 			},

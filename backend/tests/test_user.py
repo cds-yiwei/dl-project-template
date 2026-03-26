@@ -1,15 +1,16 @@
 """Unit tests for user API endpoints."""
 
+import uuid as uuid_pkg
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from src.app.api.v1.users import (
+    add_role_to_user,
     erase_db_user,
     erase_user,
     patch_user_department,
     patch_user,
-    patch_user_role,
     patch_user_tier,
     read_user_department,
     read_user,
@@ -17,9 +18,10 @@ from src.app.api.v1.users import (
     read_user_role,
     read_user_tier,
     read_users,
+    remove_role_from_user,
     write_user,
 )
-from src.app.schemas.user import UserCreate, UserDepartmentUpdate, UserRead, UserRoleUpdate, UserTierUpdate, UserUpdate
+from src.app.schemas.user import UserAddRole, UserCreate, UserDepartmentRead, UserDepartmentUpdate, UserRead, UserRemoveRole, UserTierUpdate, UserUpdate
 
 
 def unwrap_endpoint(endpoint):
@@ -137,7 +139,7 @@ class TestUserRoleEndpoints:
     @pytest.mark.asyncio
     async def test_read_user_role_returns_none_when_user_has_no_role(self, mock_db, sample_user_read):
         user_dict = sample_user_read.model_dump()
-        user_dict["role_id"] = None
+        user_dict["role_ids"] = None
         user_uuid = str(sample_user_read.uuid)
         mock_service = Mock()
         mock_service.get_user_role = AsyncMock(return_value=None)
@@ -148,16 +150,36 @@ class TestUserRoleEndpoints:
         mock_service.get_user_role.assert_awaited_once_with(db=mock_db, user_uuid=user_uuid)
 
     @pytest.mark.asyncio
-    async def test_patch_user_role_assigns_role(self, mock_db, sample_user_read):
+    async def test_add_role_to_user(self, mock_db, sample_user_read):
         user_uuid = str(sample_user_read.uuid)
-        role_update = UserRoleUpdate(role_uuid="018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301")
+        role_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301"
         mock_service = Mock()
-        mock_service.update_user_role = AsyncMock(return_value={"message": "User role updated"})
+        mock_service.add_role_to_user = AsyncMock(return_value={"message": "Role added to user"})
 
-        result = await unwrap_endpoint(patch_user_role)(Mock(), user_uuid, role_update, mock_db, mock_service)
+        result = await unwrap_endpoint(add_role_to_user)(
+            Mock(), user_uuid, uuid_pkg.UUID(role_uuid), mock_db, mock_service
+        )
 
-        assert result == {"message": "User role updated"}
-        mock_service.update_user_role.assert_awaited_once_with(db=mock_db, user_uuid=user_uuid, values=role_update)
+        assert result == {"message": "Role added to user"}
+        mock_service.add_role_to_user.assert_awaited_once_with(
+            db=mock_db, user_uuid=user_uuid, values=UserAddRole(role_uuid=uuid_pkg.UUID(role_uuid))
+        )
+
+    @pytest.mark.asyncio
+    async def test_remove_role_from_user(self, mock_db, sample_user_read):
+        user_uuid = str(sample_user_read.uuid)
+        role_uuid = "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b301"
+        mock_service = Mock()
+        mock_service.remove_role_from_user = AsyncMock(return_value={"message": "Role removed from user"})
+
+        result = await unwrap_endpoint(remove_role_from_user)(
+            Mock(), user_uuid, uuid_pkg.UUID(role_uuid), mock_db, mock_service
+        )
+
+        assert result == {"message": "Role removed from user"}
+        mock_service.remove_role_from_user.assert_awaited_once_with(
+            db=mock_db, user_uuid=user_uuid, values=UserRemoveRole(role_uuid=uuid_pkg.UUID(role_uuid))
+        )
 
 
 class TestUserDepartmentEndpoints:

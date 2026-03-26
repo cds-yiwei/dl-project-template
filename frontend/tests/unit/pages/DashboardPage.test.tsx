@@ -65,7 +65,7 @@ describe("DashboardPage", () => {
 				profileImageUrl: "https://example.com/jane.png",
 				authProvider: "gc-sso",
 				authSubject: "subject-123",
-				roleUuid: "role-uuid-3",
+				roleUuids: ["role-uuid-3"],
 				tierUuid: "tier-uuid-2",
 				uuid: "user-uuid-7",
 			},
@@ -76,11 +76,13 @@ describe("DashboardPage", () => {
 			refreshSession: vi.fn((): Promise<null> => Promise.resolve(null)),
 		});
 		vi.mocked(useUserRole).mockReturnValue({
+			addRole: vi.fn((): Promise<void> => Promise.resolve()),
 			error: null,
+			isAdding: false,
 			isLoading: false,
-			isUpdating: false,
+			isRemoving: false,
+			removeRole: vi.fn((): Promise<void> => Promise.resolve()),
 			role: { created_at: "2026-03-18T00:00:00Z", description: "Reviewer", name: "reviewer", uuid: "role-uuid-3" },
-			updateUserRole: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 		vi.mocked(usePosts).mockReturnValue({
 			error: null,
@@ -129,7 +131,7 @@ describe("DashboardPage", () => {
 				profileImageUrl: "https://example.com/jane.png",
 				authProvider: "gc-sso",
 				authSubject: "subject-123",
-				roleUuid: "role-uuid-3",
+				roleUuids: ["role-uuid-3"],
 				tierUuid: "tier-uuid-2",
 				uuid: "user-uuid-7",
 			},
@@ -141,10 +143,12 @@ describe("DashboardPage", () => {
 		});
 		vi.mocked(useUserRole).mockReturnValue({
 			error: null,
+			isAdding: false,
 			isLoading: false,
-			isUpdating: false,
+			isRemoving: false,
 			role: null,
-			updateUserRole: vi.fn((): Promise<void> => Promise.resolve()),
+			addRole: vi.fn((): Promise<void> => Promise.resolve()),
+			removeRole: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 		vi.mocked(usePosts).mockReturnValue({
 			error: null,

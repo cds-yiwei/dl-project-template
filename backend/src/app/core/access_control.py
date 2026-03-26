@@ -10,8 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..api.dependencies import get_current_user
 from ..models.access_policy import AccessPolicy
 from ..models.role import Role
-from .db.database import async_get_db
-from .db.database import local_session
+from .db.database import async_get_db, local_session
 from .exceptions.http_exceptions import ForbiddenException
 
 CASBIN_MODEL_PATH = Path(__file__).with_name("casbin_model.conf")
@@ -24,12 +23,12 @@ async def get_casbin_subject(
     if current_user.get("is_superuser"):
         return "admin"
 
-    role_id = current_user.get("role_id")
-    if role_id is not None:
-        result = await db.execute(select(Role.name).where(Role.id == role_id))
-        role_name = result.scalar_one_or_none()
-        if role_name is not None:
-            return role_name
+    role_ids = current_user.get("role_ids")
+    if role_ids is not None and len(role_ids) > 0:
+        result = await db.execute(select(Role.name).where(Role.id.in_(role_ids)))
+        role_names = result.scalars().all()
+        if len(role_names) > 0:
+            return role_names[0]
 
     return current_user["username"]
 

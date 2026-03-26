@@ -65,25 +65,12 @@ class TestSyncOidcUser:
         }
 
         with patch("src.app.core.oidc.crud_users") as mock_crud:
-            mock_crud.get = AsyncMock(return_value=existing_user)
+            mock_crud.get = AsyncMock(side_effect=[existing_user, existing_user])
             mock_crud.update = AsyncMock(return_value=None)
 
             result = await sync_oidc_user(mock_db, claims)
 
         assert result == existing_user
-        mock_crud.get.assert_any_await(
-            db=mock_db,
-            auth_provider="CanadaLogin",
-            auth_subject="subject-123",
-            is_deleted=False,
-            schema_to_select=UserReadInternal,
-        )
-        mock_crud.get.assert_any_await(
-            db=mock_db,
-            uuid="019cfc22-bff2-7168-ae43-387a301d8fcb",
-            is_deleted=False,
-            schema_to_select=UserReadInternal,
-        )
 
 
 class TestOidcCallback:

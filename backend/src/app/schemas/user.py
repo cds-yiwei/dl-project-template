@@ -1,42 +1,39 @@
 import uuid as uuid_pkg
 from datetime import datetime
-from typing import Annotated
 
-from pydantic import ConfigDict, EmailStr, Field, BaseModel
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from pydantic.alias_generators import to_camel
 
-
 from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
-from ..schemas.department import DepartmentRead
 from ..schemas.rate_limit import RateLimitRead
 
 
 class UserBase(BaseModel):
     name: str = Field(..., min_length=2, max_length=30, examples=["User Userson"])
     username: str = Field(..., min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])
-    email: EmailStr = Field(..., examples=["user.userson@example.com"]) 
+    email: EmailStr = Field(..., examples=["user.userson@example.com"])
 
 
 class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
-    
+
     profile_image_url: str = Field(default="https://www.profileimageurl.com")
     hashed_password: str | None = None
     auth_provider: str | None = None
     auth_subject: str | None = None
     is_superuser: bool = False
     department_id: int | None = None
-    role_id: int | None = None
+    role_ids: list[int] | None = None
     tier_id: int | None = None
 
 
 class UserRead(UserBase):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
-    
+
     uuid: uuid_pkg.UUID
     department_abbreviation: str | None = None
     department_uuid: uuid_pkg.UUID | None = None
-    role_uuid: uuid_pkg.UUID | None = None
+    role_uuids: list[uuid_pkg.UUID] | None = None
     tier_uuid: uuid_pkg.UUID | None = None
 
     name: str = Field(..., min_length=2, max_length=30, examples=["User Userson"])
@@ -49,10 +46,10 @@ class UserRead(UserBase):
 
 class UserReadInternal(UserRead):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
-    
+
     id: int
     department_id: int | None = None
-    role_id: int | None = None
+    role_ids: list[int] | None = None
     tier_id: int | None = None
 
 
@@ -65,7 +62,7 @@ class UserTierRead(UserRead):
 
 class UserDepartmentRead(UserRead):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
-    
+
     department_abbreviation_fr: str | None = None
     department_name: str
     department_created_at: datetime
@@ -73,7 +70,7 @@ class UserDepartmentRead(UserRead):
 
 class UserRateLimitsRead(UserRead):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
-    
+
     tier_rate_limits: list[RateLimitRead]
 
 
@@ -107,7 +104,19 @@ class UserUpdateInternal(UserUpdate):
 class UserRoleUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
 
-    role_uuid: uuid_pkg.UUID | None = None
+    role_uuid: uuid_pkg.UUID
+
+
+class UserAddRole(BaseModel):
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
+
+    role_uuid: uuid_pkg.UUID
+
+
+class UserRemoveRole(BaseModel):
+    model_config = ConfigDict(extra="forbid", validate_by_name=True, validate_by_alias=True, alias_generator=to_camel, populate_by_name=True)
+
+    role_uuid: uuid_pkg.UUID
 
 
 class UserTierUpdate(BaseModel):

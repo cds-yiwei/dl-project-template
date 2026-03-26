@@ -82,7 +82,7 @@ def sample_user_read():
         username=fake.user_name(),
         email=fake.email(),
         profile_image_url=fake.image_url(),
-        role_uuid=None,
+        role_uuids=[],
         tier_uuid=None,
     )
 

@@ -8,10 +8,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...api.dependencies import get_current_user, get_user_service
 from ...core.access_control import casbin_guard
 from ...core.db.database import async_get_db
-from ...schemas.department import DepartmentRead
 from ...core.security import oauth2_scheme
 from ...schemas.role import RoleRead
-from ...schemas.user import UserCreate, UserDepartmentRead, UserDepartmentUpdate, UserRateLimitsRead, UserRead, UserRoleUpdate, UserTierRead, UserTierUpdate, UserUpdate
+from ...schemas.user import (
+    UserAddRole,
+    UserCreate,
+    UserDepartmentRead,
+    UserDepartmentUpdate,
+    UserRateLimitsRead,
+    UserRead,
+    UserRemoveRole,
+    UserTierRead,
+    UserTierUpdate,
+    UserUpdate,
+)
 from ...services.user_service import UserService
 
 router = APIRouter(tags=["users"])
@@ -39,8 +49,13 @@ async def read_users(
 
 
 @router.get("/user/me/", response_model=UserRead)
-async def read_users_me(request: Request, current_user: Annotated[dict, Depends(get_current_user)]) -> dict:
-    return current_user
+async def read_users_me(
+    request: Request,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    service: Annotated[UserService, Depends(get_user_service)],
+) -> dict[str, Any]:
+    return await service._build_public_user(db=db, user=current_user)
 
 
 @router.get("/user/{user_uuid}", response_model=UserRead)
@@ -134,16 +149,28 @@ async def read_user_department(
     return await service.get_user_department(db=db, user_uuid=user_uuid)
 
 
-@router.patch("/user/{user_uuid}/role")
+@router.post("/user/{user_uuid}/roles/{role_uuid}")
 @casbin_guard.require_permission("users_admin", "write")
-async def patch_user_role(
+async def add_role_to_user(
     request: Request,
     user_uuid: uuid_pkg.UUID,
-    values: UserRoleUpdate,
+    role_uuid: uuid_pkg.UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     service: Annotated[UserService, Depends(get_user_service)],
 ) -> dict[str, str]:
-    return await service.update_user_role(db=db, user_uuid=user_uuid, values=values)
+    return await service.add_role_to_user(db=db, user_uuid=user_uuid, values=UserAddRole(role_uuid=role_uuid))
+
+
+@router.delete("/user/{user_uuid}/roles/{role_uuid}")
+@casbin_guard.require_permission("users_admin", "write")
+async def remove_role_from_user(
+    request: Request,
+    user_uuid: uuid_pkg.UUID,
+    role_uuid: uuid_pkg.UUID,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    service: Annotated[UserService, Depends(get_user_service)],
+) -> dict[str, str]:
+    return await service.remove_role_from_user(db=db, user_uuid=user_uuid, values=UserRemoveRole(role_uuid=role_uuid))
 
 
 @router.patch("/user/{user_uuid}/tier")

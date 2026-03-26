@@ -31,7 +31,7 @@ const sampleUser = {
 	email: "jane@example.com",
 	name: "Jane Doe",
 	profileImageUrl: "https://example.com/jane.png",
-	roleUuid: "role-uuid-2",
+	roleUuids: ["role-uuid-2"],
 	tierUuid: "tier-uuid-3",
 	uuid: "user-uuid-7",
 	username: "jdoe",

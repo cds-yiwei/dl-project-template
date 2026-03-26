@@ -11,11 +11,18 @@ export const getUserRole = async (userUuid: string): Promise<RoleRead | null> =>
 		method: "GET",
 	});
 
-export const updateUserRole = async (
+export const addRoleToUser = async (
 	userUuid: string,
-	payload: UserRoleUpdate,
+	roleUuid: string,
 ): Promise<ApiMessageResponse | null> =>
-	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}/role`, {
-		body: JSON.stringify(payload),
-		method: "PATCH",
+	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}/roles/${roleUuid}`, {
+		method: "POST",
+	});
+
+export const removeRoleFromUser = async (
+	userUuid: string,
+	roleUuid: string,
+): Promise<ApiMessageResponse | null> =>
+	requestJson<ApiMessageResponse>(`/api/v1/user/${userUuid}/roles/${roleUuid}`, {
+		method: "DELETE",
 	});

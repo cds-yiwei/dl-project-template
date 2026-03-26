@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { UnauthorizedRequestError } from "@/fetch";
 import { UsersPage } from "@/features/users/pages/UsersPage";
 import { useDepartments, useRoles, useUserDepartment, useUserManagement, useUserRole } from "@/hooks";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const navigate = vi.fn((options: { replace?: boolean; search?: Record<string, string>; to: string }): Promise<void> => {
 	void options;
@@ -27,11 +28,16 @@ vi.mock("react-i18next", () => ({
 				"users.loadingRoleBody": "Loading role assignment.",
 					"users.manageDepartmentTitle": "Assigned department",
 				"users.manageAction": "Manage user",
-				"users.manageRoleTitle": "Assigned role",
+				"users.manageRoleTitle": "Assigned roles",
 					"users.noDepartment": "No department assigned",
+					"users.noRole": "No roles assigned",
+					"users.addRoleAction": "Add role",
+					"users.addingRoleAction": "Adding role...",
+					"users.selectRole": "Select a role to add...",
 				"users.profileLink": "Open profile",
 				"users.provider": `Provider: ${options?.["value"] ?? ""}`,
 				"users.role": `Role: ${options?.["value"] ?? ""}`,
+				"users.roleLabel": "Role",
 				"users.resultsSummary": `Showing ${options?.["count"] ?? "0"} users on page ${options?.["page"] ?? "1"}`,
 				"users.roleSaveAction": "Save role",
 				"users.summary": "Protected list of backend users.",
@@ -90,6 +96,7 @@ vi.mock("@/components/ui", () => ({
 	),
 	Text: ({ children }: PropsWithChildren): ReactElement => <p>{children}</p>,
 	Modal: ({ children, isOpen, title }: PropsWithChildren<{ isOpen: boolean; title: string }>): ReactElement | null => (isOpen ? <section><h2>{title}</h2>{children}</section> : null),
+	ToastProvider: ({ children }: PropsWithChildren): ReactElement => <>{children}</>,
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -134,7 +141,7 @@ describe("UsersPage", () => {
 						name: "Jane Doe",
 					"profileImageUrl": "https://example.com/jane.png",
 					"departmentUuid": "department-uuid-1",
-					"roleUuid": "role-uuid-3",
+					"roleUuids": ["role-uuid-3"],
 					"tierUuid": "tier-uuid-3",
 						uuid: "user-uuid-7",
 						username: "jdoe",
@@ -154,7 +161,7 @@ describe("UsersPage", () => {
 					name: "Jane Doe",
 					"profileImageUrl": "https://example.com/jane.png",
 					"departmentUuid": "department-uuid-1",
-					"roleUuid": "role-uuid-3",
+					"roleUuids": ["role-uuid-3"],
 					"tierUuid": "tier-uuid-3",
 					uuid: "user-uuid-7",
 					username: "jdoe",
@@ -169,13 +176,19 @@ describe("UsersPage", () => {
 			page: 1,
 			refetch: vi.fn((): Promise<unknown> => Promise.resolve()),
 			response: {
-				data: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" }],
+				data: [
+					{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" },
+					{ created_at: "2026-03-17T00:00:00Z", description: "Editor role", name: "editor", uuid: "role-uuid-4" },
+				],
 				"has_more": false,
 				"items_per_page": 10,
 				page: 1,
-				"total_count": 1,
+				"total_count": 2,
 			},
-			roles: [{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" }],
+			roles: [
+				{ created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" },
+				{ created_at: "2026-03-17T00:00:00Z", description: "Editor role", name: "editor", uuid: "role-uuid-4" },
+			],
 		});
 		const department = {
 			abbreviation: "AAFC",
@@ -222,14 +235,20 @@ describe("UsersPage", () => {
 			updateUserDepartment: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 		vi.mocked(useUserRole).mockReturnValue({
+			addRole: vi.fn((): Promise<void> => Promise.resolve()),
 			error: null,
+			isAdding: false,
 			isLoading: false,
-			isUpdating: false,
+			isRemoving: false,
+			removeRole: vi.fn((): Promise<void> => Promise.resolve()),
 			role: { created_at: "2026-03-17T00:00:00Z", description: "Administrator role", name: "admin", uuid: "role-uuid-3" },
-			updateUserRole: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 
-		render(<UsersPage />);
+		render(
+			<ToastProvider>
+				<UsersPage />
+			</ToastProvider>,
+		);
 
 		expect(screen.getAllByRole("heading", { name: /users/i }).length).toBeGreaterThan(0);
 		expect(screen.getByRole("button", { name: /create user/i })).toBeTruthy();
@@ -241,7 +260,7 @@ describe("UsersPage", () => {
 		fireEvent.click(screen.getByRole("button", { name: /manage user/i }));
 		expect(useDepartments).toHaveBeenCalledWith(1, 200);
 		expect(screen.getByRole("heading", { name: /edit user/i })).toBeTruthy();
-		expect(screen.getByRole("heading", { name: /assigned role/i })).toBeTruthy();
+		expect(screen.getByRole("heading", { name: /assigned roles/i })).toBeTruthy();
 		expect(screen.getByRole("heading", { name: /assigned department/i })).toBeTruthy();
 		expect(screen.getByLabelText(/filter departments/i)).toBeTruthy();
 		expect(screen.getByRole("option", { name: /engineering/i })).toBeTruthy();
@@ -249,13 +268,10 @@ describe("UsersPage", () => {
 		fireEvent.input(screen.getByLabelText(/filter departments/i), { target: { value: "fin" } });
 		expect(screen.queryByRole("option", { name: /engineering/i })).toBeNull();
 		expect(screen.getByRole("option", { name: /finance/i })).toBeTruthy();
-		expect(screen.getByRole("button", { name: /save role/i })).toBeTruthy();
+		expect(screen.getByRole("button", { name: /add role/i })).toBeTruthy();
 		expect(screen.getByRole("button", { name: /save department/i })).toBeTruthy();
-		fireEvent.input(screen.getByLabelText(/users.roleLabel/i), { target: { value: "role-uuid-3" } });
-		fireEvent.click(screen.getByRole("button", { name: /save role/i }));
 		fireEvent.input(screen.getByLabelText(/^department$/i), { target: { value: "FIN" } });
 		fireEvent.click(screen.getByRole("button", { name: /save department/i }));
-		expect(vi.mocked(useUserRole).mock.results[0]?.value.updateUserRole).toHaveBeenCalledWith("user-uuid-7", { roleUuid: "role-uuid-3" });
 		expect(vi.mocked(useUserDepartment).mock.results[0]?.value.updateUserDepartment).toHaveBeenCalledWith("user-uuid-7", { departmentAbbreviation: "FIN" });
 	});
 
@@ -301,13 +317,19 @@ describe("UsersPage", () => {
 		});
 		vi.mocked(useUserRole).mockReturnValue({
 			error: null,
+			isAdding: false,
 			isLoading: false,
-			isUpdating: false,
+			isRemoving: false,
 			role: null,
-			updateUserRole: vi.fn((): Promise<void> => Promise.resolve()),
+			addRole: vi.fn((): Promise<void> => Promise.resolve()),
+			removeRole: vi.fn((): Promise<void> => Promise.resolve()),
 		});
 
-		render(<UsersPage />);
+		render(
+			<ToastProvider>
+				<UsersPage />
+			</ToastProvider>,
+		);
 
 		expect(navigate).not.toHaveBeenCalled();
 		expect(screen.queryByText(/users.errorTitle/i)).toBeNull();

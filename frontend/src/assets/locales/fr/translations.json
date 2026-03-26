@@ -176,7 +176,7 @@
 		"loadingTitle": "Chargement des utilisateurs",
 		"manageAction": "Gerer l'utilisateur",
 		"manageDepartmentTitle": "Departement attribue",
-		"manageRoleTitle": "Role attribue",
+		"manageRoleTitle": "Roles attribues",
 		"manageUserTitle": "Utilisateur selectionne",
 		"nameLabel": "Nom",
 		"noDepartment": "Aucun departement attribue",
@@ -194,10 +194,16 @@
 		"savingAction": "Enregistrement de l'utilisateur...",
 		"savingRoleAction": "Enregistrement du role...",
 		"selectUserHint": "Selectionnez un utilisateur dans la liste pour modifier son profil ou lui attribuer un role.",
+		"selectRole": "Selectionnez un role à ajouter...",
 		"summary": "Liste protégée des utilisateurs du backend renvoyée par /api/v1/users.",
 		"title": "Utilisateurs",
 		"usernameLabel": "Nom d'utilisateur",
-		"username": "Nom d'utilisateur : {{value}}"
+		"username": "Nom d'utilisateur : {{value}}",
+		"addRole": "Ajouter un role",
+		"addRoleAction": "Ajouter le role",
+		"addingRoleAction": "Ajout du role...",
+		"currentRoles": "Roles actuels",
+		"removeRole": "Supprimer"
 	},
 	"departments": {
 		"abbreviationFrLabel": "Abreviation francaise",

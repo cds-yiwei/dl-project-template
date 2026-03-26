@@ -49,9 +49,9 @@ class TestExternalIdentitySchemas:
         assert AccessPolicyOut.model_config.get("from_attributes") is True
 
     def test_user_read_exposes_public_role_and_tier_uuids_only(self):
-        assert "role_uuid" in UserRead.model_fields
+        assert "role_uuids" in UserRead.model_fields
         assert "tier_uuid" in UserRead.model_fields
-        assert "role_id" not in UserRead.model_fields
+        assert "role_ids" not in UserRead.model_fields
         assert "tier_id" not in UserRead.model_fields
 
     def test_access_control_tables_include_timestamps_and_soft_delete_columns(self):

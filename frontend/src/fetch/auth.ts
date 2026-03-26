@@ -11,7 +11,7 @@ export type UserRead = {
 	email: string;
 	name: string;
 	profileImageUrl: string | null;
-	roleUuid: string | null;
+	roleUuids: Array<string> | null;
 	tierUuid: string | null;
 	uuid: string;
 	username: string;

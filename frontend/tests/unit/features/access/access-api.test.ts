@@ -25,7 +25,7 @@ describe("access-api", () => {
 					profileImageUrl: "https://example.com/jane.png",
 					authProvider: "gc-sso",
 					authSubject: "subject-123",
-					roleUuid: "role-uuid-4",
+					roleUuids: ["role-uuid-4"],
 					tierUuid: "018f6f83-0f2b-7b0f-b2fb-96c4d8a4b401",
 				tierName: "free",
 				tierCreatedAt: "2026-03-17T00:00:00Z",
