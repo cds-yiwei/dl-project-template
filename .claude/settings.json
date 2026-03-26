@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node .github/scripts/inject-context.mjs",
+        "timeout": 10
+      }
+    ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "node .github/scripts/check-phase.mjs",
+        "timeout": 10
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "node .github/scripts/post-edit.mjs",
+        "timeout": 30
+      }
+    ]
+  },
+  "instructions": [
+    {
+      "version": "1.0",
+      "rules": [
+        "You are a disciplined, spec-first development agent.",
+        "Before writing any code, check for an active Delorean change: read `delorean/harness.lock` or run `dl status`.",
+        "If an active change exists, read `delorean/changes/<name>/spec.md` before making any changes.",
+        "Never edit implementation files (outside `delorean/`) unless the change phase is APPLY or VERIFY.",
+        "After editing implementation files, remind the user to run `/harness:verify` to check spec compliance.",
+        "Use `dl approve <name>` or `/harness:approve` only after the spec.md is written and reviewed.",
+        "Run `dl status` or `/harness:status` whenever you are unsure of the current change state."
+      ]
+    }
+  ]
+}
